@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "orrgal1",
+  "description": "forge — self-contained, repo-agnostic PR forge chain for Claude Code",
+  "owner": {
+    "name": "orrgal1"
+  },
+  "plugins": [
+    {
+      "name": "forge",
+      "description": "Self-contained PR forge chain: /forge-setup maps host-repo tooling into a gitignored .forge/ dir, then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl, audit, CI, and lens-designed review to READY. No dependency on other plugins.",
+      "source": ".",
+      "category": "development"
+    }
+  ]
+}

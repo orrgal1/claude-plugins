@@ -1,0 +1,212 @@
+---
+name: forge-status
+argument-hint: "[--slug <name>] [--json]"
+triggers:
+  - "forge status"
+  - "forge state"
+  - "where am i in the forge chain"
+  - "where does this pr stand"
+allowed-tools:
+  - Bash
+  - Read
+  - Grep
+  - Glob
+practices:
+  - tdd
+  - code-review
+user-invocable: true
+---
+
+# /forge-status — read state, recommend next step
+
+Read-only. Reports phase verdict + drift list + one recommended next command.
+`/forge` calls this at entry to pick a resume phase; operators call it for "what
+now".
+
+## Inputs
+
+| Input    | Default               |
+| -------- | --------------------- |
+| `--slug` | sanitized branch name |
+| `--json` | off — human report    |
+
+Slug rule per `/forge-goals`: lowercase, alphanumerics + dashes, strip leading
+`feat/` / `fix/` / `chore/`.
+
+## Process
+
+### 1. Resolve slug + worktree
+
+```
+branch=$(git branch --show-current)
+slug=${SLUG:-$(echo "$branch" | sed -E 's|^(feat\|fix\|chore)/||' \
+  | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')}
+art=".pr-artifacts/$slug/forge"
+```
+
+### 2. Read artifacts
+
+Missing is data, not error.
+
+| Probe                    | Used for                                         |
+| ------------------------ | ------------------------------------------------ |
+| `$art/goals.md`          | spec layer present + `## G\d+` + `^- SG\d+\.\d+` |
+| `$art/links.json`        | tests linked count + tier per SG                 |
+| `$art/design.md`         | design layer present                             |
+| `$art/run.json`          | last run pass/fail/error/skip + mtime            |
+| `$art/decisions.md`      | unattended-mode log                              |
+| `$art/approvals.json`    | per-phase sha approvals (`goals`, `design`, …)   |
+| `$art/review/cycle-*.md` | review cycle count + last B+M                    |
+
+For each `approvals.json` entry: sha matches artifact's last-touching commit
+(`git log -1 --format=%H -- <artifact>`) → phase APPROVED. Else AWAIT.
+
+### 3. PR + git state
+
+```
+gh pr view --json number,state,isDraft,body,statusCheckRollup,headRefName,baseRefName 2>/dev/null
+```
+
+No PR → `pr=none`. Plus: `git status --porcelain`,
+`git rev-list --count origin/<base>..HEAD`, mtime of HEAD vs `run.json`.
+
+### 4. Cross-check linkage
+
+For each `links.json` entry: resolve test file + function/symbol. Miss → drift
+`links.test_id_missing`.
+
+### 5. Phase verdict
+
+Earliest unsatisfied phase wins:
+
+| Phase                 | Trigger                                                                             | Next                                                   |
+| --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `NO_CHAIN`            | no `$art/` AND no PR                                                                | `/forge <source>`                                      |
+| `START_PENDING`       | branch local but no remote / draft PR                                               | `/forge-start <source>` (or `/forge` to resume start)  |
+| `GOALS_DRAFT`         | `goals.md` exists, no `approvals.json.goals`                                        | `/forge-goals --push`                                  |
+| `AWAIT_GOALS_REVIEW`  | goals pushed; `approvals.json.goals` absent OR sha-stale                            | operator: `/forge approve` or `/forge iterate "<fbk>"` |
+| `GOALS_APPROVED`      | approval sha matches goals.md last commit                                           | `/forge-design --push`                                 |
+| `DESIGN_DRAFT`        | `design.md` exists, no `approvals.json.design`                                      | `/forge-design --push`                                 |
+| `AWAIT_DESIGN_REVIEW` | design pushed; approval absent or sha-stale                                         | operator: same shape                                   |
+| `DESIGN_APPROVED`     | approval sha matches design.md                                                      | `/forge-scenarios`                                     |
+| `SCENARIOS_DRAFT`     | ≥1 scenario, no `links.json` (or empty)                                             | `/forge-tests`                                         |
+| `TESTS_LINKED`        | links present, no `run.json` (or older than any linked test)                        | `/forge-impl-green`                                    |
+| `RED`                 | `run.json` `fail>0` or `error>0`                                                    | `/forge-impl-green`                                    |
+| `IMPL_GREEN`          | `run.json` all pass, no audit-green PASS yet                                        | per-layer attestation 5a-5e → `/forge-audit-green`     |
+| `AUDIT_GREEN`         | last audit PASS, no embed in PR body OR no CI green for HEAD                        | `/forge-audit --embed` + `/forge-ci-green`             |
+| `CI_GREEN`            | PR CI green on HEAD, no review cycles                                               | `/forge-review-green`                                  |
+| `REVIEW_OPEN`         | last `cycle-N.md` B+M>0 AND no commits since                                        | `/forge-review-green`                                  |
+| `REVIEW_STALE`        | last cycle B+M>0 AND commits since, no new cycle                                    | `/forge-review-green` (re-cycle)                       |
+| `REVIEW_GREEN`        | last cycle B+M=0, commits since last `ci.green`                                     | `/forge-ci-green` (phase 9 final)                      |
+| `READY`               | CI green post-review + audit-embed present + last B+M=0 (or `--no-review` recorded) | mark ready / merge                                     |
+
+Manual-mode AWAIT verdicts (phases 3-9): `AWAIT_SCENARIOS_REVIEW`,
+`AWAIT_TESTS_REVIEW`, `AWAIT_IMPL_REVIEW`, `AWAIT_AUDIT_REVIEW`,
+`AWAIT_CI_REVIEW`, `AWAIT_REVIEW_REVIEW`. Detect via `wip.mode_manual` flag in
+`decisions.md` + phase-completion signal without matching `approvals.json`
+entry.
+
+### 6. Drift
+
+Independent of phase. `block` halts autopilot; `warn` surfaces only.
+
+| Drift                             | Severity | Detection                                                     | Fix                                      |
+| --------------------------------- | -------- | ------------------------------------------------------------- | ---------------------------------------- |
+| `links.test_id_missing`           | block    | step 4 cross-check failed                                     | `/forge-tests --refresh <SG>` or restore |
+| `goals.uncovered`                 | block    | `## G\d+` with 0 `^- SG\d+\.\d+`                              | `/forge-scenarios --goal G<n>`           |
+| `design.orphan`                   | warn     | `design.md` exists, no `goals.md`                             | `/forge-goals` to seed                   |
+| `run.stale`                       | warn     | `run.json` older than any linked test file OR older than HEAD | `/forge-impl-green`                      |
+| `review.unaddressed`              | block    | last cycle B+M>0, no commits since                            | `/forge-review-green`                    |
+| `review.assumed_fixed_no_recycle` | warn     | last cycle B+M>0, commits since, no new cycle                 | `/forge-review` (re-cycle)               |
+| `pr.no_forge_block`               | warn     | run+audit clean, PR body lacks `<!-- forge-audit -->`         | `/forge-audit --embed`                   |
+| `pr.dirty_worktree`               | warn     | `git status --porcelain` non-empty                            | commit / stash                           |
+| `pr.ahead_unpushed`               | warn     | commits ahead of remote tracking                              | push                                     |
+| `pr.ci_failing`                   | block    | `statusCheckRollup` has FAILURE on HEAD                       | `/forge-ci-green`                        |
+
+### 7. Emit report
+
+Human (default):
+
+```
+FORGE STATUS — <slug>
+  branch:   <branch>   (clean | dirty: N files)
+  pr:       #<num> <state>   ci: <pass|fail|pending|none>
+  phase:    <VERDICT>
+
+  artifacts:
+    goals.md       <N goals, M scenarios>
+    design.md      <present|absent>
+    links.json     <K linked / M scenarios>
+    run.json       <P pass · F fail · E error · S skip · age: 2h>
+    review         <cycle-1: B=0 M=2 | cycle-2: B=0 M=0>
+
+  drift:
+    [block] review.unaddressed: cycle-2 has 2 majors, no commits since 10:43
+
+  recommendation:
+    verdict:  PROCEED | BLOCKED_DRIFT | ALREADY_FORGED
+    next:     /forge-review-green --slug <slug>
+    why:      <one line>
+```
+
+JSON (`--json`):
+
+```json
+{
+  "slug": "<slug>",
+  "phase": "REVIEW_OPEN",
+  "pr": { "number": 12345, "state": "OPEN", "draft": false, "ci": "pass" },
+  "artifacts": {
+    "goals": { "exists": true, "goals": 3, "scenarios": 7 },
+    "design": { "exists": true },
+    "links": { "linked": 7, "missing": 0 },
+    "run": { "pass": 7, "fail": 0, "error": 0, "skip": 0, "age_sec": 7200 },
+    "review": { "cycles": 2, "last": { "blockers": 0, "majors": 2 } }
+  },
+  "drift": [
+    { "severity": "block", "signal": "review.unaddressed", "detail": "..." }
+  ],
+  "recommendation": {
+    "verdict": "BLOCKED_DRIFT",
+    "next": "/forge-review-green --slug <slug>",
+    "why": "<one line>"
+  }
+}
+```
+
+## Hooks
+
+- `/forge` at entry → `--json`. `status.phase` drives entry phase. Any
+  `severity=block` drift → halt `BLOCKED_DRIFT`. `--from` overrides.
+- `/forge approve` / `/forge iterate` → `--json` to detect the awaiting phase.
+  - One `AWAIT_<phase>_REVIEW` → target that phase.
+  - Multiple AWAITs (defensive) → require `--phase <phase>`.
+  - None → refuse "no awaiting phase".
+- `approve` writes `{"<phase>": "<sha>"}` to `approvals.json`.
+  `iterate "<feedback>"` re-spawns the phase skill with `--iterate --push`; the
+  prior sha goes stale on commit.
+
+## Symbol presence check
+
+`links.json` entries are validated via language-aware grep — `def`, `func`,
+`it(`/`test(`/`describe(`. Miss → drift `links.test_id_missing` (block).
+
+## Out of scope
+
+- Modifying any artifact. Pure read.
+- Fixing drift. Recommends; never applies.
+
+## Honesty
+
+- Missing artifact = `absent`, not broken.
+- Stale data surfaces explicitly (`run.stale`, `review.stale-vs-commits`).
+- Verdict uncomputable from disk → `UNKNOWN`, no invention.
+
+## Exit codes
+
+| Code | Meaning                  |
+| ---- | ------------------------ |
+| 0    | phase = READY            |
+| 1    | phase < READY            |
+| 2    | ≥1 `block` drift         |
+| 64   | unrecoverable read error |
