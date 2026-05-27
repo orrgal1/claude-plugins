@@ -47,7 +47,7 @@ Or point Claude Code at a local checkout:
 
 ```
 git clone git@github.com:orrgal1/forge.git
-claude --plugin-dir forge
+claude --plugin-dir forge/forge
 ```
 
 ## Quickstart
