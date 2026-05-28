@@ -1,5 +1,6 @@
 ---
 name: forge-verify-tests
+description: "Verify each scenario is attached to a real component-tier test."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify tests"

@@ -1,5 +1,6 @@
 ---
 name: forge-map-events
+description: "Generator: write the event / message-bus map (.forge/maps/events.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:

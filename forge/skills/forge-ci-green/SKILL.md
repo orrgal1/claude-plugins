@@ -1,5 +1,6 @@
 ---
 name: forge-ci-green
+description: "Drive PR CI to green via a fix-loop."
 argument-hint: "[--slug <name>] [--watch] [max=<N>]"
 triggers:
   - "forge ci green"

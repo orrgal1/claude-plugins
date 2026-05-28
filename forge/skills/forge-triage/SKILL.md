@@ -1,5 +1,6 @@
 ---
 name: forge-triage
+description: "Classify a failing test — in/out of scope, type, fixable, ignore."
 argument-hint: "[--slug <name>] [--failing <list>] [--pr <number>] [--json]"
 triggers:
   - "forge triage"

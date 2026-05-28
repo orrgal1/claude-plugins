@@ -1,5 +1,6 @@
 ---
 name: forge-audit
+description: "Aggregate the full forge attestation chain: goals → scenarios → tests → match → runs."
 argument-hint: "[--slug <name>] [--embed]"
 triggers:
   - "forge verify"

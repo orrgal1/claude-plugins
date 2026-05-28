@@ -1,5 +1,6 @@
 ---
 name: forge-line
+description: "Write the forge statusline state file (~/.claude/forge/state.json)."
 argument-hint:
   "--phase-id <id> --sub <one-line> [--slug <name>] [--recap <text>] [--verdict
   <in-progress|READY|...>]"

@@ -1,10 +1,12 @@
 ---
 name: forge-review-green
+description: "Drive the lens-designed review to 0 blockers + 0 majors via a fix-loop."
 argument-hint: "[--slug <name>] [--persona <id> | --personas <a,b,c>] [max=<N>]"
 triggers:
   - "forge review green"
   - "drive forge review to green"
   - "clear blockers and majors"
+  - "fix review findings"
 allowed-tools:
   - Skill
   - Bash

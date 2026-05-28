@@ -1,5 +1,6 @@
 ---
 name: forge-status
+description: "Read forge chain state and recommend the next step."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge status"

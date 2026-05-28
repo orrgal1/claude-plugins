@@ -1,5 +1,6 @@
 ---
 name: forge-stuck-check
+description: "Detect if the forge chain is looping in a rabbit hole."
 argument-hint:
   "[--slug <name>] [--phase <phase>] [--signal <name>] [--iter <N>] [--json]"
 triggers:

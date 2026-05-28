@@ -1,5 +1,6 @@
 ---
 name: forge-address-review
+description: "Process reviewer feedback on a forge PR (GitHub + any mechanisms in .forge/review/)."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--auto] [--source
   github|<mechanism>|self|all]"

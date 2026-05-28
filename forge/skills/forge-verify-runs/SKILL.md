@@ -1,5 +1,6 @@
 ---
 name: forge-verify-runs
+description: "Verify linked scenario tests pass."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify runs"

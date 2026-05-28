@@ -1,5 +1,6 @@
 ---
 name: forge-map-config
+description: "Generator: write the config / env-var map (.forge/maps/config.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:

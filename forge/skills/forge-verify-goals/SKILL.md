@@ -1,5 +1,6 @@
 ---
 name: forge-verify-goals
+description: "Verify goals are loyal to the PR source."
 argument-hint: "[--slug <name>] [--pr <num>] [--json]"
 triggers:
   - "forge verify goals"

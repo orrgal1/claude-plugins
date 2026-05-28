@@ -1,5 +1,6 @@
 ---
 name: forge-setup
+description: "Map host-repo tooling (build, test, lint, typecheck, codegen, devenv, localenv) into a gitignored .forge/ dir so forge adopts into any repo."
 argument-hint:
   "[--cap <name>=<command>]... [--instr <name>=<prose>]... [--list] [--yes]"
 triggers:

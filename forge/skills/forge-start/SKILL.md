@@ -1,5 +1,6 @@
 ---
 name: forge-start
+description: "Open a forge chain — turn a source into a 1–3 sentence brief, land a sentinel commit, push, open a draft PR."
 argument-hint: "<source> [--slug <name>] [--base <branch>]"
 triggers:
   - "forge start"

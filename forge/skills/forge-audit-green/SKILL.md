@@ -1,10 +1,12 @@
 ---
 name: forge-audit-green
+description: "Drive the forge audit to PASS via a fix-loop."
 argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
   - "forge audit green"
   - "drive forge audit to green"
   - "fix audit findings"
+  - "make audit pass"
 allowed-tools:
   - Skill
   - Bash

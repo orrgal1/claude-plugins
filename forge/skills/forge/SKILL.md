@@ -1,5 +1,6 @@
 ---
 name: forge
+description: "End-to-end PR forge chain runner — drives a PR from scratch through goals, design, scenarios, tests, impl, audit, CI, and lens-designed review to READY."
 argument-hint:
   "[<source>] [--slug <name>] [--mode auto|manual] [--max-review-cycles <N>]
   [--persona <id>] [--from <phase>] [--until <phase>]"

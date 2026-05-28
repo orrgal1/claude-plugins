@@ -1,10 +1,13 @@
 ---
 name: forge-impl-green
+description: "Drive linked scenario tests to green via an iteration loop."
 argument-hint: "[--slug <name>] [--scenario SG<n>.<m>] [max=<N>]"
 triggers:
   - "drive forge tests to green"
   - "make linked tests pass"
   - "close the forge chain"
+  - "forge impl green"
+  - "get to green"
 allowed-tools:
   - Skill
   - Bash

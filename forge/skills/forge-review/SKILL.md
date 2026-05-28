@@ -1,5 +1,6 @@
 ---
 name: forge-review
+description: "Single-pass forge-chain-aware lens-designed PR review."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--persona <id> | --personas <a,b,c> |
   --no-persona] [--embed]"

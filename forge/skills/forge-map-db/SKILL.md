@@ -1,5 +1,6 @@
 ---
 name: forge-map-db
+description: "Generator: write the db schema map (.forge/maps/db.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
