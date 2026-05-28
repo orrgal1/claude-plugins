@@ -1,8 +1,8 @@
 ---
 name: forge-map
 argument-hint:
-  "[<area>] [--list] [--refresh] [--all] [--scope <path>] [--out <file>]
-  [--quiet]"
+  "[<area> | adhoc <name> --prompt <text>] [--list] [--refresh] [--all]
+  [--scope <path>] [--out <file>] [--quiet]"
 triggers:
   - "forge map"
   - "map this repo"
@@ -11,6 +11,8 @@ triggers:
   - "map events"
   - "map config"
   - "refresh forge maps"
+  - "map this for me"
+  - "build me a map of"
 allowed-tools:
   - Bash
   - Read
@@ -29,10 +31,18 @@ agents revisit constantly (db schema, api routes, events, config) so downstream
 skills load a single file instead of re-discovering. Maps live under
 `.forge/maps/` and are gitignored with the rest of `.forge/`.
 
-This skill is the **dispatcher**. Each area has its own generator skill
-(`/forge-map-db`, `/forge-map-api`, `/forge-map-events`, `/forge-map-config`).
-This skill resolves the area, calls the generator, updates the registry, and
-prints a recap. Generators are not user-invocable — go through here.
+This skill is the **dispatcher**. Each canonical area has its own generator
+skill (`/forge-map-db`, `/forge-map-api`, `/forge-map-events`,
+`/forge-map-config`). This skill resolves the area, calls the generator,
+updates the registry, and prints a recap. Generators are not user-invocable —
+go through here.
+
+It also runs **ad-hoc maps**: operator describes an area in prose
+(`/forge-map adhoc <name> --prompt "<description>"`) and the dispatcher
+performs the scan inline, writing the same JSON envelope to
+`.forge/maps/<name>.json`. Ad-hoc lets the operator spin up new map types on
+demand without authoring a new generator skill — useful when the area is one-
+off or still being shaped. Promote to a real generator once the shape stabilizes.
 
 ## When to run
 
@@ -51,21 +61,26 @@ fall through silently when absent. Maps are an aid, not a gate.
 | `api`    | `/forge-map-api`    | HTTP routes: method, path, handler `file:line`, types     | `.forge/maps/api.json`    |
 | `events` | `/forge-map-events` | Topics, producers, consumers, payload refs                | `.forge/maps/events.json` |
 | `config` | `/forge-map-config` | Env vars consumed, where read, defaults, secret hints     | `.forge/maps/config.json` |
+| `adhoc <name>` | dispatcher (inline) | Operator-described area, agent-driven scan          | `.forge/maps/<name>.json` |
 
-Unknown area → halt `MAP_BLOCKED reason unknown-area=<x>`. Never invent a map
-type. Add a new area by shipping a new generator skill + adding the row above.
+Unknown area name that isn't `adhoc` → halt `MAP_BLOCKED reason
+unknown-area=<x>`. Never invent a canonical map type — to add a stable one,
+ship a new generator skill and add the row above. Use `adhoc` for one-offs or
+exploratory scans that haven't earned a generator yet.
 
 ## Inputs
 
-| Input             | Required          | Notes                                                                                       |
-| ----------------- | ----------------- | ------------------------------------------------------------------------------------------- |
-| `<area>`          | unless `--list` / `--all` | One of `db` / `api` / `events` / `config`.                                          |
-| `--list`          | optional          | Print registry status from `.forge/forge.toml` `[maps]`, exit. No generation. No writes.    |
-| `--refresh`       | optional          | Force regenerate even if the map file is fresh vs source signals.                           |
-| `--all`           | optional          | Run every known generator. Implies `--refresh`.                                             |
-| `--scope <path>`  | optional          | Restrict scan to a subtree (passed through to the generator).                               |
-| `--out <file>`    | optional          | Override output path (passed through). Default `.forge/maps/<area>.json`.                   |
-| `--quiet`         | optional          | Suppress recap; only emit the one-line per-area summary the generator returns.              |
+| Input              | Required          | Notes                                                                                                       |
+| ------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| `<area>`           | unless `--list` / `--all` / `adhoc` | One of `db` / `api` / `events` / `config`.                                          |
+| `adhoc <name>`     | with `--prompt`   | Ad-hoc map. `<name>` is the registry key (lowercase, alphanumerics + dashes). Reserved: any canonical area. |
+| `--prompt <text>`  | with `adhoc`      | Operator's free-form description of what to map. Drives the inline scan.                                    |
+| `--list`           | optional          | Print registry status from `.forge/forge.toml` `[maps]`, exit. No generation. No writes.                    |
+| `--refresh`        | optional          | Force regenerate even if the map file is fresh vs source signals.                                           |
+| `--all`            | optional          | Run every canonical generator. Does **not** re-run ad-hoc maps. Implies `--refresh`.                        |
+| `--scope <path>`   | optional          | Restrict scan to a subtree (passed through to the generator).                                               |
+| `--out <file>`     | optional          | Override output path (passed through). Default `.forge/maps/<area>.json`.                                   |
+| `--quiet`          | optional          | Suppress recap; only emit the one-line per-area summary the generator returns.                              |
 
 ## Process
 
@@ -103,20 +118,55 @@ type. Add a new area by shipping a new generator skill + adding the row above.
    Exit. No writes.
 
 4. **Resolve the run set.**
-   - `--all` → every area in the registry table.
-   - `<area>` → that single area.
+   - `--all` → every canonical area in the registry table (`db` / `api` /
+     `events` / `config`). Ad-hoc maps are intentionally excluded.
+   - `<area>` → that single canonical area.
+   - `adhoc <name>` → one ad-hoc run, inline (step 6).
    - Neither + no `--list` → halt `MAP_BLOCKED reason no-area-given`.
+   - `adhoc <name>` with `<name>` matching a canonical area key → halt
+     `MAP_BLOCKED reason adhoc-name-reserved=<name>`. Never shadow a generator.
+   - `adhoc <name>` without `--prompt` → halt
+     `MAP_BLOCKED reason adhoc-missing-prompt`.
 
-5. **Per area, dispatch to generator.** Call the generator skill (via the Skill
-   tool) with passthrough flags: `--scope`, `--out`, `--quiet`, and
+5. **Per canonical area, dispatch to generator.** Call the generator skill (via
+   the Skill tool) with passthrough flags: `--scope`, `--out`, `--quiet`, and
    `--refresh` (implicit when `--all`). Generator owns detection, scanning,
    writing the JSON, and updating `[maps.<area>]` in `forge.toml`.
 
    Generator missing → emit `NOT_IMPLEMENTED area=<area>` and continue with the
    next. Don't halt the batch.
 
-6. **Recap** (unless `--quiet`). Same table shape as `--list`, regenerated from
-   `[maps]` post-run, plus the next-move line:
+6. **Ad-hoc run** (when `adhoc <name>` was given). The dispatcher runs the
+   scan itself — no sub-skill. Steps:
+
+   1. Read `--prompt` literally; treat it as the contract for what to find.
+   2. Pick detection heuristics (grep patterns, file globs, parsers) that fit
+      the prompt. Read host files via Read / Grep / Glob only. Never write
+      outside `.forge/`.
+   3. Normalize findings into items. Choose a stable item schema for this run
+      and record it under the envelope's optional `item_schema` field (object
+      describing field names + types). Without `item_schema` the agent
+      reading the map can't trust the shape.
+   4. Write the envelope to `--out` (default `.forge/maps/<name>.json`) with:
+      - `area: "<name>"`
+      - `generator: "/forge-map (adhoc)"`
+      - `prompt: "<verbatim --prompt text>"` (extra optional field, persists
+        the operator intent so re-runs preserve scope)
+      - `item_schema: { … }`
+      - everything else per the shared envelope below.
+   5. Update `[maps.<name>]` in `.forge/forge.toml` with
+      `generator = "/forge-map (adhoc)"` + `prompt = "<text>"`. Preserve
+      `stale_after_days` and unknown keys.
+   6. Emit the same one-line summary generators emit:
+      `<name>: <N> items, <K> gaps → .forge/maps/<name>.json`.
+
+   Ad-hoc never auto-runs under `--all`. Re-run by invoking
+   `/forge-map adhoc <name> --prompt "<same or refined text>"` — the prompt is
+   intentionally re-stated so drift stays visible.
+
+7. **Recap** (unless `--quiet`). Same table shape as `--list`, regenerated from
+   `[maps]` post-run, plus the next-move line. Ad-hoc maps appear after the
+   canonical rows, sorted by name:
 
    ```
    ## /forge-map result
@@ -125,10 +175,11 @@ type. Add a new area by shipping a new generator skill + adding the row above.
    root:    <repo root>
 
    maps:
-     db       <fresh | stale | missing>   <items count>   <gaps count>
-     api      <…>
-     events   <…>
-     config   <…>
+     db          <fresh | stale | missing>   <items count>   <gaps count>
+     api         <…>
+     events      <…>
+     config      <…>
+     <adhoc>     <…>                          (kind: adhoc)
 
    ### next move
    <one of: open .forge/maps/<area>.json  |  run /forge-map <area> --refresh  |  fix the block>
@@ -165,13 +216,23 @@ freshness, and gaps without knowing the area.
 
 Field rules:
 
-- `area` — one of the known area keys. Must match the filename stem.
-- `generator` — the skill that produced it, for traceability.
+- `area` — one of the canonical area keys, or the ad-hoc `<name>`. Must match
+  the filename stem.
+- `generator` — the skill that produced it (`/forge-map-<area>`), or
+  `"/forge-map (adhoc)"` for ad-hoc runs.
 - `generated_at` — ISO-8601 UTC.
 - `source_files[]` — the files whose mtimes drive freshness. Empty allowed.
 - `items[]` — area-specific. Empty allowed (no findings ≠ failure).
 - `gaps[]` — partial-coverage notes, never an error channel. Each gap is
   `{ reason, detail }`. Tooling failures are exit codes, not gap entries.
+
+Optional fields written only by ad-hoc runs:
+
+- `prompt` — the verbatim `--prompt` text the operator passed. Persists intent
+  across re-runs.
+- `item_schema` — a JSON object describing the `items[]` shape this run
+  chose. Required for ad-hoc, omitted for canonical generators (their shape
+  is defined in their SKILL.md).
 
 Writes are atomic: tmp file in `.forge/maps/`, then `mv -f`.
 
@@ -210,6 +271,13 @@ generator = "/forge-map-events"
 file      = "maps/config.json"
 last_run  = ""
 generator = "/forge-map-config"
+
+# Example ad-hoc map — written by /forge-map adhoc <name> --prompt "..."
+[maps.feature-flags]
+file      = "maps/feature-flags.json"
+last_run  = "2026-05-28T09:14:00Z"
+generator = "/forge-map (adhoc)"
+prompt    = "every call to isEnabled() and its flag key"
 ```
 
 Subtable contract:
@@ -217,7 +285,9 @@ Subtable contract:
 - `file` — path relative to `.forge/`. Required.
 - `last_run` — ISO-8601 UTC of the most recent successful generator run, or
   empty string. Required field, empty is valid.
-- `generator` — the canonical skill name. Required.
+- `generator` — the canonical skill name, or `"/forge-map (adhoc)"`. Required.
+- `prompt` — required when `generator = "/forge-map (adhoc)"`, omitted
+  otherwise.
 - `stale_after_days` — optional integer; falls back to the dispatcher's
   default (30) when absent.
 
@@ -235,3 +305,10 @@ Unknown subtables are tolerated (forward-compat) but ignored by `--list`.
 - **Never write outside `.forge/`.** Generators read the host repo; they only
   write under `.forge/maps/` and `.forge/forge.toml`.
 - **No host-repo edits.** Maps are auxiliary; never modify tracked files.
+- **Ad-hoc is bounded the same way.** The free-form `--prompt` does not
+  loosen the contract — same envelope, same atomic write, same `.forge/`-only
+  write surface, same `gap` discipline. The prompt directs *what* to scan, not
+  *how* the output is shaped.
+- **Promote ad-hoc when it stabilizes.** Once an ad-hoc map name re-runs with
+  a steady shape, ship a real generator skill and drop the `adhoc` form.
+  Keeping ad-hoc forever lets the shape silently drift.
