@@ -165,7 +165,43 @@ localenv  = ""
 # selector_usage = "how forge should pass a single-test selector"
 # component_tier = "command or notes to run the component tier specifically"
 # tiers          = ["unit", "component", "e2e"]
+
+# /forge-review reads [review] to pick which review channels to run.
+# Channels live in forge/review-channels/ (bundled) + .forge/review-channels/
+# (host-repo overrides). See forge/review-channels/README.md for the channel
+# concept and authoring shape.
+[review]
+default_channels = ["lens-fanout"]    # active channel set; "lens-fanout" is the bundled default
+aggregation      = "interleave"        # "interleave" (sort by file:line) | "grouped" (section per channel)
+
+# Per-channel config. The [review.channels.<id>] subtable enables / disables
+# a channel and sets channel-specific knobs read from its body. Missing
+# subtable = channel's frontmatter defaults apply.
+[review.channels.lens-fanout]
+enabled       = true
+agent         = "@orrgal1/forge:forge-lens-reviewer"
+lens_dir      = "lenses"
+order         = "lens-mode"            # "lens-mode" | "file-by-file"
+severity_cap  = ""                     # empty = no cap; values: blocker/major/minor/nit
+
+[review.channels.code-review-builtin]
+enabled       = false                  # opt-in; wraps Claude Code's /code-review
+effort        = "medium"               # low | medium | high | max
+severity_cap  = ""                     # empty = no cap; cap to "minor" to keep advisory
+
+[review.channels.security-review-builtin]
+enabled       = false                  # opt-in; wraps Claude Code's /security-review
+scope         = ""                     # empty = full diff; otherwise --scope path
+severity_cap  = ""                     # empty = no cap
 ```
+
+Channel resolution is layered the same way capabilities are: bundled file
+under `forge/review-channels/<id>.md`; host override at
+`.forge/review-channels/<id>.md` (same schema, wins when both exist); config
+toggle in `[review.channels.<id>]`. Channel discovery is automatic — adding
+a file to either dir surfaces it in `--list` and at the `/forge-review`
+gate, but it's only **active** when listed in `default_channels` (or added
+per-run via `--add-channel`).
 
 ## Process
 

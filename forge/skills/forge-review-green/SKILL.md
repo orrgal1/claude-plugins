@@ -1,6 +1,6 @@
 ---
 name: forge-review-green
-description: "Drive the lens-designed review to 0 blockers + 0 majors via a fix-loop."
+description: "Drive the aggregated multi-channel review to 0 blockers + 0 majors via a fix-loop."
 argument-hint: "[--slug <name>] [--persona <id> | --personas <a,b,c>] [max=<N>]"
 triggers:
   - "forge review green"
@@ -27,6 +27,11 @@ user-invocable: true
 Runs the forge **loop contract** (`/forge` § "Loop contract") over review
 cycles. Local-only — applies fixes, commits per fix, never pushes. Sister to
 `/forge-impl-green` — same loop, different target.
+
+Operates on the **aggregated** finding set from `/forge-review` — every
+active channel contributes. Blockers + majors drive the loop regardless of
+source channel (lens-fanout, code-review-builtin, security-review-builtin,
+or any custom channel). Channel id stays attached to each finding for trace.
 
 Prereqs (refuse without): `/forge-audit` PASS + linked tests all pass /
 skipped + chain artifacts (`goals.md`, `links.json`) exist. Use
