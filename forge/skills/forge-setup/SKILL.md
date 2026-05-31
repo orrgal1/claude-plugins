@@ -203,6 +203,39 @@ a file to either dir surfaces it in `--list` and at the `/forge-review`
 gate, but it's only **active** when listed in `default_channels` (or added
 per-run via `--add-channel`).
 
+### `[tools]` — operator-named runbooks
+
+`/forge-tool` owns this section. Each entry is an operator-captured tool
+under `.forge/tools/` — a packaged ad-hoc flow that the operator wants
+repeatable. Distinct from `[commands]` (canonical capabilities), `[review]`
+(channel registry), `[maps]` (read-only snapshots).
+
+```toml
+[tools]
+dir = "tools"             # where tool files live, relative to .forge/
+
+# Each tool is a subtable [tools.<name>]:
+[tools.seed-test-db]
+form      = "script"      # script | instructions | dir | agent
+file      = "tools/seed-test-db"
+purpose   = "load fixture rows into the test db"
+inputs    = "[--rows N]"
+captured  = "2026-05-31T08:14:00Z"
+source    = "discovered during PR #432 work"
+
+# Agent-form tools also carry the subagent slug:
+[tools.audit-feature-flag-usage]
+form      = "agent"
+file      = "tools/audit-feature-flag-usage.md"
+agent     = "caveman:cavecrew-investigator"
+purpose   = "find every call site of isEnabled() for a given flag key"
+captured  = "2026-05-28T13:40:00Z"
+```
+
+Tools are first-class — other forge skills can resolve a tool by name via
+`/forge-tool run <name>` or by direct reference in a `.forge/commands/<cap>.md`
+instructions file. See `/forge-tool` for the full registry contract.
+
 ## Process
 
 1. **Resolve repo root.** `git rev-parse --show-toplevel`. Not a git repo → halt
