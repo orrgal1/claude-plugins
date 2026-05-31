@@ -1,6 +1,6 @@
 ---
 name: forge-map-config
-description: "Generator: write the config / env-var map (.forge/maps/config.json). Dispatched by /forge-map."
+description: "Generator: write the config / env-var map ($FORGE_HOME/maps/main/config.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
@@ -22,7 +22,7 @@ user-invocable: false
 Generator dispatched by `/forge-map`. Scans the host repo for environment
 variables consumed by code, joins them to declarations in `.env.example` /
 deployment manifests, infers defaults + required-ness, and writes
-`.forge/maps/config.json` plus a `[maps.config]` entry in `.forge/forge.toml`.
+`$FORGE_HOME/maps/main/config.json` plus a `[maps.config]` entry in `$FORGE_HOME/forge.toml`.
 
 Not user-invocable directly — go through `/forge-map config`.
 
@@ -31,7 +31,7 @@ Not user-invocable directly — go through `/forge-map config`.
 | Input            | Required | Notes                                                             |
 | ---------------- | -------- | ----------------------------------------------------------------- |
 | `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                |
-| `--out <file>`   | optional | Override output path. Default `.forge/maps/config.json`.          |
+| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/config.json`.          |
 | `--refresh`      | optional | No-op — every run rewrites. Accepted for API parity.              |
 | `--quiet`        | optional | Suppress one-line summary.                                        |
 
@@ -74,7 +74,7 @@ Multiple stacks coexist — parse each.
    ```bash
    root="$(git rev-parse --show-toplevel)"
    scope="${SCOPE:-$root}"
-   out="${OUT:-$root/.forge/maps/config.json}"
+   out="${OUT:-$FORGE_HOME/maps/main/config.json}"
    mkdir -p "$(dirname "$out")"
    ```
 
@@ -184,11 +184,11 @@ Multiple stacks coexist — parse each.
    }
    ```
 
-8. **Update `[maps.config]` in `.forge/forge.toml`.**
+8. **Update `[maps.config]` in `$FORGE_HOME/forge.toml`.**
 
    ```toml
    [maps.config]
-   file      = "maps/config.json"
+   file      = "maps/main/config.json"
    last_run  = "<ISO-8601 UTC>"
    generator = "/forge-map-config"
    ```
@@ -198,7 +198,7 @@ Multiple stacks coexist — parse each.
 9. **Emit summary** (unless `--quiet`):
 
    ```
-   config: <N> vars, <K> gaps → .forge/maps/config.json
+   config: <N> vars, <K> gaps → $FORGE_HOME/maps/main/config.json
    ```
 
    Exit 0 on any envelope write.
@@ -219,7 +219,7 @@ Multiple stacks coexist — parse each.
   every template.
 - **Never collapse case variants.** `DATABASE_URL` and `database_url` are
   separate items with a gap.
-- **Read-only on host repo.** Writes confined to `.forge/maps/config.json`
-  and `.forge/forge.toml`. Never modify `.env*` or manifests.
+- **Read-only on host repo.** Writes confined to `$FORGE_HOME/maps/main/config.json`
+  and `$FORGE_HOME/forge.toml`. Never modify `.env*` or manifests.
 - **Source attribution is mandatory.** Every read + declaration carries
   `file` + `line`. Agents verify against the live file before acting.

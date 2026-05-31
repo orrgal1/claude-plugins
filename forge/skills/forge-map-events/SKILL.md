@@ -1,6 +1,6 @@
 ---
 name: forge-map-events
-description: "Generator: write the event / message-bus map (.forge/maps/events.json). Dispatched by /forge-map."
+description: "Generator: write the event / message-bus map ($FORGE_HOME/maps/main/events.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
@@ -23,8 +23,8 @@ user-invocable: false
 Generator dispatched by `/forge-map`. Scans the host repo for pub/sub
 publishers + consumers across Kafka, NATS, RabbitMQ, AWS SQS/SNS, GCP Pub/Sub,
 Azure Service Bus, Redis Streams / Pub/Sub, MQTT, Kinesis, ZeroMQ, and
-in-process event buses. Writes `.forge/maps/events.json` plus a `[maps.events]`
-entry in `.forge/forge.toml`.
+in-process event buses. Writes `$FORGE_HOME/maps/main/events.json` plus a `[maps.events]`
+entry in `$FORGE_HOME/forge.toml`.
 
 Not user-invocable directly — go through `/forge-map events`.
 
@@ -33,7 +33,7 @@ Not user-invocable directly — go through `/forge-map events`.
 | Input            | Required | Notes                                                             |
 | ---------------- | -------- | ----------------------------------------------------------------- |
 | `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                |
-| `--out <file>`   | optional | Override output path. Default `.forge/maps/events.json`.          |
+| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/events.json`.          |
 | `--refresh`      | optional | No-op — every run rewrites. Accepted for API parity.              |
 | `--quiet`        | optional | Suppress one-line summary.                                        |
 
@@ -69,7 +69,7 @@ Multiple transports coexist — parse each, attribute each event.
    ```bash
    root="$(git rev-parse --show-toplevel)"
    scope="${SCOPE:-$root}"
-   out="${OUT:-$root/.forge/maps/events.json}"
+   out="${OUT:-$FORGE_HOME/maps/main/events.json}"
    mkdir -p "$(dirname "$out")"
    ```
 
@@ -173,11 +173,11 @@ Multiple transports coexist — parse each, attribute each event.
    }
    ```
 
-7. **Update `[maps.events]` in `.forge/forge.toml`.**
+7. **Update `[maps.events]` in `$FORGE_HOME/forge.toml`.**
 
    ```toml
    [maps.events]
-   file      = "maps/events.json"
+   file      = "maps/main/events.json"
    last_run  = "<ISO-8601 UTC>"
    generator = "/forge-map-events"
    ```
@@ -187,7 +187,7 @@ Multiple transports coexist — parse each, attribute each event.
 8. **Emit summary** (unless `--quiet`):
 
    ```
-   events: <N> topics, <K> gaps → .forge/maps/events.json
+   events: <N> topics, <K> gaps → $FORGE_HOME/maps/main/events.json
    ```
 
    Exit 0 on any envelope write.
@@ -202,7 +202,7 @@ Multiple transports coexist — parse each, attribute each event.
   Never invent a counterpart.
 - **Payload schemas link, not embed.** Record `schema_file` paths; let the
   agent open the schema if it needs the full shape. Keeps the map compact.
-- **Read-only on host repo.** Writes confined to `.forge/maps/events.json`
-  and `.forge/forge.toml`.
+- **Read-only on host repo.** Writes confined to `$FORGE_HOME/maps/main/events.json`
+  and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every producer / consumer carries
   `file` + `line`. Agents verify against live source before acting.

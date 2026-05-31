@@ -70,7 +70,7 @@ on every scenario. Missing → exit, point at `/forge` or `/forge-tests`.
 ## Verification
 
 Read `goals.md` scenarios + `- test:` / `- tier:` sub-bullets (strip backticks).
-Run them via the `test` capability (`.forge/commands/test <selector>`, per
+Run them via the `test` capability (`$FORGE_HOME/commands/test <selector>`, per
 `/forge` § "Repo tooling"). Aggregate to `.pr-artifacts/<slug>/forge/run.json`
 (overwrite). Always run the **full** linked set per tick — sibling regressions
 need to surface.

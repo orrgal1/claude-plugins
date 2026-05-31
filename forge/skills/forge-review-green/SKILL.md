@@ -130,7 +130,7 @@ If `--persona(s)` was passed → use for every cycle. Else fingerprint the diff
 | No clear winner                                | `default`                               |
 
 Read available personas from `personas/*.md` and
-`.forge/personas/*.md` (skip `README.md`); `.forge/` wins on id clash. Match the
+`$FORGE_HOME/personas/*.md` (skip `README.md`); `$FORGE_HOME/` wins on id clash. Match the
 dominant surface to a persona whose `lenses:` fit; fall back to `default` when
 none matches. Switch between cycles when the dominant surface shifts; log
 rationale.

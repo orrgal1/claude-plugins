@@ -167,7 +167,7 @@ No CONFIDENT or LIKELY match:
       can pick it up later.
 
 4.  **Run** the test once via the `test` capability
-    (`.forge/commands/test <selector>`, per `/forge` § "Repo tooling"). Red bar
+    (`$FORGE_HOME/commands/test <selector>`, per `/forge` § "Repo tooling"). Red bar
     must be right-reason:
     - Assertion failing OR unimplemented marker firing from `act:` (both count —
       marker proves scaffold compiled + test reached the unimplemented surface).

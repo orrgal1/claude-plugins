@@ -1,6 +1,6 @@
 ---
 name: forge-tool
-description: "Capture an ad-hoc flow as a repeatable tool under .forge/tools/ and register it in .forge/forge.toml [tools.<name>]."
+description: "Capture an ad-hoc flow as a repeatable tool under $FORGE_HOME/tools/ and register it in $FORGE_HOME/forge.toml [tools.<name>]."
 argument-hint:
   "[package <name> | list | run <name> [args] | show <name> | delete <name>]
   [--purpose <text>] [--form script|instructions|dir|agent]
@@ -30,20 +30,20 @@ user-invocable: true
 # /forge-tool — package an ad-hoc flow into a reusable tool
 
 A **tool** is an operator-named, user-defined runbook living under
-`.forge/tools/`. Use it when a flow you just figured out (seed a test db,
+`$FORGE_HOME/tools/`. Use it when a flow you just figured out (seed a test db,
 rotate staging secrets, backfill a column with care) is one you want
 repeatable without rediscovery next time. Other forge skills can resolve
 tools by name when wired into a capability — tools are first-class.
 
-Tools are distinct from the other `.forge/` surfaces:
+Tools are distinct from the other `$FORGE_HOME/` surfaces:
 
 | Surface              | What lives there                            | Who names it           |
 | -------------------- | ------------------------------------------- | ---------------------- |
-| `.forge/commands/`   | canonical capabilities (`test`, `build`, …) | forge (finite set)     |
-| `.forge/review/`     | additive review-mechanism integrations      | forge (one per mechanism) |
-| `.forge/review-channels/` | `/forge-review` channels             | forge (per channel)    |
-| `.forge/maps/`       | read-only domain snapshots                  | `/forge-map` (per area)|
-| `.forge/tools/`      | **open-ended, operator-named runbooks**     | **the operator**       |
+| `$FORGE_HOME/commands/`   | canonical capabilities (`test`, `build`, …) | forge (finite set)     |
+| `$FORGE_HOME/review/`     | additive review-mechanism integrations      | forge (one per mechanism) |
+| `$FORGE_HOME/review-channels/` | `/forge-review` channels             | forge (per channel)    |
+| `$FORGE_HOME/maps/`       | read-only domain snapshots                  | `/forge-map` (per area)|
+| `$FORGE_HOME/tools/`      | **open-ended, operator-named runbooks**     | **the operator**       |
 
 ## Subcommands
 
@@ -61,7 +61,7 @@ Absent subcommand + a name → `package <name>` (the common case).
 
 | Input                  | Subcommand     | Notes                                                                                  |
 | ---------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| `<name>`               | most           | Tool id (lowercase slug, hyphens). Reserved: any `.forge/commands/<cap>` capability.   |
+| `<name>`               | most           | Tool id (lowercase slug, hyphens). Reserved: any `$FORGE_HOME/commands/<cap>` capability.   |
 | `--purpose <text>`     | `package`      | One-line summary stored in `[tools.<name>].purpose`. Asked interactively if absent.    |
 | `--form <form>`        | `package`      | Force form: `script` / `instructions` / `dir` / `agent`. Auto-detect when absent.      |
 | `--from-session`       | `package`      | Capture from the current Claude session (recent observations / transcript / git log + edits). Operator confirms before save. |
@@ -79,14 +79,14 @@ Auto-detected from the captured content; `--form` overrides.
 
 ### `script`
 
-Single executable file at `.forge/tools/<name>`. Deterministic shell; args
+Single executable file at `$FORGE_HOME/tools/<name>`. Deterministic shell; args
 passed via `$@`. Auto-detected when the captured flow is a sequence of
 shell commands with no conditional logic.
 
 ```sh
 #!/usr/bin/env sh
-# .forge/tools/seed-test-db — load fixture rows into the test db.
-# Forge invokes: .forge/tools/seed-test-db [--rows N]
+# $FORGE_HOME/tools/seed-test-db — load fixture rows into the test db.
+# Forge invokes: $FORGE_HOME/tools/seed-test-db [--rows N]
 set -eu
 rows="${1:-100}"
 exec psql "$DATABASE_URL_TEST" -c "INSERT INTO ..."
@@ -94,7 +94,7 @@ exec psql "$DATABASE_URL_TEST" -c "INSERT INTO ..."
 
 ### `instructions`
 
-Markdown doc at `.forge/tools/<name>.md` the agent reads and performs.
+Markdown doc at `$FORGE_HOME/tools/<name>.md` the agent reads and performs.
 Auto-detected when the captured flow has conditionals, judgment calls,
 multi-step health checks, or other content a fixed command can't capture.
 
@@ -108,12 +108,12 @@ multi-step health checks, or other content a fixed command can't capture.
 
 ### `dir`
 
-Tool dir at `.forge/tools/<name>/` with `run` as the entrypoint and any
+Tool dir at `$FORGE_HOME/tools/<name>/` with `run` as the entrypoint and any
 helper files (`lib/...`, `templates/...`). Auto-detected when the captured
 flow includes file fixtures the script reads, or grows past ~50 lines.
 
 ```
-.forge/tools/backfill-org-ids/
+$FORGE_HOME/tools/backfill-org-ids/
   run               # entrypoint script
   lib/migrate.sql
   lib/verify.sql
@@ -122,7 +122,7 @@ flow includes file fixtures the script reads, or grows past ~50 lines.
 ### `agent`
 
 Tool that spawns a subagent with a baked prompt. The tool file is markdown
-at `.forge/tools/<name>.md` with frontmatter:
+at `$FORGE_HOME/tools/<name>.md` with frontmatter:
 
 ```markdown
 ---
@@ -149,7 +149,7 @@ prompt and want to do it again."
 ## Layout
 
 ```
-.forge/
+$FORGE_HOME/
   tools/
     seed-test-db                    # form: script
     rotate-staging-secrets.md       # form: instructions
@@ -161,31 +161,31 @@ prompt and want to do it again."
 
 Filename rules:
 
-- `script`: `.forge/tools/<name>` (no extension, executable bit set).
-- `instructions` + `agent`: `.forge/tools/<name>.md` (same extension; the
+- `script`: `$FORGE_HOME/tools/<name>` (no extension, executable bit set).
+- `instructions` + `agent`: `$FORGE_HOME/tools/<name>.md` (same extension; the
   frontmatter's `form:` field distinguishes them).
-- `dir`: `.forge/tools/<name>/run` is the entrypoint; helpers free-form.
+- `dir`: `$FORGE_HOME/tools/<name>/run` is the entrypoint; helpers free-form.
 
-Resolution order when running a tool (same spirit as `.forge/commands/`):
+Resolution order when running a tool (same spirit as `$FORGE_HOME/commands/`):
 
-1. `.forge/tools/<name>` executable → run as script.
-2. `.forge/tools/<name>/run` executable → run as dir-form (cwd = the dir).
-3. `.forge/tools/<name>.md` with frontmatter `form: instructions` → agent
+1. `$FORGE_HOME/tools/<name>` executable → run as script.
+2. `$FORGE_HOME/tools/<name>/run` executable → run as dir-form (cwd = the dir).
+3. `$FORGE_HOME/tools/<name>.md` with frontmatter `form: instructions` → agent
    reads + performs the body.
-4. `.forge/tools/<name>.md` with frontmatter `form: agent` → spawn the
+4. `$FORGE_HOME/tools/<name>.md` with frontmatter `form: agent` → spawn the
    declared subagent with the rendered prompt.
 5. None → halt `TOOL_NOT_FOUND name=<name>`.
 
-## `[tools]` schema in `.forge/forge.toml`
+## `[tools]` schema in `$FORGE_HOME/forge.toml`
 
 Forge owns the registry. Each tool gets its own subtable. Entries are
 written by `/forge-tool package`; manual edits honored but not recommended.
 
 ```toml
-# .forge/forge.toml — tools section is owned by /forge-tool.
+# $FORGE_HOME/forge.toml — tools section is owned by /forge-tool.
 
 [tools]
-# Where tool files live, relative to .forge/. Override if you must.
+# Where tool files live, relative to $FORGE_HOME/. Override if you must.
 dir = "tools"
 
 [tools.seed-test-db]
@@ -213,7 +213,7 @@ captured  = "2026-05-28T13:40:00Z"
 Subtable contract:
 
 - `form` — one of `script` / `instructions` / `dir` / `agent`. Required.
-- `file` — path relative to `.forge/`. For `dir` form: the dir, not `run`.
+- `file` — path relative to `$FORGE_HOME/`. For `dir` form: the dir, not `run`.
   Required.
 - `purpose` — one-line summary. Required (asked at capture time).
 - `inputs` — short usage string shown in `/forge-tool list`. Optional.
@@ -230,7 +230,7 @@ Unknown keys are tolerated (forward-compat) but ignored by `list`.
 
 Other forge skills resolve a tool by name through this surface:
 
-1. Read `.forge/forge.toml` `[tools.<name>]`. Missing → tool not registered,
+1. Read `$FORGE_HOME/forge.toml` `[tools.<name>]`. Missing → tool not registered,
    no fallback discovery.
 2. Resolve the file per the **Resolution order** above.
 3. Invoke per form:
@@ -240,10 +240,10 @@ Other forge skills resolve a tool by name through this surface:
 
 Recommended use sites (advisory, not enforced):
 
-- `.forge/commands/<cap>.md` instruction files can say "before this,
+- `$FORGE_HOME/commands/<cap>.md` instruction files can say "before this,
   invoke `tool: <name>` to set up state" — forge skills honor that hint.
 - `/forge-impl-green` may resolve `tool: seed-test-db` when an
-  `.forge/commands/test.md` references it.
+  `$FORGE_HOME/commands/test.md` references it.
 - `/forge-review-green` may resolve `tool: <name>` from a fix-plan note.
 
 Tools never auto-run from the canonical chain. The chain references them
@@ -263,11 +263,14 @@ only when an instruction file the operator wrote asks for it.
 3. **Bootstrap dir** (idempotent):
 
    ```bash
-   root="$(git rev-parse --show-toplevel)"
-   mkdir -p "$root/.forge/tools"
-   [ -f "$root/.forge/.gitignore" ] || printf '*\n' > "$root/.forge/.gitignore"
-   [ -f "$root/.forge/forge.toml" ] || /forge-setup --yes
+   home="$(forge_home)"           # resolves to ~/.claude/forge/<repo-key>/ by default
+   mkdir -p "$home/tools"
+   [ -f "$home/forge.toml" ] || /forge-setup --yes
    ```
+
+   User-layer forge home needs no `.gitignore` (state lives outside any
+   repo). Legacy-layer (`<repo>/.forge/`) keeps the `*` gitignore — but
+   `/forge-setup` owns that step now; don't duplicate here.
 
 4. **Ask: purpose.** "One line — what does this tool do?" Skip if
    `--purpose <text>` was passed.
@@ -311,7 +314,7 @@ only when an instruction file the operator wrote asks for it.
     verdict: TOOL_REGISTERED | TOOL_BLOCKED
     tool:    <name>
     form:    <form>
-    file:    .forge/tools/<...>
+    file:    $FORGE_HOME/tools/<...>
     purpose: <one line>
 
     ### next move
@@ -346,7 +349,7 @@ from step 6. Useful for one-shot recipe paste:
 
 ### `list`
 
-1. Read `.forge/forge.toml` `[tools.*]`.
+1. Read `$FORGE_HOME/forge.toml` `[tools.*]`.
 2. For each tool, compute freshness:
    - `missing` — `file` not on disk.
    - `stale` — file mtime older than the registered `captured` (operator
@@ -398,12 +401,14 @@ Print the resolved file(s) + the registry subtable. No writes.
 - **Script form requires determinism.** Anything conditional → instructions
   form. Better to surface a multi-step flow honestly than fake a one-liner.
 - **Tools never auto-run during `package`.** Dry-run is opt-in.
-- **`.forge/tools/` is gitignored by default** along with the rest of
-  `.forge/`. Operators choose to track tools when they want them shared.
+- **`$FORGE_HOME/tools/` lives at the user layer by default** (see
+  `/forge-setup` § "Forge home"). State is operator-local; not tracked
+  by any repo. Repos that want team-shared tools use `/forge-setup
+  --migrate repo` and commit `.forge/tools/` deliberately.
 - **Operator-named, operator-owned.** This skill registers + resolves;
   it never imposes structure on what the tool does.
 - **No host-repo edits during `package`.** Writes confined to
-  `.forge/tools/` + `.forge/forge.toml`.
+  `$FORGE_HOME/tools/` + `$FORGE_HOME/forge.toml`.
 - **Source attribution on capture.** `source` field records when + how the
   tool was captured. Edits over time should refresh `captured`, never
   rewrite history.

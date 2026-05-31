@@ -118,15 +118,15 @@ Both refuse if `/forge-status` reports no awaiting phase.
 ## Repo tooling
 
 Forge knows **no** repo-specific tooling directly. Every build/test/lint/codegen
-operation resolves through the `.forge/` tooling map (`/forge-setup`). A
+operation resolves through the `$FORGE_HOME/` tooling map (`/forge-setup`). A
 capability is wired as **either an executable/command** (deterministic) **or
 prose instructions** (the agent reads them and carries out the steps) —
 whichever fits. Resolve `<cap>` in this order:
 
-> 1. `.forge/commands/<cap>` executable → **run it** (args appended).
+> 1. `$FORGE_HOME/commands/<cap>` executable → **run it** (args appended).
 > 2. `forge.toml` `[commands].<cap>` non-empty → **run that command** (args
 >    appended).
-> 3. `.forge/commands/<cap>.md` exists → **follow it as instructions** — read
+> 3. `$FORGE_HOME/commands/<cap>.md` exists → **follow it as instructions** — read
 >    the file and perform the described steps (handles conditional / multi-step
 >    flows a fixed command can't, e.g. "bring up infra, wait for health, then
 >    run").
@@ -146,10 +146,10 @@ operates on GitHub PRs (`/forge-start` opens one, `/forge-ci-green` reads
 `gh pr checks`), so it works with nothing wired. A repo can register
 **additional** review mechanisms — multiple coexist in one org (e.g. GitHub
 threads **and** Reviewable **and** a custom bot) — by dropping integration files
-in `.forge/review/<name>.md` (instructions) or `.forge/review/<name>`
+in `$FORGE_HOME/review/<name>.md` (instructions) or `$FORGE_HOME/review/<name>`
 (executable), each covering list / reply / resolve / re-request for that
 mechanism. Forge processes feedback across GitHub **and** every registered
-mechanism; a `.forge/review/` entry never replaces the GitHub baseline, it
+mechanism; a `$FORGE_HOME/review/` entry never replaces the GitHub baseline, it
 stacks on it.
 
 ## Loop contract
@@ -415,7 +415,7 @@ cycle synthesis and the fix-loop inside phase 8.
 | Tier deviation                                  | Default `component`, log only if operator would have asked.                                    |
 | Design rejected alternative                     | Pick chosen path, log rejected + reason.                                                       |
 | Impl delta touches file outside design coverage | If non-contract (not test, not goals/links/design), auto-add to map, log decision.             |
-| Stale mocks / generated files in compile error  | Run the `codegen` capability (`.forge/commands/codegen`) once, retry. Unwired or fails → halt. |
+| Stale mocks / generated files in compile error  | Run the `codegen` capability (`$FORGE_HOME/commands/codegen`) once, retry. Unwired or fails → halt. |
 | `links.test_id_missing` drift                   | `/forge-tests --refresh <SG>` once. Halt only on no match.                                     |
 | `goals.uncovered` drift                         | `/forge-scenarios --goal G<n>` once. Halt only if scenario draft blocks.                       |
 | `run.stale` drift                               | Re-run linked tests via `/forge-impl-green` once before phase decision.                        |

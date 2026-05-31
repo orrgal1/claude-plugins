@@ -40,7 +40,7 @@ The forge plugin ships three channels (`forge/review-channels/`):
 | `security-review-builtin`  | skill-wrapper  | opt-in      | Claude Code's built-in `/security-review` |
 
 A host repo extends or overrides by dropping channel files into
-`.forge/review-channels/` (same shape as `forge/review-channels/<id>.md` —
+`$FORGE_HOME/review-channels/` (same shape as `forge/review-channels/<id>.md` —
 see `forge/review-channels/README.md`).
 
 If the PR has no forge chain → `/forge-review` still runs, but channels that
@@ -60,9 +60,9 @@ declare `needs: forge-chain` are skipped. If the chain is broken → run
 5. Risk hot-spots — 3-5 anchored to concrete paths, from the diff. Available
    to channels that ask for them.
 6. **Channel selection.** Read enabled channels from
-   `.forge/forge.toml` `[review]` `default_channels`, intersected with
+   `$FORGE_HOME/forge.toml` `[review]` `default_channels`, intersected with
    discovered channel files (`forge/review-channels/` + override
-   `.forge/review-channels/`). Apply CLI overrides: `--channels` replaces
+   `$FORGE_HOME/review-channels/`). Apply CLI overrides: `--channels` replaces
    the set, `--add-channel <id>` / `--drop-channel <id>` mutate. Each
    channel's `needs` checked against context — unmet need → channel
    dropped with a one-line note (`needs: forge-chain` on a no-chain PR).
@@ -214,7 +214,7 @@ No `open` attribute. No embed-block yet → refuse with "run `/forge-audit
 ## Synthesis output
 
 Main thread merges normalized findings from every channel. Aggregation mode
-from `.forge/forge.toml` `[review].aggregation` (`interleave` default,
+from `$FORGE_HOME/forge.toml` `[review].aggregation` (`interleave` default,
 `grouped` alternative):
 
 - **interleave** (default) — findings sorted by `(file, line)`. Each line

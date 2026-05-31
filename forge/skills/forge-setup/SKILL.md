@@ -144,10 +144,10 @@ repo warrants.
 the always-on baseline (forge operates on GitHub PRs), so review automation
 works out of the box. A repo can register **additional** review mechanisms —
 multiple coexist in one org (GitHub threads + Reviewable + a custom bot, all at
-once) — by dropping one file per mechanism in `.forge/review/`:
+once) — by dropping one file per mechanism in `$FORGE_HOME/review/`:
 
 ```
-.forge/review/
+$FORGE_HOME/review/
   reviewable.md      # instructions: list/reply/resolve/re-request on Reviewable
   internal-bot       # executable: `internal-bot <op> [args]` sub-commands
 ```
@@ -155,8 +155,8 @@ once) — by dropping one file per mechanism in `.forge/review/`:
 Each integration (instructions or script) covers the same four ops for its
 mechanism: (1) list unresolved threads with ids, (2) reply to a thread, (3)
 resolve a thread, (4) re-request reviewers. `/forge-address-review` processes
-feedback across GitHub **and** every file in `.forge/review/` — entries stack on
-the GitHub baseline, never replace it.
+feedback across GitHub **and** every file in `$FORGE_HOME/review/` — entries
+stack on the GitHub baseline, never replace it.
 
 ## Capability resolution (the contract forge skills follow)
 

@@ -1,6 +1,6 @@
 ---
 name: forge-map-api
-description: "Generator: write the HTTP api map (.forge/maps/api.json). Dispatched by /forge-map."
+description: "Generator: write the HTTP api map ($FORGE_HOME/maps/main/api.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
@@ -20,8 +20,8 @@ user-invocable: false
 # /forge-map-api — generate the HTTP api map
 
 Generator dispatched by `/forge-map`. Scans the host repo for HTTP route
-declarations and writes `.forge/maps/api.json` plus a `[maps.api]` entry in
-`.forge/forge.toml`.
+declarations and writes `$FORGE_HOME/maps/main/api.json` plus a `[maps.api]` entry in
+`$FORGE_HOME/forge.toml`.
 
 Not user-invocable directly — go through `/forge-map api`. Out of scope:
 non-HTTP RPC (gRPC, GraphQL, message handlers) — record as gaps, leave to
@@ -32,7 +32,7 @@ future generators.
 | Input            | Required | Notes                                                             |
 | ---------------- | -------- | ----------------------------------------------------------------- |
 | `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                |
-| `--out <file>`   | optional | Override output path. Default `.forge/maps/api.json`.             |
+| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/api.json`.             |
 | `--refresh`      | optional | No-op — every run rewrites. Accepted for API parity.              |
 | `--quiet`        | optional | Suppress one-line summary.                                        |
 
@@ -71,7 +71,7 @@ Multiple stacks coexist — parse all, attribute each route.
    ```bash
    root="$(git rev-parse --show-toplevel)"
    scope="${SCOPE:-$root}"
-   out="${OUT:-$root/.forge/maps/api.json}"
+   out="${OUT:-$FORGE_HOME/maps/main/api.json}"
    mkdir -p "$(dirname "$out")"
    ```
 
@@ -178,11 +178,11 @@ Multiple stacks coexist — parse all, attribute each route.
    }
    ```
 
-7. **Update `[maps.api]` in `.forge/forge.toml`.**
+7. **Update `[maps.api]` in `$FORGE_HOME/forge.toml`.**
 
    ```toml
    [maps.api]
-   file      = "maps/api.json"
+   file      = "maps/main/api.json"
    last_run  = "<ISO-8601 UTC>"
    generator = "/forge-map-api"
    ```
@@ -192,7 +192,7 @@ Multiple stacks coexist — parse all, attribute each route.
 8. **Emit summary** (unless `--quiet`):
 
    ```
-   api: <N> routes, <K> gaps → .forge/maps/api.json
+   api: <N> routes, <K> gaps → $FORGE_HOME/maps/main/api.json
    ```
 
    Exit 0 on any envelope write.
@@ -205,7 +205,7 @@ Multiple stacks coexist — parse all, attribute each route.
   agents filter by method.
 - **OpenAPI is authoritative for shape, not for existence.** Spec-only routes
   are recorded but tagged so agents know they may not be wired.
-- **Read-only on host repo.** Writes confined to `.forge/maps/api.json` and
-  `.forge/forge.toml`.
+- **Read-only on host repo.** Writes confined to `$FORGE_HOME/maps/main/api.json` and
+  `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every item carries `handler.file` +
   `handler.line`. Agents verify the handler still exists before acting.

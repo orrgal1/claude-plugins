@@ -1,6 +1,6 @@
 ---
 name: forge-map-db
-description: "Generator: write the db schema map (.forge/maps/db.json). Dispatched by /forge-map."
+description: "Generator: write the db schema map ($FORGE_HOME/maps/main/db.json). Dispatched by /forge-map."
 argument-hint:
   "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
@@ -21,7 +21,7 @@ user-invocable: false
 
 Generator dispatched by `/forge-map`. Scans the host repo for database schema
 definitions (migrations, ORM models, raw SQL) and writes
-`.forge/maps/db.json` plus a `[maps.db]` entry in `.forge/forge.toml`.
+`$FORGE_HOME/maps/main/db.json` plus a `[maps.db]` entry in `$FORGE_HOME/forge.toml`.
 
 Not user-invocable directly — go through `/forge-map db`. Listed under
 generators in `/forge-map`'s area table.
@@ -31,7 +31,7 @@ generators in `/forge-map`'s area table.
 | Input            | Required | Notes                                                             |
 | ---------------- | -------- | ----------------------------------------------------------------- |
 | `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                |
-| `--out <file>`   | optional | Override output path. Default `.forge/maps/db.json`.              |
+| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/db.json`.              |
 | `--refresh`      | optional | No-op for this generator — every run rewrites. Accepted for API parity. |
 | `--quiet`        | optional | Suppress the one-line summary on stdout.                          |
 
@@ -66,7 +66,7 @@ the candidate files. Never guess a schema.
    ```bash
    root="$(git rev-parse --show-toplevel)"
    scope="${SCOPE:-$root}"
-   out="${OUT:-$root/.forge/maps/db.json}"
+   out="${OUT:-$FORGE_HOME/maps/main/db.json}"
    mkdir -p "$(dirname "$out")"
    ```
 
@@ -170,11 +170,11 @@ the candidate files. Never guess a schema.
    }
    ```
 
-7. **Update `[maps.db]` in `.forge/forge.toml`.** Read existing, set:
+7. **Update `[maps.db]` in `$FORGE_HOME/forge.toml`.** Read existing, set:
 
    ```toml
    [maps.db]
-   file      = "maps/db.json"
+   file      = "maps/main/db.json"
    last_run  = "<ISO-8601 UTC>"
    generator = "/forge-map-db"
    ```
@@ -184,7 +184,7 @@ the candidate files. Never guess a schema.
 8. **Emit summary** (unless `--quiet`):
 
    ```
-   db: <N> tables, <K> gaps → .forge/maps/db.json
+   db: <N> tables, <K> gaps → $FORGE_HOME/maps/main/db.json
    ```
 
    Exit 0 on any write. Exit non-zero only when no envelope was written
@@ -198,7 +198,7 @@ the candidate files. Never guess a schema.
   surface ignorance than fabricate types the agent will trust.
 - **Empty result is valid.** `items: []` + `gaps: [{reason: no-db-signal}]` is
   the right answer for a repo without persistence.
-- **Read-only on the host repo.** Writes confined to `.forge/maps/db.json` and
-  `.forge/forge.toml`. Never touch tracked files.
+- **Read-only on the host repo.** Writes confined to `$FORGE_HOME/maps/main/db.json` and
+  `$FORGE_HOME/forge.toml`. Never touch tracked files.
 - **Source attribution is mandatory.** Every item carries `source` +
   `source_line`. Downstream agents verify against the live file before acting.
