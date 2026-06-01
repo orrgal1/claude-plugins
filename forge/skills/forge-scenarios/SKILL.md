@@ -1,7 +1,7 @@
 ---
 name: forge-scenarios
 description: "Draft when:/then: scenarios that cover each goal — component-tier-observable behavior only."
-argument-hint: "[--slug <name>] [--goal G<n>]"
+argument-hint: '[--slug <name>] [--goal G<n>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge scenarios"
   - "draft scenarios for goals"
@@ -128,8 +128,25 @@ re-checks; this skill establishes on first authoring.
    fi
    ```
 
-9. Recap — per-goal counts (harvested vs new), orphan resolutions, then
-   `→ /forge-tests next`.
+9. **`--push`** (orchestrator entry, before `AWAIT_SCENARIOS_REVIEW`): push when
+   local commits ahead (`@{u}..HEAD > 0`); no-op else. SSH-only. `--push`
+   without upstream → `git push -u origin HEAD`.
+
+10. Recap — per-goal counts (harvested vs new), orphan resolutions, then
+    `→ /forge-tests next` (or `→ AWAIT_SCENARIOS_REVIEW` when orchestrator-driven).
+
+## Iterate mode — `--iterate "<feedback>"`
+
+Triggered by `/forge` from `AWAIT_SCENARIOS_REVIEW`. Free-text feedback.
+
+1. Read existing `goals.md` (missing → exit `BLOCKED_ITERATE_NO_FILE`).
+2. Apply feedback directly — no dialogue. Stay inside Sizing rules.
+3. Preserve `SG<n>.<m>` IDs across edits (Edit mode rule).
+4. Re-write inline + re-commit per §6–§8.
+5. `--push` (orchestrator default) per §9.
+6. Recap with `iterated on: <feedback summary>` tail.
+
+Orchestrator re-settles `AWAIT_SCENARIOS_REVIEW` after push.
 
 ## Harvest
 

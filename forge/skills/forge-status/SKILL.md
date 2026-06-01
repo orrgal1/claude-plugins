@@ -89,8 +89,10 @@ Earliest unsatisfied phase wins:
 | `GOALS_APPROVED`      | approval sha matches goals.md last commit                                           | `/forge-design --push`                                 |
 | `DESIGN_DRAFT`        | `design.md` exists, no `approvals.json.design`                                      | `/forge-design --push`                                 |
 | `AWAIT_DESIGN_REVIEW` | design pushed; approval absent or sha-stale                                         | operator: same shape                                   |
-| `DESIGN_APPROVED`     | approval sha matches design.md                                                      | `/forge-scenarios`                                     |
-| `SCENARIOS_DRAFT`     | ≥1 scenario, no `links.json` (or empty)                                             | `/forge-tests`                                         |
+| `DESIGN_APPROVED`     | approval sha matches design.md                                                      | `/forge-scenarios --push`                              |
+| `SCENARIOS_DRAFT`         | scenarios written, no `approvals.json.scenarios`                                    | `/forge-scenarios --push`                              |
+| `AWAIT_SCENARIOS_REVIEW`  | scenarios pushed; `approvals.json.scenarios` absent OR sha-stale                    | operator: `/forge approve` or `/forge iterate "<fbk>"` |
+| `SCENARIOS_APPROVED`      | approval sha matches goals.md scenarios block, no `links.json` (or empty)           | `/forge-tests`                                         |
 | `TESTS_LINKED`        | links present, no `run.json` (or older than any linked test)                        | `/forge-impl-green`                                    |
 | `RED`                 | `run.json` `fail>0` or `error>0`                                                    | `/forge-impl-green`                                    |
 | `IMPL_GREEN`          | `run.json` all pass, no audit-green PASS yet                                        | per-layer attestation 5a-5e → `/forge-audit-green`     |
@@ -101,11 +103,12 @@ Earliest unsatisfied phase wins:
 | `REVIEW_GREEN`        | last cycle B+M=0, commits since last `ci.green`                                     | `/forge-ci-green` (phase 9 final)                      |
 | `READY`               | CI green post-review + audit-embed present + last B+M=0 (or `--no-review` recorded) | mark ready / merge                                     |
 
-Manual-mode AWAIT verdicts (phases 3-9): `AWAIT_SCENARIOS_REVIEW`,
-`AWAIT_TESTS_REVIEW`, `AWAIT_IMPL_REVIEW`, `AWAIT_AUDIT_REVIEW`,
-`AWAIT_CI_REVIEW`, `AWAIT_REVIEW_REVIEW`. Detect via `wip.mode_manual` flag in
-`decisions.md` + phase-completion signal without matching `approvals.json`
-entry.
+Manual-mode AWAIT verdicts (phases 4-9): `AWAIT_TESTS_REVIEW`,
+`AWAIT_IMPL_REVIEW`, `AWAIT_AUDIT_REVIEW`, `AWAIT_CI_REVIEW`,
+`AWAIT_REVIEW_REVIEW`. Detect via `wip.mode_manual` flag in `decisions.md` +
+phase-completion signal without matching `approvals.json` entry.
+(`AWAIT_SCENARIOS_REVIEW` is always-on across both modes — see phase table
+above.)
 
 ### 6. Drift
 
