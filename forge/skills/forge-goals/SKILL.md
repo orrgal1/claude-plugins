@@ -40,6 +40,15 @@ Pick one phrasing:
 
 Wrong: "Refactor X" (task), "Add tests" (means), "Fix the bug" (no specificity).
 
+**How a goal is proven** depends on its shape. Behavioral goals (capability /
+end-state / invariant with a runtime observable) are proven by **scenarios**
+(`/forge-scenarios` → component tests). **Removal** and structural goals — whose
+end-state is a source-level fact with no runtime observable ("the field is
+gone") — are proven by **validations** (`/forge-validations` → a `git grep` /
+build predicate, or agent attestation). A goal may carry both: the removal as
+validations plus one behavioral guard scenario. Either kind counts as a proof;
+every goal needs ≥1 proof, not ≥1 of each.
+
 ## Count — hard cap 3, floor 1
 
 - **G1** = main (the one sentence reviewers should remember).
@@ -213,7 +222,8 @@ entirely.
 
 ## Next step
 
-- `/forge-scenarios` — typical next phase
+- `/forge-scenarios` — typical next phase (behavioral goals)
+- `/forge-validations` — proofs for removal / structural goals
 - `/forge-status` — chain state + drift
 
 ## Usage

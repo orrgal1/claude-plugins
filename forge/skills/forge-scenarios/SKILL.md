@@ -62,7 +62,10 @@ grep (`^- SG\d+\.\d+`). `when:` / `then:` content rules in § "What goes into
 
 Scenarios are complete when:
 
-- Every `Gn` has ≥1 scenario.
+- Every `Gn` has ≥1 **proof** — a scenario here, or a validation under
+  `## Validations` (`/forge-validations`). A removal/structural goal may have
+  **zero scenarios** and be fully proven by validations; that is not an
+  uncovered goal. Behavioral goals still want ≥1 scenario.
 - No scenario is orphaned (every lives under a real `Gn`).
 - Each `then:` is specific enough to be observed. "Works correctly" doesn't
   count — name the surface.
@@ -281,6 +284,8 @@ The `## Scenarios` header under each goal is **load-bearing** — parsed by
 ## Next step
 
 - `/forge-tests` — typical next phase
+- `/forge-validations` — proofs for any removal / structural goal (no runtime
+  observable)
 - `/forge-status` — chain state + drift
 
 ## Usage
