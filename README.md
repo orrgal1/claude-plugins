@@ -106,7 +106,7 @@ lenses (goal-delivery, scenario-realism, test-match) + code-quality lenses, plus
 | `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green` | Fix-loops to green                              |
 | `/forge-review`                                                                        | Lens-designed, chain-aware PR review            |
 | `/forge-address-review`                                                                | Drive submitted reviewer feedback to resolution |
-| `/forge-status` · `/forge-line` · `/forge-triage` · `/forge-stuck-check`               | Status, statusline, triage, loop-health         |
+| `/forge-status` · `/forge-triage` · `/forge-stuck-check`                               | Status, triage, loop-health                     |
 
 ## State & artifacts
 

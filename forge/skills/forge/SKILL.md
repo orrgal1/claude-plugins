@@ -375,13 +375,6 @@ matches the artifact's last-touching commit, phase is **unapproved** and the
 next `/forge` run re-settles its AWAIT. Local-only per root
 `.pr-artifacts/.gitignore`.
 
-## Statusline
-
-`/forge-line` keeps `~/.claude/forge/state.json` fresh. Write on every phase
-entry, every fix-loop iteration, every AWAIT settle, every verdict settlement,
-and heartbeat ≥5 min on long single-step work. Full call-site table in
-`/forge-line`.
-
 ## No-waste gates (per phase boundary)
 
 | Gate                | Skip the phase when                                                                                               |

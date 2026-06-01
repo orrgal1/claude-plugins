@@ -89,13 +89,10 @@ parses it). Per row:
    `NO_CHAIN`.
 2. **Run `/forge-audit --slug <slug>`.** `PASS` → settle `AUDIT_GREEN`, exit.
    `FAIL` → parse `## smallest blocking set`.
-3. **Statusline** —
-   `/forge-line --phase-id audit-green --sub "iter <N>/<M> (<F> findings)"`.
-   Heartbeat every 5 min in long subagent calls.
-4. **Apply one fix per finding.** Contract-guard each diff. Sub-skill routes
+3. **Apply one fix per finding.** Contract-guard each diff. Sub-skill routes
    spawn one `forge-step-runner` with scoped finding — refuse multi-finding
    briefs (one attempt per boundary). Mechanical fixes edit directly.
-5. **Commit + decisions log.**
+4. **Commit + decisions log.**
 
    ```
    forge-audit-green: <SG or layer> <one-line fix>
@@ -110,7 +107,7 @@ parses it). Per row:
    - commit:  <sha>
    ```
 
-6. **Layer 1 signals** — track `same-finding-recurs`, `same-file-edited`,
+5. **Layer 1 signals** — track `same-finding-recurs`, `same-file-edited`,
    `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
    `subagent-same-blocker`. On hard trip →
    `/forge-stuck-check --slug <slug> --phase audit-green --signal <name> --iter <N> --json`:
@@ -118,7 +115,7 @@ parses it). Per row:
    - `suspected` → bump threshold once, log, continue.
    - `none` → log false-alarm, continue.
 
-7. **Loop** — re-run audit at iter N+1. Hit `max=<N>` without PASS → settle
+6. **Loop** — re-run audit at iter N+1. Hit `max=<N>` without PASS → settle
    `BUDGET_EXHAUSTED`.
 
 ## Settle

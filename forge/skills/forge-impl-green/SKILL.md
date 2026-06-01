@@ -85,11 +85,6 @@ Exit codes:
   marker**. Halt `BLOCKED`. Wrong-reason — scaffold missed a shape, impl
   regressed one, or the runner is broken; operator decides.
 
-## Statusline write
-
-`/forge-line --phase-id impl --sub "SG<n>.<m> iter <N>/<M>"` at start of each
-iter. Contract in `/forge-line`.
-
 ## Layer 1 signals (per `/forge-stuck-check`)
 
 Track: `same-scenario-flat`, `same-error-string`, `same-file-edited`,

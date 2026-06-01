@@ -167,10 +167,7 @@ Rules:
 Loop reason names the finding, every cycle it was `addressed` / `regressed`, and
 commit citations on each side.
 
-## Statusline + Layer 1
-
-`/forge-line --phase-id review-green --sub "cycle <N>: <K> open"` at cycle
-entry + after each fix commit.
+## Layer 1
 
 Track counters: `same-finding-flat`, `same-error-pattern`, `same-file-edited`,
 `diff-grew-find-flat`, `decisions-log-churn`.

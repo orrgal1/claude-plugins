@@ -132,8 +132,7 @@ game.
    focused commit + push once** (no force, no rebase, no `--no-verify`). The
    push re-triggers CI; the poll loop picks up the new run.
 
-4. **Statusline + Layer 1 signals** —
-   `/forge-line --phase-id ci-green --sub "<check> iter <N>/<M>"` per iter.
+4. **Layer 1 signals** —
    Track: `same-check-fails`, `same-error-string`, `same-file-edited`,
    `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
    `subagent-same-blocker`. On hard trip →
