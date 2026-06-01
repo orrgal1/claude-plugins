@@ -35,7 +35,10 @@ blockers, no majors) by sequencing the chain skills.
 Two modes:
 
 - **`auto` (default)** — pauses at goals + design + scenarios (contract review).
-  Everything else unattended; auto-resolutions log to `decisions.md`.
+  At each such pause it **arms a `/forge-review-watch --contract <phase>`** so
+  the operator can approve / give feedback from the PR review UI (§
+  "Contract-pause watch"). Everything else unattended; auto-resolutions log to
+  `decisions.md`.
 - **`manual`** — pauses after every phase.
 
 Operator resumes via `/forge approve` or `/forge iterate "<feedback>"` — both
@@ -215,6 +218,28 @@ Each phase delegates to its skill via step-runner (or directly for phase 8). The
 skill's SKILL.md is canonical; this section names only the per-phase
 orchestrator delta (mode-aware pause, halt mapping).
 
+### Contract-pause watch (phases 1–3)
+
+The three contract pauses don't only settle an AWAIT and wait for the operator
+to type `/forge approve | iterate` — on settling each, forge also **arms a
+`/forge-review-watch --slug <slug> --contract <goals|design|scenarios>`** so the
+operator can drive the gate from the PR's review UI:
+
+- The watch seeds its cursor at the just-pushed artifact and waits for the
+  operator's review. **Instruct the operator** (in the result output): submit a
+  GitHub review — either one carrying **feedback** (any requested change /
+  question), or a **plain comment review expressing approval** (e.g. "lgtm"). On
+  a self-owned PR GitHub allows the comment-review form; contract mode does not
+  exclude `self`, so the operator's own review fires.
+- The watch's contract router classifies the review: approval →
+  `/forge approve --phase <phase>`; actionable feedback →
+  `/forge iterate --phase <phase> "<body>"`. Approval advances the phase and
+  ends the watch for this gate; the next contract pause arms a fresh one.
+  Iterate re-spawns the phase skill, the new push re-settles the same AWAIT, and
+  the watch re-arms for the same gate.
+- The watch is **additive** — typing `/forge approve` /
+  `/forge iterate "<feedback>"` by hand still reaches the same two resumes.
+
 ### 0. start
 
 Runs only when `NO_CHAIN` + no PR. Step-runner `step: start` → `/forge-start`,
@@ -228,7 +253,8 @@ Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists
 
 `forge-step-runner step: goals`, `flags: ["--push", "--yolo"]` (auto mode;
 manual drops `--yolo`). **Always** settles `AWAIT_GOALS_REVIEW` after push,
-regardless of mode — goals review is the contract.
+regardless of mode — goals review is the contract. On settle, arm
+`/forge-review-watch --contract goals` (§ "Contract-pause watch").
 
 Approve → write `{"goals": "<sha>"}` to `approvals.json` → advance. Iterate →
 re-spawn with `["--iterate", "<feedback>", "--push"]`; new push re-settles
@@ -239,7 +265,8 @@ Halts: `BLOCKED_SPEC`.
 ### 2. design
 
 Same shape as phase 1, key `design`. `AWAIT_DESIGN_REVIEW` always settles
-post-push.
+post-push; on settle, arm `/forge-review-watch --contract design` (§
+"Contract-pause watch").
 
 `pause-before-impl:` in `design.md` `## Risk` is informational here — the AWAIT
 pause already gives operator a chance to react. If they want changes, they
@@ -259,9 +286,11 @@ goals get both. If every goal is behavioral, the validations step is a no-op.
 
 **Always** settles `AWAIT_SCENARIOS_REVIEW` after the push(es), regardless of
 mode — scenarios + validations are the proof contract, operator review is the
-gate. Auto-resolutions in auto mode: LIKELY harvest → best-fit goal, orphans →
-`## Orphan scenarios`; a goal whose only honest proof is a removal fact → draft
-as a validation rather than forcing a contorted scenario.
+gate. On settle, arm `/forge-review-watch --contract scenarios` (§
+"Contract-pause watch"). Auto-resolutions in auto mode: LIKELY harvest →
+best-fit goal, orphans → `## Orphan scenarios`; a goal whose only honest proof
+is a removal fact → draft as a validation rather than forcing a contorted
+scenario.
 
 Approve → write `{"scenarios": "<sha>"}` to `approvals.json` → advance (the
 `scenarios` approval covers both proof types under this gate). Iterate →
@@ -612,7 +641,8 @@ open blockers: <N>   open majors: <N>
 
 ### next move
 READY                    → mark PR ready / merge per workflow
-AWAIT_*_REVIEW           → review artifact on PR; /forge approve | iterate
+AWAIT_*_REVIEW           → watch armed: submit a GitHub review (feedback, or a
+                           comment review = approval) | or /forge approve | iterate
 BLOCKED_SPEC             → fix source; re-run /forge
 BLOCKED_DESIGN           → resolve unsatisfiable scenario; --from design
 BLOCKED_IMPL             → see decisions.md; --from impl
@@ -635,7 +665,8 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Sequential phases at orchestrator layer.** Lens fan-out happens inside
   `/forge-review`.
 - **Three contract pauses** — goals + design + scenarios always pause (both
-  modes).
+  modes); each arms a `/forge-review-watch --contract <phase>` so the operator's
+  PR review drives the gate (§ "Contract-pause watch").
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
 - **Push only where needed** — start, goals, design, scenarios (review
   surfaces), ci-green / final-ci (CI). Local commits otherwise.
@@ -652,7 +683,9 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 ## Next step
 
 - `READY` → mark PR ready / merge.
-- `AWAIT_*_REVIEW` → `/forge approve` or `/forge iterate "<feedback>"`.
+- `AWAIT_*_REVIEW` → submit a GitHub review on the PR (the armed
+  `/forge-review-watch --contract` routes feedback → iterate, approval comment →
+  approve) — or `/forge approve` / `/forge iterate "<feedback>"` by hand.
 - `BLOCKED_*` / `NEEDS_OPERATOR` → fix per decisions.md, `--from <phase>`.
 - `STUCK` → act on stuck-check's reason; `--from <phase>`.
 - `/forge-status` — re-assess any time.
