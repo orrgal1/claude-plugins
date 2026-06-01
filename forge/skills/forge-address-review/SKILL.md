@@ -1,6 +1,8 @@
 ---
 name: forge-address-review
-description: "Process reviewer feedback on a forge PR (GitHub + any mechanisms in $FORGE_HOME/review/)."
+description:
+  "Process reviewer feedback on a forge PR (GitHub + any mechanisms in
+  $FORGE_HOME/review/)."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--auto] [--source
   github|<mechanism>|self|all]"
@@ -62,11 +64,11 @@ executed.
 
 Review automation is **additive** (`/forge` § "Repo tooling"). Operations below
 (list / reply / resolve / re-request) run against the **GitHub baseline** (`gh`,
-always on) **plus every mechanism registered in `$FORGE_HOME/review/`** — a repo may
-have several at once (e.g. GitHub + Reviewable). For each mechanism, list its
-mechanism, run the op via its file (script or instructions); the `gh` snippets
-are the baseline mechanism. `--source` narrows to one mechanism (`github`, a
-`$FORGE_HOME/review/<name>`, or `self`); default `all`.
+always on) **plus every mechanism registered in `$FORGE_HOME/review/`** — a repo
+may have several at once (e.g. GitHub + Reviewable). For each mechanism, list
+its mechanism, run the op via its file (script or instructions); the `gh`
+snippets are the baseline mechanism. `--source` narrows to one mechanism
+(`github`, a `$FORGE_HOME/review/<name>`, or `self`); default `all`.
 
 ### 1. Intake feedback (parallel across mechanisms; `--source` narrows, default `all`)
 
@@ -79,10 +81,10 @@ are the baseline mechanism. `--source` narrows to one mechanism (`github`, a
   }' -F o=<owner> -F r=<repo> -F n=<N>
   ```
   Plus relevant issue comments: `gh pr view <N> --json comments`.
-- **Registered mechanisms** — for each file in `$FORGE_HOME/review/`, run its "list
-  unresolved" op (script sub-command or instructions). Tag each thread with its
-  mechanism so replies route back to the right place. None registered → GitHub
-  only.
+- **Registered mechanisms** — for each file in `$FORGE_HOME/review/`, run its
+  "list unresolved" op (script sub-command or instructions). Tag each thread
+  with its mechanism so replies route back to the right place. None registered →
+  GitHub only.
 - **Self-review** — `gh pr view <N> --json body`, extract between
   `<!-- forge:self-review -->` markers. Absent → empty source; invent nothing.
 - Short-circuit: zero unresolved + empty self-review → `Nothing to address.`
@@ -143,8 +145,8 @@ CHAIN-IMPACTING items route to the operator (a deliberate chain edit + `/forge`
 re-verify, logged), never edited inline here.
 
 After the walk: one self-review pass over the cumulative diff; validate linked
-tests via the `test` capability (`$FORGE_HOME/commands/test`, per `/forge` § "Repo
-tooling") and refresh `run.json`.
+tests via the `test` capability (`$FORGE_HOME/commands/test`, per `/forge` §
+"Repo tooling") and refresh `run.json`.
 
 Write per-item status to `.pr-artifacts/<slug>/forge/review/external-<cycle>.md`
 using `forge-review-green`'s finding-status discipline (`new` / `addressed` /
@@ -165,8 +167,8 @@ using `forge-review-green`'s finding-status discipline (`new` / `addressed` /
     gh api graphql -f query='mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ isResolved } } }' -F t=<thread_id>
     ```
     Issue-level comment → `gh pr comment <N> --body "<reply>"`.
-  - A registered `$FORGE_HOME/review/<name>` mechanism — reply + resolve via that
-    mechanism's ops (script sub-command or instructions).
+  - A registered `$FORGE_HOME/review/<name>` mechanism — reply + resolve via
+    that mechanism's ops (script sub-command or instructions).
 - **Verification gate (hard).** Every thread across **every** mechanism Fixed /
   Dismissed (justification posted) / Already-resolved. Any unaddressed → STOP,
   list, resolve. Post a `<!-- forge:feedback-addressed -->` proof comment
@@ -216,4 +218,6 @@ PR #<N> forge-address-review — <slug>
 
 - Converged + audit PASS → `/forge-audit --embed` → `/forge-review --embed`.
 - CHAIN-IMPACTING open → `/forge` (edit artifact + re-verify), then re-run.
+- `/forge-review-watch` — keep this armed: auto-dispatch on every new review
+  until stopped, instead of re-running by hand.
 - `/forge-status` — chain state + drift.
