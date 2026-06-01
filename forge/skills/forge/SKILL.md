@@ -46,7 +46,7 @@ status → entry phase → phases in order:
   0  start              (only when NO_CHAIN + no PR; runs /forge-start)
   1  goals --push       AWAIT_GOALS_REVIEW (always, both modes)
   2  design --push      AWAIT_DESIGN_REVIEW (always, both modes)
-  3  scenarios --push   AWAIT_SCENARIOS_REVIEW (always, both modes)
+  3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (always, both modes)
   4  tests              (+ scaffolds impl surface for red bar)
   5  impl-green
   5a verify-goals
@@ -54,6 +54,7 @@ status → entry phase → phases in order:
   5c verify-tests
   5d verify-match
   5e verify-runs
+  5f verify-validations
   6  audit-green        (+ --embed on PASS)
   7  ci-green
   8  review-green
@@ -62,7 +63,7 @@ status → entry phase → phases in order:
   READY | AWAIT_*_REVIEW | BLOCKED_* | NEEDS_OPERATOR | STUCK
 ```
 
-Phases 0/3/4/5/5a-5e/6/7/9 delegate to `forge-step-runner` subagents. Phase 8
+Phases 0/3/4/5/5a-5f/6/7/9 delegate to `forge-step-runner` subagents. Phase 8
 stays in main thread (review fans out to lens reviewers; runner can't nest).
 
 ## Inputs
@@ -81,7 +82,7 @@ stays in main thread (review fans out to lens reviewers; runner can't nest).
 | `--dry-run`           | off                                                        |
 
 `--from` / `--until` phase set:
-`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | audit | ci | review | final-ci`.
+`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | final-ci`.
 
 `--from` resumes after a halt; prereqs checked, missing inputs route to earliest
 unsatisfied phase regardless. `--until` truncates; exits with the named phase's
@@ -216,17 +217,26 @@ pause already gives operator a chance to react. If they want changes, they
 
 Halts: `BLOCKED_DESIGN` (honest blocker per `/forge-design`).
 
-### 3. scenarios
+### 3. scenarios + validations
 
 `forge-step-runner step: scenarios`, `flags: ["--push", "--yolo"]` (auto mode;
-manual drops `--yolo`). **Always** settles `AWAIT_SCENARIOS_REVIEW` after push,
-regardless of mode — scenarios are the test contract, operator review is the
-gate. Auto-resolutions in auto mode: LIKELY harvest → best-fit goal, orphans →
-`## Orphan scenarios`.
+manual drops `--yolo`). Then, for any **removal / structural goal** (a `Gn` with
+no runtime-observable end-state — see `/forge-goals` Goal shape), run
+`forge-step-runner step: validations` with the same flags to draft its
+`## Validations` block. A goal is covered by ≥1 proof — a scenario or a
+validation; behavioral goals get scenarios, removal goals get validations, mixed
+goals get both. If every goal is behavioral, the validations step is a no-op.
 
-Approve → write `{"scenarios": "<sha>"}` to `approvals.json` → advance. Iterate
-→ re-spawn with `["--iterate", "<feedback>", "--push"]`; new push re-settles
-AWAIT.
+**Always** settles `AWAIT_SCENARIOS_REVIEW` after the push(es), regardless of
+mode — scenarios + validations are the proof contract, operator review is the
+gate. Auto-resolutions in auto mode: LIKELY harvest → best-fit goal, orphans →
+`## Orphan scenarios`; a goal whose only honest proof is a removal fact → draft
+as a validation rather than forcing a contorted scenario.
+
+Approve → write `{"scenarios": "<sha>"}` to `approvals.json` → advance (the
+`scenarios` approval covers both proof types under this gate). Iterate → re-spawn
+the relevant step (`scenarios` and/or `validations`) with
+`["--iterate", "<feedback>", "--push"]`; new push re-settles AWAIT.
 
 Halts: `BLOCKED_SCENARIOS`.
 
@@ -260,34 +270,44 @@ fails:
 
 Mode: auto → 5a. Manual → push + `AWAIT_IMPL_REVIEW`, exit.
 
-### 5a-5e. Per-layer attestation
+### 5a-5f. Per-layer attestation
 
-Five sub-phases. Each step-runner `step: verify-<layer>`, single-shot read-only.
+Six sub-phases. Each step-runner `step: verify-<layer>`, single-shot read-only
+(5f runs the cheap command predicates inline — still no source mutation).
 
-| Phase | Step               | PASS condition                                             |
-| ----- | ------------------ | ---------------------------------------------------------- |
-| 5a    | `verify-goals`     | structural OK + every Gn LOYAL (or SKIPPED-NO-PR)          |
-| 5b    | `verify-scenarios` | every Gn COVERED, zero MISSING / ORPHAN                    |
-| 5c    | `verify-tests`     | every SG LINKED, zero STALE / UNLINKED / TIER-UNIT         |
-| 5d    | `verify-match`     | every LINKED SG MATCH, zero MISMATCH / NO-COMMENT / NO-AAA |
-| 5e    | `verify-runs`      | every LINKED SG PASS in `run.json`                         |
+| Phase | Step                 | PASS condition                                             |
+| ----- | -------------------- | ---------------------------------------------------------- |
+| 5a    | `verify-goals`       | structural OK + every Gn LOYAL (or SKIPPED-NO-PR)          |
+| 5b    | `verify-scenarios`   | every Gn COVERED by ≥1 proof, zero MISSING / ORPHAN        |
+| 5c    | `verify-tests`       | every SG LINKED, zero STALE / UNLINKED / TIER-UNIT         |
+| 5d    | `verify-match`       | every LINKED SG MATCH, zero MISMATCH / NO-COMMENT / NO-AAA |
+| 5e    | `verify-runs`        | every LINKED SG PASS in `run.json` (or SKIPPED-NO-RUN)     |
+| 5f    | `verify-validations` | every VG PASS in `validations.json` (or SKIPPED-NO-VALIDATIONS) |
+
+5c–5e operate on scenario-backed goals; a removal goal with no SG simply has
+nothing for them to check (they pass vacuously for it) and is proven at 5f. 5e
+SKIPPED-NO-RUN and 5f SKIPPED-NO-VALIDATIONS are clean passes for an unused proof
+type.
 
 FAIL → halt with named verdict (operator fixes at the right layer instead of
 letting audit-green attempt mechanical recovery on a contract gap):
 
 - 5a → `BLOCKED_VERIFY_GOALS` → `/forge-goals --iterate` → `--from goals`.
-- 5b → `BLOCKED_VERIFY_SCENARIOS` → `/forge-scenarios --goal G<n>` →
-  `--from scenarios`.
+- 5b → `BLOCKED_VERIFY_SCENARIOS` → `/forge-scenarios --goal G<n>` or
+  `/forge-validations --goal G<n>` → `--from scenarios`.
 - 5c → `BLOCKED_VERIFY_TESTS` → `/forge-tests` / `--refresh` / `--retier` →
   `--from tests`.
 - 5d → `BLOCKED_VERIFY_MATCH` → iterate test body or scenario →
   `--from verify-match`.
 - 5e → `BLOCKED_VERIFY_RUNS` → `/forge-impl-green` → `--from impl`.
+- 5f → `BLOCKED_VERIFY_VALIDATIONS` → `/forge-impl-green` (finish the removal) or
+  `/forge-validations --iterate` (fix a mis-phrased check) → `--from impl` /
+  `--from verify-validations`.
 
-Mode (PASS path): auto → next sub-phase (or 6 after 5e); manual settles
+Mode (PASS path): auto → next sub-phase (or 6 after 5f); manual settles
 `AWAIT_VERIFY_<LAYER>_REVIEW`, exit (no push — verify skills don't commit).
 
-After 5e PASS → phase 6. Audit-green's pre-flight typically short-circuits
+After 5f PASS → phase 6. Audit-green's pre-flight typically short-circuits
 `ALREADY_PASS` when every layer was clean.
 
 ### 6. audit-green
@@ -490,7 +510,7 @@ Started: <iso> Operator: <git user.email> Last updated: <iso> Mode: auto
 ## /forge result
 
 verdict: READY | AWAIT_*_REVIEW | BLOCKED_SPEC | BLOCKED_DESIGN | BLOCKED_IMPL
-       | BLOCKED_VERIFY_{GOALS,SCENARIOS,TESTS,MATCH,RUNS}
+       | BLOCKED_VERIFY_{GOALS,SCENARIOS,TESTS,MATCH,RUNS,VALIDATIONS}
        | BLOCKED_AUDIT | BLOCKED_CI | BLOCKED_REVIEW
        | NEEDS_OPERATOR | STUCK
 mode:    auto | manual
@@ -505,7 +525,7 @@ phases:  <list ran this invocation>
 - …/review/cycle-N.md
 
 ### per-phase tallies
-start / goals / design / scenarios+tests / impl / audit-green / ci-green / review-green / final-ci
+start / goals / design / scenarios+validations+tests / impl / audit-green / ci-green / review-green / final-ci
 
 ### terminal state
 open blockers: <N>   open majors: <N>
@@ -521,6 +541,7 @@ BLOCKED_VERIFY_SCENARIOS → /forge-scenarios --goal G<n>; --from scenarios
 BLOCKED_VERIFY_TESTS     → /forge-tests / --refresh / --retier; --from tests
 BLOCKED_VERIFY_MATCH     → re-annotate test or reword scenario; --from verify-match
 BLOCKED_VERIFY_RUNS      → /forge-impl-green; --from impl
+BLOCKED_VERIFY_VALIDATIONS → /forge-impl-green (finish removal) or /forge-validations --iterate; --from impl
 BLOCKED_AUDIT            → see audit report; --from audit
 BLOCKED_CI               → see ci-green log; --from ci
 BLOCKED_REVIEW           → address blockers/majors; --from review
