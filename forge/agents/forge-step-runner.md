@@ -18,9 +18,10 @@ allowed-tools:
 You execute **exactly one** step of the forge chain and return. Stay in your
 lane. Another runner handles the next step.
 
-Legal steps: `start` | `goals` | `scenarios` | `tests` | `design` | `impl` |
-`audit-green` | `ci-green` | `verify` | `verify-goals` | `verify-scenarios` |
-`verify-tests` | `verify-match` | `verify-runs`.
+Legal steps: `start` | `goals` | `scenarios` | `validations` | `tests` |
+`design` | `impl` | `audit-green` | `ci-green` | `verify` | `verify-goals` |
+`verify-scenarios` | `verify-tests` | `verify-match` | `verify-runs` |
+`verify-validations`.
 
 `verify` = full-chain aggregator (`/forge-audit`). `verify-<layer>` = single-
 layer attestations. `review` and `temper` refused — they transitively fan out to
@@ -50,6 +51,7 @@ directly from main thread.
 | `start`            | `skills/forge-start/SKILL.md`            |
 | `goals`            | `skills/forge-goals/SKILL.md`            |
 | `scenarios`        | `skills/forge-scenarios/SKILL.md`        |
+| `validations`      | `skills/forge-validations/SKILL.md`      |
 | `tests`            | `skills/forge-tests/SKILL.md`            |
 | `design`           | `skills/forge-design/SKILL.md`           |
 | `impl`             | `skills/forge-impl-green/SKILL.md`       |
@@ -61,6 +63,7 @@ directly from main thread.
 | `verify-tests`     | `skills/forge-verify-tests/SKILL.md`     |
 | `verify-match`     | `skills/forge-verify-match/SKILL.md`     |
 | `verify-runs`      | `skills/forge-verify-runs/SKILL.md`      |
+| `verify-validations` | `skills/forge-verify-validations/SKILL.md` |
 
 Downstream repo with plugin in `~/.claude/plugins/` → invoke slash command via
 Skill tool. Prefer file-path read when both available — it's grounded.
@@ -72,6 +75,7 @@ Skill tool. Prefer file-path read when both available — it's grounded.
 | `start`            | non-empty `source`; `base` resolves to remote branch; SSH-form remote     |
 | `goals`            | nothing (or, for `--iterate`, existing `goals.md`)                        |
 | `scenarios`        | `goals.md` with ≥1 `Gn` header                                            |
+| `validations`      | `goals.md` with ≥1 `Gn` header                                            |
 | `tests`            | scenarios under every `Gn`                                                |
 | `design`           | every scenario has `- test:` (or, for `--iterate`, existing `design.md`)  |
 | `impl`             | every scenario has `- test:`; linked tests exist                          |
@@ -83,6 +87,7 @@ Skill tool. Prefer file-path read when both available — it's grounded.
 | `verify-tests`     | `goals.md` with ≥1 scenario                                               |
 | `verify-match`     | ≥1 LINKED scenario in `goals.md`                                          |
 | `verify-runs`      | `run.json` exists                                                         |
+| `verify-validations` | `goals.md` with ≥1 `## Validations` block                              |
 
 ### 3. Execute the contract
 
@@ -101,6 +106,8 @@ blocker. Key cross-step boundaries:
 - `goals` → goals.md only. No test code, no scenarios, no `links.json`.
 - `scenarios` → scenarios only (including harvest). No test code, no goal edits,
   no test attachment.
+- `validations` → `## Validations` blocks only (assert/check/kind). No test code,
+  no goal edits, no impl, no running of the checks (that's `verify-validations`).
 - `tests` → test files + impl-surface scaffolds (panic-bodied stubs with
   `forge-tests: unimplemented` marker per `/forge-tests` § 3b). No goals edit,
   no scenario redrafting, no audit.
@@ -224,7 +231,7 @@ Follow `/forge-start` § Process. Receipt:
 - `## notes`: embed status (`embedded in PR #<num>` |
   `embed skipped — no PR yet` | `embed disabled by orchestrator`).
 
-### `verify-<layer>` (goals | scenarios | tests | match | runs)
+### `verify-<layer>` (goals | scenarios | tests | match | runs | validations)
 
 - `## counts`: per-layer breakdown per the SKILL.md report (e.g. `verify-goals`:
   `structural / loyalty / loyal / drifted / extra / missing`; `verify-tests`:
