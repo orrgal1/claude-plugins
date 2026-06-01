@@ -1,6 +1,6 @@
 ---
 name: forge-verify-scenarios
-description: "Verify each goal is covered by ≥1 scenario."
+description: "Verify each goal is covered by ≥1 proof — a scenario or a validation."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify scenarios"
@@ -39,9 +39,9 @@ For each `Gn` enumerated from `goals.md`:
 
 | Verdict     | Meaning                                                                                         |
 | ----------- | ----------------------------------------------------------------------------------------------- |
-| **COVERED** | `## Scenarios` block present under `Gn` with ≥1 `SG<n>.<m>` entry, all endpoint-observable.     |
-| **PARTIAL** | Scenarios present but ≥1 has a vague `then:` OR an internal-only `then:` (not service-surface). |
-| **MISSING** | No `## Scenarios` block, or the block is empty.                                                 |
+| **COVERED** | ≥1 proof under `Gn`: a `## Scenarios` block with ≥1 endpoint-observable `SG<n>.<m>`, **or** a `## Validations` block with ≥1 `VG<n>.<m>`. |
+| **PARTIAL** | Scenarios present but ≥1 has a vague `then:` OR an internal-only `then:` (not service-surface). A goal also covered by a validation does not go PARTIAL on the scenario alone. |
+| **MISSING** | Neither a `## Scenarios` block (with entries) **nor** a `## Validations` block under `Gn`.       |
 
 A scenario by definition covers an aspect exposable by hitting the actual
 service endpoint. `then:` must name an externally-observable signal — HTTP
@@ -63,7 +63,8 @@ visible. Surface the count + scenario IDs; do not fail the chain.
 
 1. Resolve slug (argument or branch-derived).
 2. Read `.pr-artifacts/<slug>/forge/goals.md`. Missing → exit 2.
-3. Enumerate `Gn` headers. For each, read its `## Scenarios` block.
+3. Enumerate `Gn` headers. For each, read its `## Scenarios` block **and** its
+   `## Validations` block (either satisfies coverage).
 4. Apply verdict table per goal.
 5. Scan all `SG<n>.<m>` entries: any under a missing `Gn` → ORPHAN; any under
    `## Orphan scenarios` → PARKED.

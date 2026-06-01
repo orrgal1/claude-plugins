@@ -76,7 +76,7 @@ Skill tool. Prefer file-path read when both available — it's grounded.
 | `goals`            | nothing (or, for `--iterate`, existing `goals.md`)                        |
 | `scenarios`        | `goals.md` with ≥1 `Gn` header                                            |
 | `validations`      | `goals.md` with ≥1 `Gn` header                                            |
-| `tests`            | scenarios under every `Gn`                                                |
+| `tests`            | every `Gn` has ≥1 proof; binds the scenario-backed ones (a validation-only goal has no SG to bind — skip it, not a blocker) |
 | `design`           | every scenario has `- test:` (or, for `--iterate`, existing `design.md`)  |
 | `impl`             | every scenario has `- test:`; linked tests exist                          |
 | `audit-green`      | `goals.md` with linked tests; `links.json`                                |
