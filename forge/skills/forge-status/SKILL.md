@@ -51,10 +51,11 @@ Missing is data, not error.
 
 | Probe                    | Used for                                         |
 | ------------------------ | ------------------------------------------------ |
-| `$art/goals.md`          | spec layer present + `## G\d+` + `^- SG\d+\.\d+` |
+| `$art/goals.md`          | spec layer present + `## G\d+` + `^- SG\d+\.\d+` + `^- VG\d+\.\d+` |
 | `$art/links.json`        | tests linked count + tier per SG                 |
 | `$art/design.md`         | design layer present                             |
 | `$art/run.json`          | last run pass/fail/error/skip + mtime            |
+| `$art/validations.json`  | per-VG verdict + evidence + mtime                |
 | `$art/decisions.md`      | unattended-mode log                              |
 | `$art/approvals.json`    | per-phase sha approvals (`goals`, `design`, …)   |
 | `$art/review/cycle-*.md` | review cycle count + last B+M                    |
@@ -117,9 +118,10 @@ Independent of phase. `block` halts autopilot; `warn` surfaces only.
 | Drift                             | Severity | Detection                                                     | Fix                                      |
 | --------------------------------- | -------- | ------------------------------------------------------------- | ---------------------------------------- |
 | `links.test_id_missing`           | block    | step 4 cross-check failed                                     | `/forge-tests --refresh <SG>` or restore |
-| `goals.uncovered`                 | block    | `## G\d+` with 0 `^- SG\d+\.\d+`                              | `/forge-scenarios --goal G<n>`           |
+| `goals.uncovered`                 | block    | `## G\d+` with 0 `^- SG\d+\.\d+` AND 0 `^- VG\d+\.\d+`         | `/forge-scenarios --goal G<n>` or `/forge-validations --goal G<n>` |
 | `design.orphan`                   | warn     | `design.md` exists, no `goals.md`                             | `/forge-goals` to seed                   |
 | `run.stale`                       | warn     | `run.json` older than any linked test file OR older than HEAD | `/forge-impl-green`                      |
+| `validations.stale`               | warn     | `validations.json` older than HEAD commit                     | `/forge-verify-validations`              |
 | `review.unaddressed`              | block    | last cycle B+M>0, no commits since                            | `/forge-review-green`                    |
 | `review.assumed_fixed_no_recycle` | warn     | last cycle B+M>0, commits since, no new cycle                 | `/forge-review` (re-cycle)               |
 | `pr.no_forge_block`               | warn     | run+audit clean, PR body lacks `<!-- forge-audit -->`         | `/forge-audit --embed`                   |

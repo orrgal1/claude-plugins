@@ -1,6 +1,6 @@
 ---
 name: forge-audit
-description: "Aggregate the full forge attestation chain: goals → scenarios → tests → match → runs."
+description: "Aggregate the full forge attestation chain: goals → scenarios/validations → tests → match → runs → validations-hold."
 argument-hint: "[--slug <name>] [--embed]"
 triggers:
   - "forge verify"
@@ -28,17 +28,24 @@ body.
 
 ## Layers
 
-| Layer | Source                        | Skill                     |
-| ----- | ----------------------------- | ------------------------- |
-| L1    | `goals.md` + PR body          | `/forge-verify-goals`     |
-| L2    | `goals.md`                    | `/forge-verify-scenarios` |
-| L3    | `goals.md`, `links.json`      | `/forge-verify-tests`     |
-| L4    | `goals.md`, linked test files | `/forge-verify-match`     |
-| L5    | `design.md` (optional)        | **inline** — see below    |
-| L6    | `run.json`                    | `/forge-verify-runs`      |
+| Layer | Source                        | Skill                        |
+| ----- | ----------------------------- | ---------------------------- |
+| L1    | `goals.md` + PR body          | `/forge-verify-goals`        |
+| L2    | `goals.md`                    | `/forge-verify-scenarios`    |
+| L3    | `goals.md`, `links.json`      | `/forge-verify-tests`        |
+| L4    | `goals.md`, linked test files | `/forge-verify-match`        |
+| L5    | `design.md` (optional)        | **inline** — see below       |
+| L6    | `run.json`                    | `/forge-verify-runs`         |
+| L7    | `goals.md`, `validations.json`| `/forge-verify-validations`  |
 
 Each per-layer skill is the canonical reference for its verdicts and fix
 recommendations.
+
+**Proof types.** A goal is satisfied by ≥1 proof — a **scenario** (L3/L4/L6:
+linked test that runs green) or a **validation** (L7: a command/attestation
+predicate that holds). L2 coverage accepts either. A removal/structural goal may
+be all-validation (no linked test); a behavioral goal all-scenario; mixed goals
+carry both. L6 and L7 each `SKIPPED` cleanly when their proof type is unused.
 
 ## Layer 5 — design coverage (inline)
 
@@ -82,8 +89,10 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
 4. L5 inline check (skip if no `design.md`).
 5. Invoke `/forge-verify-runs --json` → L6 verdict; absent `run.json` →
    `SKIPPED-NO-RUN`, no fail (pre-impl attestation allowed).
-6. Aggregate (see "Verdict logic"). Emit report.
-7. If `--embed` AND PR exists: write report between `<!-- forge-audit:begin -->`
+6. Invoke `/forge-verify-validations --json` → L7 verdict; no `## Validations`
+   anywhere → `SKIPPED-NO-VALIDATIONS`, no fail (scenario-only PRs are normal).
+7. Aggregate (see "Verdict logic"). Emit report.
+8. If `--embed` AND PR exists: write report between `<!-- forge-audit:begin -->`
    / `<!-- forge-audit:end -->` in PR body, wrapped in collapsed `<details>`
    with a verdict-bearing `<summary>`. Idempotent overwrite via `gh api`. No
    commit, no push, no CI trigger.
@@ -131,6 +140,9 @@ missing from goals: <list>
 ## Layer 6 — linked tests pass   (omit when run.json absent)
 <per-SG result table from /forge-verify-runs>
 
+## Layer 7 — validations hold   (omit when no validations)
+<per-VG result table from /forge-verify-validations>
+
 ## smallest blocking set
 1. <fix that clears the most failing checks in one move>
 2. <next>
@@ -146,8 +158,10 @@ section name and Layer + verdict pair per row.
 
 - **PASS** — every layer PASS or SKIPPED.
 - **FAIL** — any layer FAIL.
-- L5 SKIPPED-NO-DESIGN and L6 SKIPPED-NO-RUN never fail (pre-impl / trivial-PR
-  cases).
+- L5 SKIPPED-NO-DESIGN, L6 SKIPPED-NO-RUN, and L7 SKIPPED-NO-VALIDATIONS never
+  fail (pre-impl / trivial-PR / proof-type-unused cases).
+- A goal must reach ≥1 of its proofs — if a `Gn` has neither a green linked test
+  (L6) nor a holding validation (L7), L2 surfaces it as uncovered.
 - `PARTIAL / DRIFT / WARN` surface as findings, do not fail.
 
 ## Non-goals
@@ -166,7 +180,8 @@ PASS → drive CI green, optionally review.
 
 FAIL → re-run the specific failing layer for tighter signal:
 
-- `/forge-verify-goals` | `-scenarios` | `-tests` | `-match` | `-runs`
+- `/forge-verify-goals` | `-scenarios` | `-tests` | `-match` | `-runs` |
+  `-validations`
 - `/forge-audit-green` — auto-fix mechanical findings via fix-loop
 
 ## Usage
