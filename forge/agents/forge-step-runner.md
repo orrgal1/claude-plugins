@@ -4,7 +4,6 @@ description:
   chain — reading the matching SKILL.md from the active worktree and following
   its contract verbatim. Returns a structured receipt the orchestrator parses.
   Refuses any work outside the assigned step. Review is not a runner step.
-model: sonnet
 allowed-tools:
   - Bash
   - Read

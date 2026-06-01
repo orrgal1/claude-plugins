@@ -4,7 +4,6 @@ description:
   exactly one assigned lens, reads full files (not diffs) for context, and emits
   line findings with 4-tier severity (blocker/major/minor/nit). Strict scope
   guard — out-of-lens findings go in a one-line tail section, not the body.
-model: opus
 allowed-tools:
   - Read
   - Grep
