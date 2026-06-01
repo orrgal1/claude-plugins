@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "forge — self-contained, repo-agnostic PR forge chain for Claude Code",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, diagnose, ralph, persona, reviewable)",
   "owner": {
     "name": "orrgal1"
   },
@@ -10,6 +10,30 @@
       "name": "forge",
       "description": "Self-contained PR forge chain: /forge-setup maps host-repo tooling into a gitignored .forge/ dir, then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl, audit, CI, and lens-designed review to READY. No dependency on other plugins.",
       "source": "./forge",
+      "category": "development"
+    },
+    {
+      "name": "diagnose",
+      "description": "Portable, repo-agnostic diagnostic toolkit — /root-cause, /hypothesize, /pepper, /trace. No dependency on other plugins.",
+      "source": "./diagnose",
+      "category": "development"
+    },
+    {
+      "name": "ralph",
+      "description": "/ralph — general bounded-autonomy iteration loop toward any verifiable target; grinds to green, commits each step, stops at success or budget. Self-contained, repo-agnostic.",
+      "source": "./ralph",
+      "category": "development"
+    },
+    {
+      "name": "persona",
+      "description": "Simple inlined persona — /setup-persona writes ~/.claude/persona.md (idempotent) and ensures CLAUDE.md @-imports it. No dependency on other plugins.",
+      "source": "./persona",
+      "category": "productivity"
+    },
+    {
+      "name": "reviewable",
+      "description": "Reviewable.io automation via agent-browser — /reviewable-read, /reviewable-reply, /reviewable-publish, /reviewable-login. Repo-agnostic (resolves owner/repo from git origin).",
+      "source": "./reviewable",
       "category": "development"
     }
   ]

@@ -1,0 +1,26 @@
+{
+  "name": "@orrgal1/ralph",
+  "version": "1.0.0",
+  "description": "/ralph \u2014 general bounded-autonomy iteration loop toward any verifiable target.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "ralph"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "ralph",
+    "iteration",
+    "autonomy",
+    "loop"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills"
+  ]
+}

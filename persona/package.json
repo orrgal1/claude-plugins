@@ -1,0 +1,24 @@
+{
+  "name": "@orrgal1/persona",
+  "version": "1.0.0",
+  "description": "Simple inlined persona for Claude Code \u2014 /setup-persona.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "persona"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "persona"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "templates"
+  ]
+}

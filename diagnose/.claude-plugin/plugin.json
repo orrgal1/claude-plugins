@@ -1,0 +1,18 @@
+{
+  "name": "@orrgal1/diagnose",
+  "description": "Portable, repo-agnostic diagnostic toolkit. /root-cause runs hypothesis-driven RCA with parallel investigation. /hypothesize is a lightweight 2\u20134 candidate hypothesis loop for local bugs. /pepper scatters uniquely-tagged trace logs through suspect code, runs the repro, greps, and cleans up. /trace streams noisy process output to files for targeted extraction. No arnac coupling \u2014 usable in any repo.",
+  "version": "1.0.0",
+  "author": {
+    "name": "orrgal1"
+  },
+  "ci": {
+    "headless": true,
+    "actions": {
+      "investigate": {
+        "skill": "/root-cause",
+        "mode": "read-only",
+        "budget": 15
+      }
+    }
+  }
+}
