@@ -1,6 +1,8 @@
 ---
 name: forge-ci-green
-description: "Drive PR CI to green via a fix-loop."
+description:
+  "Drive PR CI to green — main-thread loop controller; each fix + each CI
+  snapshot offloaded to a subagent; controller owns the inter-tick wait."
 argument-hint: "[--slug <name>] [--watch] [max=<N>]"
 triggers:
   - "forge ci green"
@@ -14,6 +16,7 @@ allowed-tools:
   - Write
   - Grep
   - Glob
+  - Agent
   - ScheduleWakeup
   - Monitor
 practices:
@@ -25,10 +28,14 @@ user-invocable: true
 # /forge-ci-green — drive CI to green, chain-aware
 
 Runs the forge **loop contract** (`/forge` § "Loop contract") against GitHub PR
-CI, with two CI-specific overrides — **poll-based verify** (CI can't compress to
-one exit code) and **push-per-iteration** (CI can't verify a local commit). Adds
-a chain-contract guard + forge-tagged commits + decisions-log integration so the
-CI loop slots into the forge chain without smuggling scope.
+CI. **This skill is the loop _controller_** — it owns iteration count, budget,
+signals, the green verdict, and **the inter-tick wait**, and offloads each
+iteration's two heavy halves to `forge-step-runner` subagents: **`ci-check`**
+(mergeability gate + three-probe snapshot + classify → verdict) and **`ci-fix`**
+(diagnose one failing run, minimal fix, commit + push). Two CI-specific traits
+carry over — poll-based verify (CI can't compress to one exit code) and
+push-per-iteration (CI can't verify a local commit) — plus a chain-contract
+guard, forge-tagged commits, and decisions-log integration.
 
 ## Inputs
 
@@ -43,9 +50,17 @@ No PR → settle `NO_PR`. `mergeable=CONFLICTING` or
 `mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → settle `BLOCKED_RESTACK`. No chain
 → pass-through mode (run the CI loop without chain bookkeeping; warn once).
 
-## Chain-contract guard
+## State (file-backed loop memory)
 
-Each per-iteration patch is checked before it lands. **Refuse** if it touches:
+`.pr-artifacts/<slug>/forge/loop/forge-ci-green-<slug>/` — `plan.md` +
+`scratchpad.md`. Every offloaded subagent reads `scratchpad.md` on entry,
+appends on exit; the controller threads each `ci-check` `## handoff` (failing
+runs) into the `ci-fix` brief and each `ci-fix` `## handoff` (pushed HEAD sha)
+into the next `ci-check`.
+
+## Chain-contract guard (enforced in `ci-fix`, re-checked by controller)
+
+A per-iteration patch is **refused** if it touches:
 
 | Surface                                 | Reason                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -58,12 +73,12 @@ Refusal → `BLOCKED_CONTRACT`. Operator revises via `/forge-tests` /
 `/forge-scenarios`. Non-contract surfaces (impl, deps, CI config, docs) are fair
 game.
 
-## Process
+## Pre-flight (controller)
 
-1. Resolve slug + worktree (per `/forge-status` § 1).
+1. Resolve slug + worktree.
    `gh pr view --json number,mergeable,mergeStateStatus` → pre-flight (see
-   Inputs). Read `links.json` → build contract-file allowlist.
-
+   Inputs). Read `links.json` → build the contract-file allowlist passed to
+   every `ci-fix`.
 2. **Triage gate** (skip if `--watch` or single trivial check):
 
    ```
@@ -71,91 +86,118 @@ game.
    /forge-triage --failing <list> --json
    ```
 
-   Branch on `recommendation`:
+   Branch on `recommendation` (controller-owned — main thread):
    - `PROCEED` → continue.
    - `PROCEED_WITH_SKIPS` → for each `OUT_OF_PR_SCOPE` / `STACK_DEFERRED_<ref>`:
      - Refuse if test path in `links.json` → halt `BLOCKED_CONTRACT`.
-     - Else apply language-appropriate skip (Go `t.Skip`, py `@pytest.mark.skip`
-       / `xfail`, TS `.skip(...)`) with verdict comment + sibling PR ref.
-       Commit: `forge-ci-green: defer <test> per /forge-triage (<verdict>)`.
-     - Enter step 3 with `REAL_BUG` subset only.
+     - Else dispatch one `ci-fix` to apply the language-appropriate skip (Go
+       `t.Skip`, py `@pytest.mark.skip` / `xfail`, TS `.skip(...)`) with verdict
+       comment + sibling PR ref. Commit:
+       `forge-ci-green: defer <test> per /forge-triage (<verdict>)`.
+     - Enter the loop with the `REAL_BUG` subset only.
    - `HALT_TRIAGE` → verdict-named halt:
      - `FLAKE_SUSPECT` → `BLOCKED_FLAKY` (flakes are diagnosis-only — not a
-       fix-loop target; surface for separate handling).
+       fix-loop target).
      - `INFRA_FAILURE` → `BLOCKED_INFRA`.
      - `AMBIGUOUS` → `NEEDS_OPERATOR` reason `triage-ambiguous`.
 
-3. **Run the CI loop** (budget = `max`, optional focus `<check>`). Each
-   iteration: **poll-verify → if red, diagnose + fix + push → re-poll**. Every
-   per-iteration patch passes the chain-contract guard before it lands.
+## Control loop (main thread — never offloaded)
 
-   **Poll-based verify** (never `gh pr checks --watch` / `--fail-fast` — the
-   first hides parallel failures, the second blocks with no room to reason):
-   1. **Mergeability gate** (per tick):
-      `gh pr view --json mergeable,mergeStateStatus,headRefOid`. `CONFLICTING`
-      or `mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → stop (`BLOCKED_RESTACK`):
-      pushes against this state may produce zero workflow runs, so checks read
-      stale.
-   2. **Snapshot via three probes** (not one — each covers a blind spot):
-      - **A** required check-runs: `gh pr checks <num>` (job-level state).
-      - **B** workflow runs for HEAD:
-        `gh run list --commit "$(git rev-parse HEAD)" --limit 50 --json status,conclusion,workflowName`
-        — catches dispatched-but-jobless runs Probe A can't see.
-      - **C** merge-gate readiness:
-        `gh pr view --json mergeable,mergeStateStatus,reviewDecision` +
-        unresolved-thread count (GraphQL `reviewThreads`) — catches non-CI
-        gates.
-   3. **Classify:** _running_ (any check in flight, or any workflow
-      `status != completed`) → wait; _red_ (any
-      `conclusion ∈ {failure,cancelled,timed_out,action_required}`) → fix;
-      _CI-green-but-gated_ (zero running/red but Probe C shows
-      `mergeStateStatus ∉ {CLEAN,HAS_HOOKS}` — unresolved threads, missing
-      approval, pending external status contexts like `code-review/*` or
-      review-tool bots) → **stop** and surface the gate (out-of-band of the CI
-      fix flow); _green_ (zero running/red + Probe C clean) → verify exits 0 →
-      `SUCCESS`.
-   4. **Wait** between ticks with a bounded sleep (~120–180s, keep prompt cache
-      warm). Use `ScheduleWakeup` under `/loop`, else `Monitor` with an
-      until-loop — don't handroll a `Bash` poll predicate (a naive
-      `until pending==0` deadlocks on perpetual-pending manual gates). Re-enter
-      at the mergeability gate after each wakeup.
+```
+iter = 0
+while iter < max:
+    v = spawn ci-check                         # mergeability + 3-probe snapshot → verdict
+    v.BLOCKED_RESTACK → settle BLOCKED_RESTACK
+    v.GREEN → spawn impl-check to refresh run.json (chain mode) → settle CI_GREEN
+    v.GATED → stop + surface the gate (out-of-band of the CI fix flow)
+    v.RUNNING → WAIT (below), continue           # do NOT count an iteration
+    v.RED → act-vs-wait judgment (below):
+              act  → spawn ci-fix(v.handoff failing runs); iter += 1
+              wait → WAIT, continue
+    fold v.signals → stuck check (below)
+settle BUDGET_EXHAUSTED
+```
 
-   **Act-vs-wait** is a judgment call per tick: act when the failure is
-   self-contained and unrelated to what's still running; wait when in-flight
-   jobs touch the same surface (one fix with the full set beats two pushes), or
-   the failures look flake-suspicious. If unsure, wait one more tick.
+Under `--watch`, the controller never spawns `ci-fix` — it loops `ci-check` +
+WAIT and reports the terminal verdict (GREEN / GATED / still-RED) without
+fixing.
 
-   **Per-iteration implementer** (when red): identify the failing run(s)
-   (`gh run view <id> --log-failed`), read the failure (strongest signal first),
-   pull artifacts if needed, apply the **minimal** in-scope fix, verify locally
-   via the `test`/`build`/`lint` capability when reproducible, then **commit one
-   focused commit + push once** (no force, no rebase, no `--no-verify`). The
-   push re-triggers CI; the poll loop picks up the new run.
+**WAIT** (controller-owned): bounded sleep ~120–180s to keep the prompt cache
+warm — `ScheduleWakeup` under `/loop`, else `Monitor` with an until-loop. Don't
+handroll a `Bash` poll predicate (a naive `until pending==0` deadlocks on
+perpetual-pending manual gates). Re-enter at the next `ci-check` after wakeup.
 
-4. **Layer 1 signals** —
-   Track: `same-check-fails`, `same-error-string`, `same-file-edited`,
-   `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
-   `subagent-same-blocker`. On hard trip →
-   `/forge-stuck-check --slug <slug> --phase ci-green --signal <name> --iter <N> --json`:
-   - `confirmed` → halt, settle `STUCK` with reflect's reason.
-   - `suspected` → bump threshold once, log, continue.
-   - `none` → log false-alarm, continue.
+**Act-vs-wait** is the controller's judgment per tick: act when the failure is
+self-contained and unrelated to what's still running; wait when in-flight jobs
+touch the same surface (one fix with the full set beats two pushes), or the
+failures look flake-suspicious. If unsure, wait one more tick.
 
-5. **Per-iteration bookkeeping** (chain mode):
+## Offloaded unit — `ci-check`
 
-   ```
-   commit: forge-ci-green: <short fix>
-   decisions.md:
-     ## <iso> — forge-ci-green cycle <N>
-     - check:  <name>
-     - cause:  <one-line>
-     - fix:    <one-line>
-     - commit: <sha>
-   ```
+`forge-step-runner step: ci-check`. No edits, no push, no waiting.
 
-6. **Post-success — refresh `run.json`** (chain mode only). Re-run linked tests
-   locally (same dispatch as `/forge-impl-green`) and overwrite `run.json`.
-   Clears `run.stale` drift on the next phase.
+1. **Mergeability gate**:
+   `gh pr view --json mergeable,mergeStateStatus,headRefOid`. `CONFLICTING` or
+   `mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → `BLOCKED_RESTACK` (pushes
+   against this state may produce zero workflow runs → stale checks).
+2. **Snapshot via three probes** (each covers a blind spot):
+   - **A** required check-runs: `gh pr checks <num>` (job-level state).
+   - **B** workflow runs for HEAD:
+     `gh run list --commit "$(git rev-parse HEAD)" --limit 50 --json status,conclusion,workflowName`
+     — catches dispatched-but-jobless runs Probe A can't see.
+   - **C** merge-gate readiness:
+     `gh pr view --json mergeable,mergeStateStatus,reviewDecision` +
+     unresolved-thread count (GraphQL `reviewThreads`) — catches non-CI gates.
+3. **Classify → verdict**: _RUNNING_ (any check in flight / any workflow
+   `status != completed`); _RED_ (any
+   `conclusion ∈ {failure,cancelled,timed_out,action_required}`); _GATED_ (zero
+   running/red but Probe C shows `mergeStateStatus ∉ {CLEAN,HAS_HOOKS}` —
+   unresolved threads, missing approval, pending external contexts like
+   `code-review/*` or review-tool bots); _GREEN_ (zero running/red + Probe C
+   clean).
+4. `## handoff`: for RED, failing run(s) + first failure line; for GATED, the
+   gate kind.
+
+## Offloaded unit — `ci-fix`
+
+`forge-step-runner step: ci-fix` with the controller-supplied failing run(s).
+
+- Read `scratchpad.md` on entry. Identify the failing run(s)
+  (`gh run view <id> --log-failed`), read the failure (strongest signal first),
+  pull artifacts if needed.
+- Apply the **minimal** in-scope fix; verify locally via the
+  `test`/`build`/`lint` capability when reproducible. Chain-contract guard each
+  diff.
+- **Commit one focused commit + push once** (no force, no rebase, no
+  `--no-verify`). The push re-triggers CI; the next `ci-check` picks up the new
+  run.
+- Append `## iter <N>` (check / cause / fix / commit) to `scratchpad.md` +
+  `decisions.md`:
+
+  ```
+  ## <iso> — forge-ci-green cycle <N>
+  - check:  <name>
+  - cause:  <one-line>
+  - fix:    <one-line>
+  - commit: <sha>
+  ```
+
+## Post-success — refresh `run.json` (chain mode)
+
+On `CI_GREEN`, the controller spawns one `impl-check` (no fix) to re-run linked
+tests locally and overwrite `run.json` — clears `run.stale` drift on the next
+phase.
+
+## Stuck detection (controller-owned)
+
+Fold each subagent's `## signals`: `same-check-fails`, `same-error-string`,
+`same-file-edited`, `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
+`subagent-same-blocker`. On hard trip →
+`/forge-stuck-check --slug <slug> --phase ci-green --signal <name> --iter <N> --json`:
+
+- `confirmed` → halt, settle `STUCK` with reflect's reason.
+- `suspected` → bump threshold once, log, continue.
+- `none` → log false-alarm, continue.
 
 ## Settle
 

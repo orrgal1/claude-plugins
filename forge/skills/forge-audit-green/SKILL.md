@@ -1,6 +1,8 @@
 ---
 name: forge-audit-green
-description: "Drive the forge audit to PASS via a fix-loop."
+description:
+  "Drive the forge audit to PASS — main-thread loop controller; each fix + each
+  re-audit offloaded to a subagent."
 argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
   - "forge audit green"
@@ -24,9 +26,12 @@ user-invocable: true
 
 # /forge-audit-green — drive structural audit to PASS
 
-Wraps `/forge-audit` in a fix-loop. Each iteration: read smallest blocking set,
-apply the named one-step fix (or route to the right sub-skill), commit,
-re-audit. Sister to `/forge-ci-green` + `/forge-impl-green`.
+Wraps `/forge-audit` in a fix-loop. **This skill is the loop _controller_** per
+`/forge` § "Loop contract": it owns iteration count, budget, signals, and the
+PASS verdict, and offloads each iteration's two heavy halves to
+`forge-step-runner` subagents — the **check** is the `verify` aggregator step
+(`/forge-audit` itself), the **fix** is `audit-fix` (one finding's mechanical
+delta + commit). Sister to `/forge-ci-green` + `/forge-impl-green`.
 
 ## Inputs
 
@@ -35,9 +40,17 @@ re-audit. Sister to `/forge-ci-green` + `/forge-impl-green`.
 | `--slug`  | sanitized branch name |
 | `max=<N>` | `10`                  |
 
-## Chain-contract guard
+## State (file-backed loop memory)
 
-Each per-iteration patch is checked before it lands. **Refuse** if it touches:
+`.pr-artifacts/<slug>/forge/loop/forge-audit-green-<slug>/` — `plan.md` (one
+bullet per open finding) + `scratchpad.md` (append-only `## iter <N>` log).
+Every offloaded subagent reads `scratchpad.md` on entry and appends on exit; the
+controller threads the check's `## handoff` (smallest blocking set) into each
+`audit-fix` brief.
+
+## Chain-contract guard (enforced in `audit-fix`, re-checked by controller)
+
+A per-iteration patch is **refused** if it touches:
 
 | Surface                                 | Reason                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -53,76 +66,92 @@ Non-contract surfaces (impl source, test `when:` / `then:` comments, AAA
 markers, tier notes, coverage map cells for SGs already in `goals.md`) are fair
 game.
 
-## Findings → fix mapping
+## Findings → routing (controller reads the check's smallest blocking set)
 
-`/forge-audit` emits `## smallest blocking set` (preserve verbatim — this loop
-parses it). Per row:
+`/forge-audit` emits `## smallest blocking set` (preserved verbatim in the
+check's `## handoff`). The controller routes each row — **mechanical fixes go to
+`audit-fix`; everything else is spawned as its own step-runner or halts**:
 
-| Layer + verdict                             | One-step fix                                                                                   |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Layer 1 — structural FAIL (any)             | Halt `BLOCKED_CONTRACT` — goals shape is operator-iterate via `/forge-goals`.                  |
-| Layer 1 — loyalty DRIFTED / EXTRA / MISSING | Halt `BLOCKED_CONTRACT` — loyalty fix is `/forge-goals --iterate "<feedback>"`.                |
-| Layer 2 — UNCOVERED                         | Spawn `/forge-scenarios --goal G<n>` once. Halt `BLOCKED_CONTRACT` if it doesn't fill.         |
-| Layer 3 — UNLINKED                          | Spawn `/forge-tests --scenario SG<n>.<m>` once. Halt `BLOCKED_CONTRACT` on miss.               |
-| Layer 3 — STALE                             | Spawn `/forge-tests --refresh SG<n>.<m>` once. Halt `BLOCKED_CONTRACT` on miss.                |
-| Layer 3 — TIER-UNIT / TIER-UNKNOWN          | Halt `BLOCKED_CONTRACT` — re-tiering implies behavior change, operator.                        |
-| Layer 4 — NO-COMMENT                        | Add `when:` / `then:` above the test, verbatim from scenario.                                  |
-| Layer 4 — NO-AAA                            | Add `// --- arrange:` / `// --- act:` / `// --- assert:` markers, one short note per phase.    |
-| Layer 4 — DRIFT                             | Update the stale entity name in `when:` / `then:`.                                             |
-| Layer 4 — MISMATCH                          | Halt `BLOCKED_CONTRACT` — `assert:` doesn't realize the scenario; operator picks side.         |
-| Layer 5 — ORPHAN-SG                         | Spawn `forge-step-runner` step=`design` once. Halt `BLOCKED_CONTRACT` if it doesn't cover.     |
-| Layer 5 — ORPHAN-ELEMENT / EMPTY-PROVES     | Edit the component's `proves:` line to cite the right SG(s).                                   |
-| Layer 5 — DANGLING-SG                       | Halt `BLOCKED_CONTRACT` — map cites a scenario no longer in `goals.md`.                        |
-| Layer 6 — STALE                             | Spawn `/forge-impl-green --watch` once to refresh `run.json`. Halt `BLOCKED_CONTRACT` on red.  |
-| Layer 6 — MISSING                           | Spawn `/forge-impl-green` once (linked SG never ran). Halt `BLOCKED_CONTRACT` if red persists. |
-| Layer 6 — DANGLING                          | Spawn `/forge-tests --refresh SG<n>.<m>` once to realign cache; re-read `run.json`.            |
-| Layer 6 — FAIL / ERROR                      | Halt `BLOCKED_CONTRACT` — behavior fix is `/forge-impl-green`, not annotation.                 |
-| Tier sanity WARN                            | Skip (not a blocker).                                                                          |
-| `tier_reason` missing on non-component      | Add the reason to the scenario's `- tier:` sub-bullet.                                         |
+| Layer + verdict                             | Route                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Layer 1 — structural FAIL (any)             | Halt `BLOCKED_CONTRACT` — goals shape is operator-iterate via `/forge-goals`.                    |
+| Layer 1 — loyalty DRIFTED / EXTRA / MISSING | Halt `BLOCKED_CONTRACT` — loyalty fix is `/forge-goals --iterate "<feedback>"`.                  |
+| Layer 2 — UNCOVERED                         | Spawn `forge-step-runner step: scenarios` (goal G<n>) once. Halt `BLOCKED_CONTRACT` if unfilled. |
+| Layer 3 — UNLINKED                          | Spawn `forge-step-runner step: tests` (SG<n>.<m>) once. Halt `BLOCKED_CONTRACT` on miss.         |
+| Layer 3 — STALE                             | Spawn `forge-step-runner step: tests` (`--refresh SG<n>.<m>`) once. Halt on miss.                |
+| Layer 3 — TIER-UNIT / TIER-UNKNOWN          | Halt `BLOCKED_CONTRACT` — re-tiering implies behavior change, operator.                          |
+| Layer 4 — NO-COMMENT / NO-AAA / DRIFT       | `audit-fix` — mechanical annotation (add `when:`/`then:`, AAA markers, fix stale entity name).   |
+| Layer 4 — MISMATCH                          | Halt `BLOCKED_CONTRACT` — `assert:` doesn't realize the scenario; operator picks side.           |
+| Layer 5 — ORPHAN-SG                         | Spawn `forge-step-runner step: design` once. Halt `BLOCKED_CONTRACT` if it doesn't cover.        |
+| Layer 5 — ORPHAN-ELEMENT / EMPTY-PROVES     | `audit-fix` — edit the component's `proves:` line to cite the right SG(s).                       |
+| Layer 5 — DANGLING-SG                       | Halt `BLOCKED_CONTRACT` — map cites a scenario no longer in `goals.md`.                          |
+| Layer 6 — STALE / MISSING                   | Spawn one `impl-check` to refresh `run.json`. Tests still red → `BLOCKED_CONTRACT` (behavior).   |
+| Layer 6 — DANGLING                          | Spawn `forge-step-runner step: tests` (`--refresh SG<n>.<m>`) once to realign cache.             |
+| Layer 6 — FAIL / ERROR                      | Halt `BLOCKED_CONTRACT` — behavior fix is `/forge-impl-green` (its own loop), not annotation.    |
+| Tier sanity WARN                            | Skip (not a blocker).                                                                            |
+| `tier_reason` missing on non-component      | `audit-fix` — add the reason to the scenario's `- tier:` sub-bullet.                             |
 
 **Same defect 3 iters in a row** → halt `BLOCKED_RECURRENT`.
 
-## Process
+## Control loop (main thread — never offloaded)
 
-1. Resolve slug + worktree (per `/forge-status` § 1). Read `goals.md` + (if
-   present) `links.json` for the contract-file allowlist. Missing goals → settle
-   `NO_CHAIN`.
-2. **Run `/forge-audit --slug <slug>`.** `PASS` → settle `AUDIT_GREEN`, exit.
-   `FAIL` → parse `## smallest blocking set`.
-3. **Apply one fix per finding.** Contract-guard each diff. Sub-skill routes
-   spawn one `forge-step-runner` with scoped finding — refuse multi-finding
-   briefs (one attempt per boundary). Mechanical fixes edit directly.
-4. **Commit + decisions log.**
+```
+resolve slug + worktree; read goals.md (+ links.json) for the allowlist.
+missing goals → NO_CHAIN.
+iter = 0
+while iter < max:
+    a = spawn verify step (forge-step-runner)         # the re-audit → smallest blocking set
+    a.PASS → invoke /forge-audit --embed once → settle AUDIT_GREEN
+    route each finding in a.handoff (table above):
+        mechanical → spawn audit-fix(finding)
+        routed     → spawn the named step-runner once
+        contract   → settle BLOCKED_CONTRACT
+    fold subagent ## signals → stuck check (below)
+    iter += 1
+settle BUDGET_EXHAUSTED
+```
 
-   ```
-   forge-audit-green: <SG or layer> <one-line fix>
-   ```
+Embed (`/forge-audit --embed`) is a one-shot on PASS — no fix-loop, no push.
 
-   `.pr-artifacts/<slug>/forge/decisions.md` entry:
+## Offloaded units
 
-   ```
-   ## <iso> — forge-audit-green cycle <N>
-   - finding: <layer> <verdict> <SG or path>
-   - fix:     <one-line>
-   - commit:  <sha>
-   ```
+- **check** = `forge-step-runner step: verify` → runs `/forge-audit`, returns
+  per-layer verdicts + `## handoff` = the smallest blocking set. Read-only;
+  never applies a fix.
+- **fix** = `forge-step-runner step: audit-fix` → applies one finding's
+  mechanical delta + commit, contract-guarded. Returns the commit + signals.
 
-5. **Layer 1 signals** — track `same-finding-recurs`, `same-file-edited`,
-   `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
-   `subagent-same-blocker`. On hard trip →
-   `/forge-stuck-check --slug <slug> --phase audit-green --signal <name> --iter <N> --json`:
-   - `confirmed` → halt loop, settle `STUCK` with the named reason.
-   - `suspected` → bump threshold once, log, continue.
-   - `none` → log false-alarm, continue.
+Commit + decisions log live in `audit-fix`:
 
-6. **Loop** — re-run audit at iter N+1. Hit `max=<N>` without PASS → settle
-   `BUDGET_EXHAUSTED`.
+```
+forge-audit-green: <SG or layer> <one-line fix>
+```
+
+`.pr-artifacts/<slug>/forge/decisions.md`:
+
+```
+## <iso> — forge-audit-green cycle <N>
+- finding: <layer> <verdict> <SG or path>
+- fix:     <one-line>
+- commit:  <sha>
+```
+
+## Stuck detection (controller-owned)
+
+Fold each subagent's `## signals`: `same-finding-recurs`, `same-file-edited`,
+`diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
+`subagent-same-blocker`. On hard trip →
+`/forge-stuck-check --slug <slug> --phase audit --signal <name> --iter <N> --json`:
+
+- `confirmed` → halt loop, settle `STUCK` with the named reason.
+- `suspected` → bump threshold once, log, continue.
+- `none` → log false-alarm, continue.
 
 ## Settle
 
 | Verdict             | Meaning                                      |
 | ------------------- | -------------------------------------------- |
-| `AUDIT_GREEN`       | `/forge-audit` PASS                          |
+| `AUDIT_GREEN`       | `verify` PASS                                |
 | `NO_CHAIN`          | no `goals.md` for slug                       |
 | `BLOCKED_CONTRACT`  | guard refused OR finding on contract surface |
 | `BLOCKED_RECURRENT` | same finding survived 3 iters                |
