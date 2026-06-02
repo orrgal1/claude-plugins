@@ -1,6 +1,6 @@
 {
   "name": "@orrgal1/forge",
-  "version": "4.13.0",
+  "version": "4.13.1",
   "description": "Self-contained PR forge chain — no dependency on other plugins. /forge drives start → goals → design → scenarios → tests → impl → audit-green → ci-green → review-green → final-ci → READY (modes auto | manual; resume via /forge approve and /forge iterate). Skills: /forge-setup (maps host-repo tooling into $FORGE_HOME, default ~/.claude/forge/<repo-key>/, so worktrees share state), /forge-start, atoms (/forge-goals, /forge-scenarios, /forge-validations, /forge-tests, /forge-design, /forge-audit, /forge-review), per-layer attestation (/forge-verify-{goals,scenarios,tests,match,runs,validations}), fix-loops (/forge-impl-green, /forge-audit-green, /forge-ci-green, /forge-review-green), domain mapping (/forge-map: db/api/events/config/ad-hoc), multi-channel review (/forge-review: lens-fanout + always-on /code-review + /security-review), tool packaging (/forge-tool). Bundles its own lens pool + review channels (extensible via $FORGE_HOME/; no persona bundled — tiered baseline is the default). Per-PR artifacts under .pr-artifacts/<branch-slug>/forge/.",
   "author": "orrgal1",
   "license": "MIT",
