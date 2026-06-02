@@ -189,7 +189,7 @@ their native severity all the way through.
 enabled       = true            # master switch
 agent         = "@orrgal1/forge:forge-lens-reviewer"
 lens_dir      = "lenses"        # relative to plugin root; .forge/lenses/ overrides per file
-persona       = ""              # default persona id; CLI --persona overrides
+persona       = ""              # default persona id; empty = none (baseline only); CLI --persona overrides
 order         = "lens-mode"     # or "file-by-file"
 severity_cap  = ""              # empty = no cap; values: blocker/major/minor/nit
 ```

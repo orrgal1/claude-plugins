@@ -5,9 +5,11 @@ A persona is a named reviewer profile that `/forge-review` and
 contributes a `lenses:` list (union'd with the baseline) plus a description of
 what that reviewer cares about and how they phrase findings.
 
-Forge ships one generic persona (`default.md`). A host repo can add its own —
-either here (if forking the plugin) or, without touching the plugin, in
-`.forge/personas/*.md`. Forge reads both locations; `.forge/` wins on id clash.
+Forge bundles **no** persona. The no-persona default is the tiered lens baseline
+(`review-channels/lens-fanout.md` § Selection) — a persona only ever _adds_
+lenses on top, so "no persona" already runs the right set. A host repo adds its
+own in `$FORGE_HOME/personas/*.md` (or `.forge/personas/*.md`) when it wants
+emphasis beyond the baseline.
 
 ## Schema
 
@@ -32,7 +34,7 @@ lenses: [correctness, robustness, observability, api-design]
 ## Adding a persona for a surface
 
 `/forge-review-green` suggests a persona by diff fingerprint (dominant language
-/ area). The bundled pool only ships `default`; add personas matching the
-surfaces your repo reviews most — e.g. a backend persona for service code, a
-security persona for trust-boundary changes, a frontend persona for UI work.
-Until one exists, forge falls back to `default`.
+/ area). With none bundled, add personas matching the surfaces your repo reviews
+most — e.g. a backend persona for service code, a frontend persona for UI work.
+Until one exists (or when none matches), forge runs the baseline only — no
+persona.

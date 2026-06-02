@@ -156,19 +156,20 @@ Always run the **full** cycle. Hiding a lens hides re-emergence.
 If `--persona(s)` was passed → use for every cycle. Else fingerprint the diff +
 prior-cycle findings:
 
-| Diff fingerprint                               | Persona pick (typical)                  |
-| ---------------------------------------------- | --------------------------------------- |
-| ≥70% frontend / UI (TS/JS components, styles)  | a frontend persona, else `default`      |
-| ≥70% backend / service / library code          | a backend persona, else `default`       |
-| Touches auth, crypto, secrets, IAM, signatures | a security persona, else `default`      |
-| Schema migration, DB indexes, query rewrites   | a data-modeling persona, else `default` |
-| Mobile (Flutter / Swift / Kotlin)              | a mobile persona, else `default`        |
-| No clear winner                                | `default`                               |
+| Diff fingerprint                               | Persona pick (typical)                        |
+| ---------------------------------------------- | --------------------------------------------- |
+| ≥70% frontend / UI (TS/JS components, styles)  | a frontend persona, else none (baseline)      |
+| ≥70% backend / service / library code          | a backend persona, else none (baseline)       |
+| Touches auth, crypto, secrets, IAM, signatures | a security persona, else none (baseline)      |
+| Schema migration, DB indexes, query rewrites   | a data-modeling persona, else none (baseline) |
+| Mobile (Flutter / Swift / Kotlin)              | a mobile persona, else none (baseline)        |
+| No clear winner                                | none (baseline)                               |
 
-Read available personas from `personas/*.md` and `$FORGE_HOME/personas/*.md`
-(skip `README.md`); `$FORGE_HOME/` wins on id clash. Match the dominant surface
-to a persona whose `lenses:` fit; fall back to `default`. Switch between cycles
-when the dominant surface shifts; log rationale.
+Read available personas from `$FORGE_HOME/personas/*.md` (skip `README.md`).
+Forge bundles **no** persona — a persona only ever _adds_ lenses beyond the
+tiered baseline, so when none matches the dominant surface, run with no persona
+(baseline only). Match a host persona whose `lenses:` fit; else baseline. Switch
+between cycles when the dominant surface shifts; log rationale.
 
 ## Finding-status discipline
 
