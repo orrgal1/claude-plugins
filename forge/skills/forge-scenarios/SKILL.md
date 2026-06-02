@@ -106,9 +106,10 @@ skill establishes on first authoring.
 6. **Write scenarios inline** in canonical sub-bullet shape. Insert
    `## Scenarios` block immediately under each goal's body.
 7. **Forge narration** — between goal body and `## Scenarios`, add a
-   `### How the scenarios prove this` section: plain-English paragraph tying SGs
+   `### How the scenarios prove this` section: **≤2 sentences** tying SGs
    (`SG<n>.<m>` or ranges `SG1.1–SG1.5`) to the goal's end-state.
-   Reviewer-facing only, not parsed downstream. Rewrite when scenarios change.
+   Reviewer-facing only, not parsed downstream. Phrases over prose; no restating
+   each scenario — the SG list already says it. Rewrite when scenarios change.
 8. **Publish goals.md** (only-goals-tracked policy) — gitignore bootstrap +
    legacy-host force-add per `/forge-goals` §5, commit msg
    `forge-scenarios: update review artifact`.
@@ -242,7 +243,7 @@ When this PR ships, the system will support <capability>.
 
 ### How the scenarios prove this
 
-<Plain-English paragraph tying SG1.1–SG1.3 back to the goal.>
+<≤2 sentences tying SG1.1–SG1.3 back to the goal. No per-scenario restatement.>
 
 ## Scenarios
 
