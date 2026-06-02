@@ -1,0 +1,27 @@
+{
+  "name": "@orrgal1/graphify-wrapper",
+  "version": "1.0.0",
+  "description": "Thin harness over the graphify knowledge-graph CLI for monorepos + worktrees — /graphify-wrapper-setup, /graphify-wrapper-map, /graphify-wrapper-index, /graphify-wrapper-sync, /graphify-wrapper-query, /graphify-wrapper-status.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "graphify-wrapper"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "graphify",
+    "knowledge-graph",
+    "monorepo",
+    "worktrees"
+  ],
+  "files": [
+    ".claude-plugin",
+    "lib",
+    "skills"
+  ]
+}
