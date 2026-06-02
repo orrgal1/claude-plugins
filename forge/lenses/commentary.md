@@ -81,9 +81,32 @@ The brief carries the diff's commentary surface — every added or modified
 comment, docstring, or inline note with surrounding code context — plus the rule
 set above. No forge artifact.
 
-**Severity:** commentary findings are typically minor (a single redundant line,
-a stale anchor). Promote to major when the comment is actively misleading —
-contradicts the code it sits beside, or claims behavior the code does not
-implement. Blocker only when the misleading comment hides a correctness risk a
-future reader would rely on (e.g. `this never returns null` above code that
-does).
+**Severity.** The fix loop (`forge-review-green`) drives only blockers + majors
+to zero; minors are noted and survive to merge. So the floor is deliberately not
+"everything is minor" — the two failure modes this lens exists to stop,
+**drift** and **sustained verbosity**, promote to major so they are actually
+forced.
+
+- **Minor** — an isolated, low-rot slip: one redundant line, a lone
+  signature-echo param, a banner/divider, a tone word (`just`, `obviously`). One
+  comment, no rot vector, reader loses nothing if it ships.
+- **Major** — promote when either holds:
+  - **Drift-prone anchor.** The comment pins itself to ephemera that rots away
+    from the code: a PR/issue/ticket number, a line-number reference
+    (`see foo.py:123`), a caller list (`used by X, Y, Z`), a
+    session/PR-narration note (`added for the Y flow`,
+    `handles the case from #123`), an author/date stamp, or a
+    `temporary until …` with no tied removal condition. These mislead the moment
+    the surface moves — minor undersells them, and minor means they ship.
+  - **Sustained verbosity.** Not one stray line but a _block_ that fails
+    brevity: multi-paragraph prose where one line carries the rationale, a
+    docstring that paraphrases every signature param with no added invariant, or
+    a comment that restates the function it sits above. Volume is the defect;
+    one finding covers the block.
+- **Blocker** — reserved for the misleading case: a comment that contradicts the
+  code beside it or claims behavior the code does not implement, _and_ a future
+  reader would rely on it for a correctness decision (e.g.
+  `this never returns null` above code that does).
+
+When in doubt between minor and major, ask: _does this rot or mislead, or is it
+merely redundant?_ Rot/mislead → major. Merely redundant → minor.

@@ -51,11 +51,11 @@ No PR → bail `NO_PR`.
 
 Failing list sources (cheapest first):
 
-| Source                                | Use for                               |
-| ------------------------------------- | ------------------------------------- |
-| `gh pr checks <num>` FAILURE-filtered | CI checks (ci-green caller)           |
-| `.pr-artifacts/<slug>/forge/run.json` | linked tests with `result != pass`    |
-| latest `cycle-*.md` blockers + majors | review findings (review-green caller) |
+| Source                                           | Use for                               |
+| ------------------------------------------------ | ------------------------------------- |
+| `gh pr checks <num>` FAILURE-filtered            | CI checks (ci-green caller)           |
+| `.pr-artifacts/<slug>/forge/run.json`            | linked tests with `result != pass`    |
+| latest `cycle-*.md` open findings (any severity) | review findings (review-green caller) |
 
 ### 2. Five checks per item
 

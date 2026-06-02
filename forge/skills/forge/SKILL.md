@@ -88,7 +88,7 @@ and offloads each finding to `review-fix`.
 | `--slug`              | sanitized branch name                                      |
 | `--mode`              | `auto`                                                     |
 | `--base`              | `main`                                                     |
-| `--max-review-cycles` | `3`                                                        |
+| `--max-review-cycles` | `5`                                                        |
 | `--max-impl-iters`    | `15`                                                       |
 | `--persona`           | self-select per cycle (delegated to `/forge-review-green`) |
 | `--from`              | earliest unsatisfied phase                                 |
@@ -460,7 +460,7 @@ Halts:
 Main-thread `/forge-review-green` (the review **controller**) per § "Loop
 contract". Its **check** is a `/forge-review` cycle run in the main thread (fans
 out to lens reviewers; a runner can't nest fan-out); its **fix** is one
-`review-fix` subagent per blocker/major finding:
+`review-fix` subagent per finding, every severity (blocker through nit):
 
 ```
 /forge-review-green --slug <slug> max=<--max-review-cycles> [--persona <id>]
@@ -558,7 +558,7 @@ Each → one decision-log entry `D<n> <iso> <phase> <rule>`.
 
 ### Float to operator — genuine halts only
 
-- Cycle 3 blockers/majors remain → `BLOCKED_REVIEW`.
+- Cycle 3 (budget) ends with any finding still open → `BLOCKED_REVIEW`.
 - Loop detected (≥2 address↔regress on same finding, post persona swap) →
   `NEEDS_OPERATOR reason loop`.
 - Destructive op required outside scope →
@@ -654,7 +654,7 @@ BLOCKED_VERIFY_RUNS      → /forge-impl-green; --from impl
 BLOCKED_VERIFY_VALIDATIONS → /forge-impl-green (finish removal) or /forge-validations --iterate; --from impl
 BLOCKED_AUDIT            → see audit report; --from audit
 BLOCKED_CI               → see ci-green log; --from ci
-BLOCKED_REVIEW           → address blockers/majors; --from review
+BLOCKED_REVIEW           → address open findings (any severity); --from review
 NEEDS_OPERATOR           → see decisions.md; --from <phase>
 STUCK                    → see /forge-stuck-check report; --from <phase>
 ```
@@ -697,7 +697,7 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 /forge                                # resume from earliest unsatisfied
 /forge --mode manual                  # pause after every phase
 /forge --base develop                 # non-main base
-/forge --max-review-cycles 5          # raise review budget
+/forge --max-review-cycles 8          # raise review budget (default 5)
 /forge --max-impl-iters 25            # raise impl budget
 /forge --persona backend-senior       # lock persona
 /forge --from impl                    # resume after operator unblocked

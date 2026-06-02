@@ -88,29 +88,14 @@ accepted.
 Downstream repo with plugin in `~/.claude/plugins/` → invoke slash command via
 Skill tool. Prefer file-path read when both available — it's grounded.
 
-### 2. Verify prereqs
+### 2. Gate on the contract's own prereqs
 
-| Step                 | Requires (else blocker, do not advance)                                                                                     |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `start`              | non-empty `source`; `base` resolves to remote branch; SSH-form remote                                                       |
-| `goals`              | nothing (or, for `--iterate`, existing `goals.md`)                                                                          |
-| `scenarios`          | `goals.md` with ≥1 `Gn` header                                                                                              |
-| `validations`        | `goals.md` with ≥1 `Gn` header                                                                                              |
-| `tests`              | every `Gn` has ≥1 proof; binds the scenario-backed ones (a validation-only goal has no SG to bind — skip it, not a blocker) |
-| `design`             | every scenario has `- test:` (or, for `--iterate`, existing `design.md`)                                                    |
-| `impl-fix`           | every scenario has `- test:`; linked tests exist; brief carries a failing set                                               |
-| `impl-check`         | every scenario has `- test:`; linked tests exist                                                                            |
-| `audit-fix`          | `goals.md` with linked tests; `links.json`; brief carries one finding (or scoped set) to fix                                |
-| `ci-fix`             | PR exists; mergeable (not CONFLICTING/DIRTY/BEHIND/UNKNOWN); brief carries the failing check(s)                             |
-| `ci-check`           | PR exists                                                                                                                   |
-| `review-fix`         | `goals.md` + `links.json`; brief carries one blocker/major finding (id + cited location)                                    |
-| `verify`             | every scenario has `- test:` (design.md optional)                                                                           |
-| `verify-goals`       | `goals.md` exists (PR recommended for loyalty check; absence not blocker)                                                   |
-| `verify-scenarios`   | `goals.md` with ≥1 `Gn` header                                                                                              |
-| `verify-tests`       | `goals.md` with ≥1 scenario                                                                                                 |
-| `verify-match`       | ≥1 LINKED scenario in `goals.md`                                                                                            |
-| `verify-runs`        | `run.json` exists                                                                                                           |
-| `verify-validations` | `goals.md` with ≥1 `## Validations` block                                                                                   |
+The step's SKILL.md states its own prereqs (its `## Process` / `## Pre-flight` /
+`Prereqs` line) and the brief supplies the per-iteration payload (failing set,
+finding, etc.). Confirm both hold before executing; unmet → `## blockers`, do
+not advance. The runner keeps **no second copy** of the prereq list — the skill
+is the source of truth, read fresh each run so the guard can never drift from
+the contract.
 
 ### 3. Execute the contract
 
@@ -121,58 +106,28 @@ skipping mandatory steps; no introducing steps not named.
 
 ## Scope guard — refuse out-of-step work
 
-If the brief asks for work belonging to a different step, **refuse** + return a
-blocker. Key cross-step boundaries:
+**The step's SKILL.md defines its own scope and guardrails — follow them
+verbatim.** Each skill states what it may write and what it must refuse (its
+scope/guardrails/chain-contract-guard section); the runner does not re-encode
+those per-step rules. If the brief asks for work belonging to a **different**
+step, **refuse** + return a blocker. The skill is the source of truth, read
+fresh each run so the guard can never drift from the contract.
 
-- `start` → ONLY 1-3 sentence brief + sentinel commit + draft PR. No goals /
-  scenarios / tests / design / impl.
-- `goals` → goals.md only. No test code, no scenarios, no `links.json`.
-- `scenarios` → scenarios only (including harvest). No test code, no goal edits,
-  no test attachment.
-- `validations` → `## Validations` blocks only (assert/check/kind). No test
-  code, no goal edits, no impl, no running of the checks (that's
-  `verify-validations`).
-- `tests` → test files + impl-surface scaffolds (panic-bodied stubs with
-  `forge-tests: unimplemented` marker per `/forge-tests` § 3b). No goals edit,
-  no scenario redrafting, no audit.
-- `design` → `design.md` only. No goal edits, no impl, no test attach, no audit.
-- `impl-fix` → **one iteration's delta.** Drive the controller-supplied failing
-  scenario(s) green by editing impl source; one focused commit. **Test bodies
-  are contract** — refuse to touch; goals.md / links.json refused. Scaffolds
-  left by `/forge-tests` step 3b ARE impl source (fill them with real behavior).
-  Do NOT loop — apply one delta and return; the main-thread controller decides
-  whether to spawn another. Read `scratchpad.md` on entry, append on exit.
-- `impl-check` → **re-verify only.** Run the full linked-test set, write
-  `run.json`, return the verdict + signals. **No source edits** (the only write
-  is `run.json` + a scratchpad line). Never fix — that's `impl-fix`.
-- `audit-fix` → **one iteration's delta.** Mechanical fixes only for the
-  controller-supplied finding(s): comments, `when:`/`then:` notes, AAA markers,
-  tier notes, `proves:` lines, coverage-map cells for SGs already in `goals.md`.
-  Behavioral impl, goals.md, links.json, design.md, linked test bodies = hard
-  refusal (`BLOCKED_CONTRACT`). Findings that route to another skill
-  (UNCOVERED→scenarios, UNLINKED→tests, ORPHAN-SG→design, FAIL→impl) are **not**
-  this step's job — return them so the controller routes. Do NOT loop or
-  re-audit. Read `scratchpad.md` on entry, append on exit.
-- `ci-check` → **re-verify only.** Mergeability gate + three-probe snapshot
-  (check-runs, workflow runs, merge-gate readiness) → classify
-  running/red/gated/green → return verdict + signals. **No edits, no push, no
-  waiting** (the controller owns the inter-tick wait).
-- `ci-fix` → **one iteration's delta.** Diagnose the controller-supplied failing
-  run, apply the minimal in-scope fix (impl / config / deps), one focused
-  commit, **push once** (no force / rebase / `--no-verify`). Goals.md /
-  links.json / design.md / any linked test = hard refusal per chain-contract
-  guard. Do NOT loop or poll. Read `scratchpad.md` on entry, append on exit.
-- `review-fix` → **one finding's delta.** Close the controller-supplied
-  blocker/major defect (stated fix is a suggestion — close the defect), narrow
-  delta, one focused commit, return predicted `addressed` citation
-  (`<sha> @ path:line`). Never downgrade severity; goals.md / links.json /
-  linked tests = `out-of-scope` refusal. Do NOT run a review cycle (that fan-out
-  is the controller's `/forge-review`). Read `scratchpad.md` on entry, append on
-  exit.
-- `verify` (aggregator) → audit only; surface fixes, never apply. (Doubles as
-  the audit-green loop's **check** — returns the smallest blocking set.)
-- `verify-<layer>` → read-only, single-layer. Out-of-layer findings go in
-  `## notes`, never as edits.
+What the runner adds on top of the skill's scope is the **loop-unit protocol** —
+how a runner behaves as one offloaded unit of a `*-green` loop, regardless of
+which skill it's running:
+
+- **`*-fix` steps** (`impl-fix`, `audit-fix`, `ci-fix`, `review-fix`) → apply
+  **exactly one narrow delta + one focused commit, then return.** Never loop —
+  the main-thread controller decides whether to spawn another. Read
+  `scratchpad.md` on entry, append the `## iter <N>` line on exit.
+- **`*-check` steps** (`impl-check`, `ci-check`) → **re-verify only.** Classify
+  and return the verdict + signals. No source edits — the sole write is the
+  verdict artifact (`run.json`, snapshot) + a scratchpad line. Never fix.
+- **`ci-fix` is the only step that pushes** (once; no force / rebase /
+  `--no-verify`). Every other step leaves pushing to the controller / operator.
+- **`verify` / `verify-<layer>`** → read-only. Surface findings, never apply;
+  out-of-layer findings go in `## notes`, never as edits.
 
 Cap is hard. Contract contradicting itself (rare) → surface to orchestrator,
 don't silently comply.
