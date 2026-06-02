@@ -2,8 +2,8 @@
 name: forge-review
 description:
   "Forge-chain-aware multi-channel PR review — fans out parallel review
-  mechanisms (lens fan-out + built-in /code-review by default; optional
-  /security-review wrapper) and aggregates findings."
+  mechanisms — lens fan-out + built-in /code-review + built-in /security-review,
+  all on by default) and aggregates findings."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--channels <ids>] [--add-channel <id>]...
   [--drop-channel <id>]... [--channel <id> --<flag> <val>]... [--persona <id> |
@@ -39,7 +39,7 @@ The forge plugin ships three channels (`forge/review-channels/`):
 | ------------------------- | ------------- | ----------- | --------------------------------------------------------------- |
 | `lens-fanout`             | agent-fanout  | **enabled** | parallel lens fan-out (`forge-lens-reviewer` agent + lens pool) |
 | `code-review-builtin`     | skill-wrapper | **enabled** | Claude Code's built-in `/code-review`                           |
-| `security-review-builtin` | skill-wrapper | opt-in      | Claude Code's built-in `/security-review`                       |
+| `security-review-builtin` | skill-wrapper | **enabled** | Claude Code's built-in `/security-review`                       |
 
 A host repo extends or overrides by dropping channel files into
 `$FORGE_HOME/review-channels/` (same shape as `forge/review-channels/<id>.md` —
@@ -131,18 +131,19 @@ Risk hot-spots:
 Channels (M active):
   ✓ lens-fanout
       Personas:  <selected slugs | "none — baseline only">
-      Lenses (K total, target 7-9):
-        L0  goal-delivery       (baseline; cannot drop)
-        L1  scenario-realism    (baseline; cannot drop)
-        L2  test-match          (baseline; cannot drop)
-        L3-L6 …                 (baseline; code-quality)
-        L7+ <pool id | name>    (persona | design)
+      Lenses (K total):
+        tier-1 core   <10 always-on; cannot drop>
+        tier-2 chain  goal-delivery, scenario-realism, test-match (if chain)
+        tier-3 auto   <pool ids matched by diff fingerprint>
+        persona/design <pool id | name>
       Order: lens-mode (default) | file-by-file
       Agent: @orrgal1/forge:forge-lens-reviewer
   ✓ code-review-builtin
       Effort:       medium
       Severity cap: <value | "none">
-  ✗ security-review-builtin     (drop — not enabled)
+  ✓ security-review-builtin
+      Scope:        <path | "full diff">
+      Severity cap: <value | "none">
 
 Approve? [y / edit / abort]
   edit:  --channels <ids> | --add-channel <id> | --drop-channel <id>

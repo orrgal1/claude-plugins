@@ -36,8 +36,8 @@ No praise, no preamble, no hedging. Cite `path:line` for every finding.
 
 ## Pairing
 
-- For security / trust-boundary code, add the `security` lens or a
-  security-focused persona.
+- Security review is the always-on `security-review-builtin` channel — no lens
+  to add; it runs on every PR.
 - For service / infra PRs, add `observability` + `production-wiring`.
 - For greenfield work with no established patterns, prefer per-PR designed
   lenses over a persona (no idioms to converge on yet).

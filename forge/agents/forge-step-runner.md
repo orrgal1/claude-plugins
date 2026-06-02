@@ -61,6 +61,13 @@ accepted.
 
 ## How to run
 
+### 0. Confirm setup ran (hard gate)
+
+Before anything else, confirm `$FORGE_HOME/forge.toml` exists with
+`[meta].ready = true` for this repo. Absent or `ready` unset → refuse the step,
+return `## blockers` = `SETUP_REQUIRED — run /forge-setup`. Do not read the
+contract, do not execute. Setup is the prerequisite for every step.
+
 ### 1. Read the contract
 
 | Step                 | SKILL.md path                              |

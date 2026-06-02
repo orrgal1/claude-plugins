@@ -75,12 +75,13 @@ bounded. A lens fires if ANY of its triggers match.
 
 | Pool id             | Fires when the diff touches …                                                                      |
 | ------------------- | -------------------------------------------------------------------------------------------------- |
-| `security`          | auth / authz / crypto / secrets / IAM / signatures / input validation / request handlers           |
 | `production-wiring` | a new interface+impl, constructor, registered endpoint, background job, feature flag, or migration |
 | `paired-tier-types` | cross-tier type defs (proto, pydantic, ORM schema, OpenAPI, TS API types)                          |
 | `api-design`        | public API surface — routes, request/response shapes, exported client                              |
 | `observability`     | service code with failure paths, async work, or external calls (oncall-relevant)                   |
 | `test-quality`      | new / changed test files                                                                           |
+
+Security review is the always-on `security-review-builtin` channel, not a lens.
 
 Fingerprint heuristics live in `lenses/README.md` § "Diff fingerprint → lens".
 Tier 1 + selected Tier 2/3 lenses can be edited at the gate (add/drop).

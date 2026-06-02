@@ -40,6 +40,24 @@ the agent reads and carries out (for conditional or multi-step flows a fixed
 command can't capture). A capability that isn't mapped is surfaced as a gap
 (`NEEDS_SETUP`) — forge never guesses.
 
+## Setup is a hard prerequisite
+
+**No forge skill runs until `/forge-setup` has completed locally for this
+repo.** Setup's final step writes `[meta].ready = true` to
+`$FORGE_HOME/forge.toml`; that marker is the gate. Every forge entry point
+checks it before doing work:
+
+- The `/forge` orchestrator and `forge-step-runner` (every chain step) refuse
+  with `SETUP_REQUIRED` when the marker is absent, pointing the operator at
+  `/forge-setup`.
+- `/forge-status` reports `NOT_SET_UP` instead of chain state.
+
+"Completed locally" means the marker exists in **this repo's** `$FORGE_HOME`
+(keyed by git identity) — a sibling repo's setup does not count. Setup also
+hard-requires Claude Code's built-in `/code-review` and `/security-review`
+skills (the always-on review channels wrap them); it refuses to mark ready
+without them.
+
 ## Forge home — where state lives
 
 All repo-scoped forge state lives at **`$FORGE_HOME`** (the "forge home" for
@@ -201,6 +219,10 @@ default_branch  = "main"    # ground-truth branch for maps. Auto-set on first ru
 home            = "user"    # "user" (default) | "repo" — where forge state lives
 migrated_from   = ""        # set by /forge-setup --migrate; audit trail
 notes           = ""        # anything forge should know about layout / test strategy
+ready             = true                          # set by /forge-setup step 12 — the prerequisite gate every forge skill checks
+setup_at          = ""                            # ISO-8601 UTC of last completed setup
+setup_version     = ""                            # forge plugin version that ran setup
+builtins_verified = ["code-review", "security-review"]  # core skills confirmed present at setup
 
 # Logical capability -> shell command (deterministic). A script at
 # $FORGE_HOME/commands/<cap> takes precedence. Leave a capability empty if
@@ -233,7 +255,7 @@ localenv  = ""
 # (host-repo overrides). See forge/review-channels/README.md for the channel
 # concept and authoring shape.
 [review]
-default_channels = ["lens-fanout", "code-review-builtin"]    # active channel set; seeded from channels with default_enabled: true
+default_channels = ["lens-fanout", "code-review-builtin", "security-review-builtin"]    # active channel set; seeded from channels with default_enabled: true
 aggregation      = "interleave"        # "interleave" (sort by file:line) | "grouped" (section per channel)
 
 # Per-channel config. The [review.channels.<id>] subtable enables / disables
@@ -252,7 +274,7 @@ effort        = "medium"               # low | medium | high | max
 severity_cap  = ""                     # empty = no cap; cap to "minor" to keep advisory
 
 [review.channels.security-review-builtin]
-enabled       = false                  # opt-in; wraps Claude Code's /security-review
+enabled       = true                   # always-on; wraps Claude Code's /security-review
 scope         = ""                     # empty = full diff; otherwise --scope path
 severity_cap  = ""                     # empty = no cap
 ```
@@ -403,7 +425,22 @@ See `/forge-map` for the full ground-truth + absorption flow.
     Surface non-zero exits as a warning, not a hard fail — the command may need
     infra up first. Instruction-form capabilities aren't dry-run.
 
-11. **Recap.** Print the capability table with final status and the next move.
+11. **Verify Claude Code built-ins (hard gate).** Forge's always-on review
+    channels wrap two core skills — `/code-review` and `/security-review`.
+    Confirm both resolve in this install (they appear in the available-skills
+    registry / are invocable via the Skill tool). Either missing → halt
+    `SETUP_BLOCKED reason missing-builtins`, naming which, with remediation
+    (update Claude Code to a build that ships the review skills). Setup does
+    **not** complete without them — forge ships no fallback for either channel.
+
+12. **Mark setup ready.** Write the completion marker to `[meta]`:
+    `ready = true`, `setup_at = "<ISO-8601 UTC>"`,
+    `setup_version = "<plugin version>"`,
+    `builtins_verified = ["code-review", "security-review"]`. This marker is the
+    signal every other forge skill checks before running (see § "Setup is a hard
+    prerequisite"). Re-running setup refreshes it.
+
+13. **Recap.** Print the capability table with final status and the next move.
 
 ## Stub templates
 

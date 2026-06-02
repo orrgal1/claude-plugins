@@ -36,6 +36,12 @@ Slug rule per `/forge-goals`: lowercase, alphanumerics + dashes, strip leading
 
 ## Process
 
+### 0. Setup gate
+
+Confirm `$FORGE_HOME/forge.toml` exists with `[meta].ready = true` for this
+repo. Absent → emit `phase: NOT_SET_UP`, next move `run /forge-setup`, and stop
+(skip the rest of the report — there's no chain to read yet). Exit non-zero.
+
 ### 1. Resolve slug + worktree
 
 ```
@@ -49,16 +55,16 @@ art=".pr-artifacts/$slug/forge"
 
 Missing is data, not error.
 
-| Probe                    | Used for                                         |
-| ------------------------ | ------------------------------------------------ |
+| Probe                    | Used for                                                           |
+| ------------------------ | ------------------------------------------------------------------ |
 | `$art/goals.md`          | spec layer present + `## G\d+` + `^- SG\d+\.\d+` + `^- VG\d+\.\d+` |
-| `$art/links.json`        | tests linked count + tier per SG                 |
-| `$art/design.md`         | design layer present                             |
-| `$art/run.json`          | last run pass/fail/error/skip + mtime            |
-| `$art/validations.json`  | per-VG verdict + evidence + mtime                |
-| `$art/decisions.md`      | unattended-mode log                              |
-| `$art/approvals.json`    | per-phase sha approvals (`goals`, `design`, …)   |
-| `$art/review/cycle-*.md` | review cycle count + last B+M                    |
+| `$art/links.json`        | tests linked count + tier per SG                                   |
+| `$art/design.md`         | design layer present                                               |
+| `$art/run.json`          | last run pass/fail/error/skip + mtime                              |
+| `$art/validations.json`  | per-VG verdict + evidence + mtime                                  |
+| `$art/decisions.md`      | unattended-mode log                                                |
+| `$art/approvals.json`    | per-phase sha approvals (`goals`, `design`, …)                     |
+| `$art/review/cycle-*.md` | review cycle count + last B+M                                      |
 
 For each `approvals.json` entry: sha matches artifact's last-touching commit
 (`git log -1 --format=%H -- <artifact>`) → phase APPROVED. Else AWAIT.
@@ -81,28 +87,28 @@ For each `links.json` entry: resolve test file + function/symbol. Miss → drift
 
 Earliest unsatisfied phase wins:
 
-| Phase                 | Trigger                                                                             | Next                                                   |
-| --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `NO_CHAIN`            | no `$art/` AND no PR                                                                | `/forge <source>`                                      |
-| `START_PENDING`       | branch local but no remote / draft PR                                               | `/forge-start <source>` (or `/forge` to resume start)  |
-| `GOALS_DRAFT`         | `goals.md` exists, no `approvals.json.goals`                                        | `/forge-goals --push`                                  |
-| `AWAIT_GOALS_REVIEW`  | goals pushed; `approvals.json.goals` absent OR sha-stale                            | operator: `/forge approve` or `/forge iterate "<fbk>"` |
-| `GOALS_APPROVED`      | approval sha matches goals.md last commit                                           | `/forge-design --push`                                 |
-| `DESIGN_DRAFT`        | `design.md` exists, no `approvals.json.design`                                      | `/forge-design --push`                                 |
-| `AWAIT_DESIGN_REVIEW` | design pushed; approval absent or sha-stale                                         | operator: same shape                                   |
-| `DESIGN_APPROVED`     | approval sha matches design.md                                                      | `/forge-scenarios --push`                              |
-| `SCENARIOS_DRAFT`         | scenarios written, no `approvals.json.scenarios`                                    | `/forge-scenarios --push`                              |
-| `AWAIT_SCENARIOS_REVIEW`  | scenarios pushed; `approvals.json.scenarios` absent OR sha-stale                    | operator: `/forge approve` or `/forge iterate "<fbk>"` |
-| `SCENARIOS_APPROVED`      | approval sha matches goals.md scenarios block, no `links.json` (or empty)           | `/forge-tests`                                         |
-| `TESTS_LINKED`        | links present, no `run.json` (or older than any linked test)                        | `/forge-impl-green`                                    |
-| `RED`                 | `run.json` `fail>0` or `error>0`                                                    | `/forge-impl-green`                                    |
-| `IMPL_GREEN`          | `run.json` all pass, no audit-green PASS yet                                        | per-layer attestation 5a-5e → `/forge-audit-green`     |
-| `AUDIT_GREEN`         | last audit PASS, no embed in PR body OR no CI green for HEAD                        | `/forge-audit --embed` + `/forge-ci-green`             |
-| `CI_GREEN`            | PR CI green on HEAD, no review cycles                                               | `/forge-review-green`                                  |
-| `REVIEW_OPEN`         | last `cycle-N.md` B+M>0 AND no commits since                                        | `/forge-review-green`                                  |
-| `REVIEW_STALE`        | last cycle B+M>0 AND commits since, no new cycle                                    | `/forge-review-green` (re-cycle)                       |
-| `REVIEW_GREEN`        | last cycle B+M=0, commits since last `ci.green`                                     | `/forge-ci-green` (phase 9 final)                      |
-| `READY`               | CI green post-review + audit-embed present + last B+M=0 (or `--no-review` recorded) | mark ready / merge                                     |
+| Phase                    | Trigger                                                                             | Next                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `NO_CHAIN`               | no `$art/` AND no PR                                                                | `/forge <source>`                                      |
+| `START_PENDING`          | branch local but no remote / draft PR                                               | `/forge-start <source>` (or `/forge` to resume start)  |
+| `GOALS_DRAFT`            | `goals.md` exists, no `approvals.json.goals`                                        | `/forge-goals --push`                                  |
+| `AWAIT_GOALS_REVIEW`     | goals pushed; `approvals.json.goals` absent OR sha-stale                            | operator: `/forge approve` or `/forge iterate "<fbk>"` |
+| `GOALS_APPROVED`         | approval sha matches goals.md last commit                                           | `/forge-design --push`                                 |
+| `DESIGN_DRAFT`           | `design.md` exists, no `approvals.json.design`                                      | `/forge-design --push`                                 |
+| `AWAIT_DESIGN_REVIEW`    | design pushed; approval absent or sha-stale                                         | operator: same shape                                   |
+| `DESIGN_APPROVED`        | approval sha matches design.md                                                      | `/forge-scenarios --push`                              |
+| `SCENARIOS_DRAFT`        | scenarios written, no `approvals.json.scenarios`                                    | `/forge-scenarios --push`                              |
+| `AWAIT_SCENARIOS_REVIEW` | scenarios pushed; `approvals.json.scenarios` absent OR sha-stale                    | operator: `/forge approve` or `/forge iterate "<fbk>"` |
+| `SCENARIOS_APPROVED`     | approval sha matches goals.md scenarios block, no `links.json` (or empty)           | `/forge-tests`                                         |
+| `TESTS_LINKED`           | links present, no `run.json` (or older than any linked test)                        | `/forge-impl-green`                                    |
+| `RED`                    | `run.json` `fail>0` or `error>0`                                                    | `/forge-impl-green`                                    |
+| `IMPL_GREEN`             | `run.json` all pass, no audit-green PASS yet                                        | per-layer attestation 5a-5e → `/forge-audit-green`     |
+| `AUDIT_GREEN`            | last audit PASS, no embed in PR body OR no CI green for HEAD                        | `/forge-audit --embed` + `/forge-ci-green`             |
+| `CI_GREEN`               | PR CI green on HEAD, no review cycles                                               | `/forge-review-green`                                  |
+| `REVIEW_OPEN`            | last `cycle-N.md` B+M>0 AND no commits since                                        | `/forge-review-green`                                  |
+| `REVIEW_STALE`           | last cycle B+M>0 AND commits since, no new cycle                                    | `/forge-review-green` (re-cycle)                       |
+| `REVIEW_GREEN`           | last cycle B+M=0, commits since last `ci.green`                                     | `/forge-ci-green` (phase 9 final)                      |
+| `READY`                  | CI green post-review + audit-embed present + last B+M=0 (or `--no-review` recorded) | mark ready / merge                                     |
 
 Manual-mode AWAIT verdicts (phases 4-9): `AWAIT_TESTS_REVIEW`,
 `AWAIT_IMPL_REVIEW`, `AWAIT_AUDIT_REVIEW`, `AWAIT_CI_REVIEW`,
@@ -115,19 +121,19 @@ above.)
 
 Independent of phase. `block` halts autopilot; `warn` surfaces only.
 
-| Drift                             | Severity | Detection                                                     | Fix                                      |
-| --------------------------------- | -------- | ------------------------------------------------------------- | ---------------------------------------- |
-| `links.test_id_missing`           | block    | step 4 cross-check failed                                     | `/forge-tests --refresh <SG>` or restore |
-| `goals.uncovered`                 | block    | `## G\d+` with 0 `^- SG\d+\.\d+` AND 0 `^- VG\d+\.\d+`         | `/forge-scenarios --goal G<n>` or `/forge-validations --goal G<n>` |
-| `design.orphan`                   | warn     | `design.md` exists, no `goals.md`                             | `/forge-goals` to seed                   |
-| `run.stale`                       | warn     | `run.json` older than any linked test file OR older than HEAD | `/forge-impl-green`                      |
-| `validations.stale`               | warn     | `validations.json` older than HEAD commit                     | `/forge-verify-validations`              |
-| `review.unaddressed`              | block    | last cycle B+M>0, no commits since                            | `/forge-review-green`                    |
-| `review.assumed_fixed_no_recycle` | warn     | last cycle B+M>0, commits since, no new cycle                 | `/forge-review` (re-cycle)               |
-| `pr.no_forge_block`               | warn     | run+audit clean, PR body lacks `<!-- forge-audit -->`         | `/forge-audit --embed`                   |
-| `pr.dirty_worktree`               | warn     | `git status --porcelain` non-empty                            | commit / stash                           |
-| `pr.ahead_unpushed`               | warn     | commits ahead of remote tracking                              | push                                     |
-| `pr.ci_failing`                   | block    | `statusCheckRollup` has FAILURE on HEAD                       | `/forge-ci-green`                        |
+| Drift                             | Severity | Detection                                                     | Fix                                                                |
+| --------------------------------- | -------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `links.test_id_missing`           | block    | step 4 cross-check failed                                     | `/forge-tests --refresh <SG>` or restore                           |
+| `goals.uncovered`                 | block    | `## G\d+` with 0 `^- SG\d+\.\d+` AND 0 `^- VG\d+\.\d+`        | `/forge-scenarios --goal G<n>` or `/forge-validations --goal G<n>` |
+| `design.orphan`                   | warn     | `design.md` exists, no `goals.md`                             | `/forge-goals` to seed                                             |
+| `run.stale`                       | warn     | `run.json` older than any linked test file OR older than HEAD | `/forge-impl-green`                                                |
+| `validations.stale`               | warn     | `validations.json` older than HEAD commit                     | `/forge-verify-validations`                                        |
+| `review.unaddressed`              | block    | last cycle B+M>0, no commits since                            | `/forge-review-green`                                              |
+| `review.assumed_fixed_no_recycle` | warn     | last cycle B+M>0, commits since, no new cycle                 | `/forge-review` (re-cycle)                                         |
+| `pr.no_forge_block`               | warn     | run+audit clean, PR body lacks `<!-- forge-audit -->`         | `/forge-audit --embed`                                             |
+| `pr.dirty_worktree`               | warn     | `git status --porcelain` non-empty                            | commit / stash                                                     |
+| `pr.ahead_unpushed`               | warn     | commits ahead of remote tracking                              | push                                                               |
+| `pr.ci_failing`                   | block    | `statusCheckRollup` has FAILURE on HEAD                       | `/forge-ci-green`                                                  |
 
 ### 7. Emit report
 
@@ -210,9 +216,10 @@ JSON (`--json`):
 
 ## Exit codes
 
-| Code | Meaning                  |
-| ---- | ------------------------ |
-| 0    | phase = READY            |
-| 1    | phase < READY            |
-| 2    | ≥1 `block` drift         |
-| 64   | unrecoverable read error |
+| Code | Meaning                                |
+| ---- | -------------------------------------- |
+| 0    | phase = READY                          |
+| 1    | phase < READY                          |
+| 2    | ≥1 `block` drift                       |
+| 3    | phase = NOT_SET_UP (no `[meta].ready`) |
+| 64   | unrecoverable read error               |

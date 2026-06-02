@@ -124,6 +124,9 @@ Both refuse if `/forge-status` reports no awaiting phase.
 
 ## Pre-phase — resolve
 
+- **Setup gate (first, hard).** Confirm `$FORGE_HOME/forge.toml` exists with
+  `[meta].ready = true` for this repo. Absent → halt `SETUP_REQUIRED`, tell the
+  operator to run `/forge-setup`. No phase runs without it.
 - Worktree from cwd. Slug from branch (`--slug` overrides). Mode default `auto`.
 - Source: argument → `gh pr view --json body` → conversation seed. Mandatory for
   start; optional for resumes.

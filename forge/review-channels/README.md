@@ -59,16 +59,16 @@ selection (lenses, agents, briefs), execution, finding normalization.>
 
 ### Frontmatter fields
 
-| Field              | Type   | Meaning                                                                                                                                                          |
-| ------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | slug   | Stable identifier. Must match filename (`<id>.md`). Referenced by config + CLI flags + finding tags.                                                             |
-| `name`             | string | Human-readable label used in the consultation gate.                                                                                                              |
-| `kind`             | enum   | `agent-fanout` (parallel agent calls), `skill-wrapper` (Skill-invoke + normalize), `command-wrapper` (shell command + parse).                                    |
-| `default_enabled`  | bool   | When `true` the channel is seeded into `default_channels` at setup, so it runs without explicit opt-in. Bundled defaults: `lens-fanout` + `code-review-builtin`. |
-| `severity_cap`     | enum   | Optional ceiling: `blocker` / `major` / `minor` / `nit` / `null`. Findings from this channel never exceed the cap. `null` = no cap.                              |
-| `severity_mapping` | map    | Required when the channel emits non-forge-native severities (skill-wrapper, command-wrapper). Maps native → forge severity.                                      |
-| `needs`            | list   | Pre-conditions the channel needs: `diff`, `forge-chain` (`goals.md` / `links.json`), `pr-metadata`. `/forge-review` enforces.                                    |
-| `introduced-by`    | string | Provenance — which skill / use case introduced it. Free text.                                                                                                    |
+| Field              | Type   | Meaning                                                                                                                                                                                      |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | slug   | Stable identifier. Must match filename (`<id>.md`). Referenced by config + CLI flags + finding tags.                                                                                         |
+| `name`             | string | Human-readable label used in the consultation gate.                                                                                                                                          |
+| `kind`             | enum   | `agent-fanout` (parallel agent calls), `skill-wrapper` (Skill-invoke + normalize), `command-wrapper` (shell command + parse).                                                                |
+| `default_enabled`  | bool   | When `true` the channel is seeded into `default_channels` at setup, so it runs without explicit opt-in. Bundled defaults: `lens-fanout` + `code-review-builtin` + `security-review-builtin`. |
+| `severity_cap`     | enum   | Optional ceiling: `blocker` / `major` / `minor` / `nit` / `null`. Findings from this channel never exceed the cap. `null` = no cap.                                                          |
+| `severity_mapping` | map    | Required when the channel emits non-forge-native severities (skill-wrapper, command-wrapper). Maps native → forge severity.                                                                  |
+| `needs`            | list   | Pre-conditions the channel needs: `diff`, `forge-chain` (`goals.md` / `links.json`), `pr-metadata`. `/forge-review` enforces.                                                                |
+| `introduced-by`    | string | Provenance — which skill / use case introduced it. Free text.                                                                                                                                |
 
 ### Body
 
@@ -122,7 +122,7 @@ Per-repo defaults live in `.forge/forge.toml` `[review]` and
 
 ```toml
 [review]
-default_channels = ["lens-fanout", "code-review-builtin"]
+default_channels = ["lens-fanout", "code-review-builtin", "security-review-builtin"]
 aggregation      = "interleave"     # or "grouped"
 
 [review.channels.lens-fanout]

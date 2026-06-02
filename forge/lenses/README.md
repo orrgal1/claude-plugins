@@ -77,7 +77,7 @@ Proposed lenses (M total):
   L0  clean-code              (tier-1 core)
   L1  correctness             (tier-1 core)
   L2  goal-delivery           (tier-2 chain; requires forge-chain)
-  L3  security                (tier-3 auto; diff touches auth/input)
+  L3  production-wiring       (tier-3 auto; diff adds new components)
   L4  test-quality            (tier-3 auto; diff changes tests)
   ...
 ```
@@ -117,7 +117,6 @@ fingerprints the diff at composition time; a lens fires if ANY trigger matches.
 
 | Lens                | Fingerprint triggers                                                                                                                                                    |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `security`          | paths/symbols touching auth, authz, crypto, secrets, IAM, signing, token handling, input validation, or request/handler entry points                                    |
 | `production-wiring` | a new interface with an impl, a new constructor/factory, endpoint/route registration, a background job or scheduler entry, a feature-flag definition, or a DB migration |
 | `paired-tier-types` | edits to cross-tier type defs: `.proto`, pydantic/dataclass models, ORM schema, OpenAPI specs, generated or hand-written TS API types                                   |
 | `api-design`        | public API surface — route definitions, request/response DTOs, exported client methods, versioned endpoints                                                             |
