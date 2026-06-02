@@ -17,9 +17,11 @@ introduced-by: forge-review
 # Lens fan-out — forge's default review channel
 
 Parallel, lens-designed PR review. Ground truth comes from the forge chain
-(`goals.md`, `links.json`, linked tests) when available. Seven always-on lenses
-(3 chain-semantic, 4 code-quality) + persona-derived lenses + 1–3 per-PR
-designed lenses against the diff's risk surface. Target 7–9 total.
+(`goals.md`, `links.json`, linked tests) when available. The selected lens set
+is composed in three tiers — an **always-on core**, **chain-conditional** lenses
+that fire only when a chain exists, and **diff-fingerprint auto-selected**
+specialists that fire only when the diff touches their surface — plus
+persona-derived and (rarely) per-PR designed lenses on top.
 
 This channel is the forge plugin's bundled default — shipped enabled, always
 present unless explicitly dropped. Other channels coexist as peers
@@ -28,25 +30,60 @@ aggregate alongside this channel's at `/forge-review` synthesis time.
 
 ## Selection
 
-### Always-on lenses
-
 Definitions live in `lenses/<id>.md` (a host repo may override or add via
 `.forge/lenses/<id>.md`). The lens body is inlined verbatim in each subagent
-brief.
+brief. The dispatcher composes the set at review time from three tiers, then
+dedups against persona + designed lenses (if a designed lens would duplicate a
+selected pool lens, drop the designed one).
 
-| L#  | Pool id            | Group          | Brief artifacts                   |
-| --- | ------------------ | -------------- | --------------------------------- |
-| L0  | `goal-delivery`    | chain-semantic | `goals.md`, PR description        |
-| L1  | `scenario-realism` | chain-semantic | `goals.md`                        |
-| L2  | `test-match`       | chain-semantic | `links.json`, linked test files   |
-| L3  | `clean-code`       | code-quality   | —                                 |
-| L4  | `elegance`         | code-quality   | —                                 |
-| L5  | `robustness`       | code-quality   | —                                 |
-| L6  | `commentary`       | code-quality   | commentary surface (diff-derived) |
+### Tier 1 — always-on core
 
-L0–L2 (chain-semantic) require `goals.md` + `links.json`. On a PR with no chain
-they're skipped automatically — channel still runs with L3–L6 + persona +
-designed lenses only. L3–L6 can be edited at the gate.
+Runs on **every** review, chain or not. Cheap + universal hygiene/correctness.
+
+| Pool id                   | Group        | Brief artifacts                   |
+| ------------------------- | ------------ | --------------------------------- |
+| `clean-code`              | code-quality | —                                 |
+| `elegance`                | code-quality | —                                 |
+| `robustness`              | code-quality | —                                 |
+| `commentary`              | code-quality | commentary surface (diff-derived) |
+| `codebase-idiom`          | code-quality | —                                 |
+| `ai-slop`                 | hygiene      | —                                 |
+| `scope`                   | hygiene      | PR description                    |
+| `pr-description-fidelity` | hygiene      | PR description                    |
+| `correctness`             | correctness  | —                                 |
+| `completeness`            | correctness  | —                                 |
+
+### Tier 2 — chain-conditional
+
+Require the forge chain (`goals.md` / `links.json`). On a PR with **no chain**
+they're skipped automatically; the review still runs Tier 1 + Tier 3 + persona +
+designed. When a chain exists, `pr-description-fidelity` (Tier 1) and
+`goal-delivery` (Tier 2) overlap on fidelity — the chain lens is authoritative,
+the description lens still covers file-list / claim drift.
+
+| Pool id            | Group          | Brief artifacts                 |
+| ------------------ | -------------- | ------------------------------- |
+| `goal-delivery`    | chain-semantic | `goals.md`, PR description      |
+| `scenario-realism` | chain-semantic | `goals.md`                      |
+| `test-match`       | chain-semantic | `links.json`, linked test files |
+
+### Tier 3 — diff-fingerprint auto-select
+
+The dispatcher fingerprints the diff and fires each specialist **only when its
+surface is touched** — keeps each review focused and the all-severity fix loop
+bounded. A lens fires if ANY of its triggers match.
+
+| Pool id             | Fires when the diff touches …                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `security`          | auth / authz / crypto / secrets / IAM / signatures / input validation / request handlers           |
+| `production-wiring` | a new interface+impl, constructor, registered endpoint, background job, feature flag, or migration |
+| `paired-tier-types` | cross-tier type defs (proto, pydantic, ORM schema, OpenAPI, TS API types)                          |
+| `api-design`        | public API surface — routes, request/response shapes, exported client                              |
+| `observability`     | service code with failure paths, async work, or external calls (oncall-relevant)                   |
+| `test-quality`      | new / changed test files                                                                           |
+
+Fingerprint heuristics live in `lenses/README.md` § "Diff fingerprint → lens".
+Tier 1 + selected Tier 2/3 lenses can be edited at the gate (add/drop).
 
 ### Persona-derived lenses
 
@@ -62,7 +99,10 @@ persona → hard error.
 
 Designed against the diff's risk surface per `lenses/README.md` § "Designing
 per-PR lenses" — wire contract, schema fidelity, mapping / dispatch invariants,
-coupling, naming, wire-up symmetry. 1–3 to land in the 7–9 sweet spot.
+coupling, naming, wire-up symmetry. With Tier 1–3 now covering most recurring
+surfaces, designed lenses are the **exception** (0–2): reach for one only when
+the diff has a risk no pool lens captures. If a designed lens would duplicate a
+selected pool lens, drop it.
 
 ## Execution
 

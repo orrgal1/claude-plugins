@@ -69,14 +69,16 @@ any `brief-artifacts` payload; it doesn't see this README.
 
 ## How consumers reference lenses
 
-A review skill's "always-on" or "designed" lens list cites pool ids:
+A review skill's composed lens list cites pool ids, tagged by selection tier
+(see `review-channels/lens-fanout.md` § Selection):
 
 ```
 Proposed lenses (M total):
-  L0  goal-delivery           (always-on; requires forge-chain)
-  L1  scenario-realism        (always-on; requires forge-chain)
-  L2  test-match              (always-on; requires forge-chain)
-  L3  clean-code              (always-on; baseline)
+  L0  clean-code              (tier-1 core)
+  L1  correctness             (tier-1 core)
+  L2  goal-delivery           (tier-2 chain; requires forge-chain)
+  L3  security                (tier-3 auto; diff touches auth/input)
+  L4  test-quality            (tier-3 auto; diff changes tests)
   ...
 ```
 
@@ -85,8 +87,7 @@ id.
 
 ## Persona references
 
-Persona files (`personas/*.md`, or `.forge/personas/*.md`)
-list `lenses:` by id:
+Persona files (`personas/*.md`, or `.forge/personas/*.md`) list `lenses:` by id:
 
 ```yaml
 lenses: [clean-code, robustness, observability, api-design]
@@ -105,13 +106,33 @@ A persona must only reference lens ids that exist in the pool (bundled or
    artifacts.
 4. Set `severity-floor` by what the lens catches. Hygiene → `minor`; correctness
    / security → `major` or `blocker`.
-5. Wire it into a review skill's default list if it should be always-on. The
-   pool itself does not auto-wire lenses.
+5. Wire it into a tier in `review-channels/lens-fanout.md` § Selection — Tier 1
+   (always-on core), Tier 2 (chain-conditional), or Tier 3 (a diff-fingerprint
+   row, below). The pool itself does not auto-wire lenses.
+
+## Diff fingerprint → lens
+
+Tier 3 lenses fire only when the diff touches their surface. The dispatcher
+fingerprints the diff at composition time; a lens fires if ANY trigger matches.
+
+| Lens                | Fingerprint triggers                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `security`          | paths/symbols touching auth, authz, crypto, secrets, IAM, signing, token handling, input validation, or request/handler entry points                                    |
+| `production-wiring` | a new interface with an impl, a new constructor/factory, endpoint/route registration, a background job or scheduler entry, a feature-flag definition, or a DB migration |
+| `paired-tier-types` | edits to cross-tier type defs: `.proto`, pydantic/dataclass models, ORM schema, OpenAPI specs, generated or hand-written TS API types                                   |
+| `api-design`        | public API surface — route definitions, request/response DTOs, exported client methods, versioned endpoints                                                             |
+| `observability`     | service code with failure/error paths, async/background work, retries, or outbound external calls (oncall-relevant)                                                     |
+| `test-quality`      | any new or changed test file                                                                                                                                            |
+
+Keep triggers conservative — a lens that fires on everything is just an
+expensive always-on lens. If a surface recurs on most PRs, promote the lens to
+Tier 1 instead of widening its triggers.
 
 ## Designing per-PR lenses (heuristics)
 
-`/forge-review` designs 1–3 ad-hoc lenses per PR against the diff's risk
-surface. These start inline (per-review) and only get promoted into this pool
+With Tier 1–3 covering recurring surfaces, per-PR designed lenses are the
+**exception** (0–2) — reach for one only when a PR carries a risk no pool lens
+captures. They start inline and get promoted into the pool (and a tier) only
 when the same shape recurs across enough PRs. Common shapes to draw from:
 
 - **Wire contract** — proto slots, reserved ranges, oneof shape, additive-only
@@ -128,9 +149,12 @@ when the same shape recurs across enough PRs. Common shapes to draw from:
 - **Wire-up symmetry** — when a feature lands at N call sites, every site wired
   up; no "all N forgot" patterns.
 
-**Sizing:** 3–7 designed lenses (with always-on lenses, total lands in the 7–9
-sweet spot). **Distinct angles:** each lens must catch something a file-by-file
-pass would miss — if two would surface the same finding, merge them.
+**Sizing:** a review's lens set = Tier 1 core (always) + matched Tier 2/3 +
+persona + 0–2 designed. The dispatcher dedups, so the working set stays focused;
+there is no fixed total cap, but each lens costs one parallel subagent and feeds
+the all-severity fix loop, so don't add a lens that duplicates a selected one.
+**Distinct angles:** each lens must catch something a file-by-file pass would
+miss — if two would surface the same finding, merge them.
 
 ## Non-goals
 
