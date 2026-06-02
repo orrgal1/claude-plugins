@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, diagnose, ralph, persona, reviewable)",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, diagnose, ralph, persona, reviewable, devloop)",
   "owner": {
     "name": "orrgal1"
   },
@@ -34,6 +34,12 @@
       "name": "reviewable",
       "description": "Reviewable.io automation via agent-browser — /reviewable-read, /reviewable-reply, /reviewable-publish, /reviewable-login. Repo-agnostic (resolves owner/repo from git origin).",
       "source": "./reviewable",
+      "category": "development"
+    },
+    {
+      "name": "devloop",
+      "description": "Thin stacked-PR dev-loop skills — /restack (bring a PR's base into its branch, merge/rebase per operator preference, syncing base with upstream first), /restack-all (same across a stack, bottom-up), /deslop (strip AI slop from a PR diff, reusing /simplify). Infers PR topology from GitHub, falls back to raw git. No dependency on other plugins.",
+      "source": "./devloop",
       "category": "development"
     }
   ]

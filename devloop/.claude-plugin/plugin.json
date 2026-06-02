@@ -1,0 +1,8 @@
+{
+  "name": "@orrgal1/devloop",
+  "description": "Thin, repo-agnostic dev-loop skills for stacked-PR work. /restack brings a PR's base into its branch (merge by default, --rebase opt-in), syncing the base with upstream first. /restack-all does the same across an entire stack bottom-up. /deslop scans a PR diff and strips AI slop — verbose obvious comments and over-complex local code — reusing the built-in /simplify pass. Infers PR topology from GitHub by default, falls back to raw git analysis. No dependency on other plugins.",
+  "version": "1.0.0",
+  "author": {
+    "name": "orrgal1"
+  }
+}

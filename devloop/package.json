@@ -1,0 +1,25 @@
+{
+  "name": "@orrgal1/devloop",
+  "version": "1.0.0",
+  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "devloop"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "devloop",
+    "restack",
+    "deslop"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills"
+  ]
+}
