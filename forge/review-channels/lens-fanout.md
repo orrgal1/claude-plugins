@@ -16,25 +16,24 @@ introduced-by: forge-review
 
 # Lens fan-out — forge's default review channel
 
-Parallel, lens-designed PR review. Ground truth comes from the forge chain
-(`goals.md`, `links.json`, linked tests) when available. The selected lens set
-is composed in three tiers — an **always-on core**, **chain-conditional** lenses
-that fire only when a chain exists, and **diff-fingerprint auto-selected**
-specialists that fire only when the diff touches their surface — plus
-persona-derived and (rarely) per-PR designed lenses on top.
+Parallel, lens-designed PR review; ground truth is the forge chain (`goals.md`,
+`links.json`, linked tests) when available. The lens set is composed in three
+tiers — **always-on core**, **chain-conditional** (fire only when a chain
+exists), and **diff-fingerprint auto-selected** specialists (fire only when the
+diff touches their surface) — plus persona-derived and (rarely) per-PR designed
+lenses.
 
-This channel is the forge plugin's bundled default — shipped enabled, always
-present unless explicitly dropped. Other channels coexist as peers
-(`code-review-builtin`, `security-review-builtin`, custom). Their findings
-aggregate alongside this channel's at `/forge-review` synthesis time.
+Forge's bundled default — shipped enabled, always present unless dropped. Peers
+(`code-review-builtin`, `security-review-builtin`, custom) aggregate alongside
+at `/forge-review` synthesis time.
 
 ## Selection
 
-Definitions live in `lenses/<id>.md` (a host repo may override or add via
+Definitions live in `lenses/<id>.md` (host repo overrides/adds via
 `.forge/lenses/<id>.md`). The lens body is inlined verbatim in each subagent
 brief. The dispatcher composes the set at review time from three tiers, then
-dedups against persona + designed lenses (if a designed lens would duplicate a
-selected pool lens, drop the designed one).
+dedups against persona + designed lenses (designed lens duplicating a selected
+pool lens → drop the designed one).
 
 ### Tier 1 — always-on core
 
@@ -55,11 +54,11 @@ Runs on **every** review, chain or not. Cheap + universal hygiene/correctness.
 
 ### Tier 2 — chain-conditional
 
-Require the forge chain (`goals.md` / `links.json`). On a PR with **no chain**
-they're skipped automatically; the review still runs Tier 1 + Tier 3 + persona +
-designed. When a chain exists, `pr-description-fidelity` (Tier 1) and
-`goal-delivery` (Tier 2) overlap on fidelity — the chain lens is authoritative,
-the description lens still covers file-list / claim drift.
+Require the forge chain (`goals.md` / `links.json`). **No chain** → skipped
+automatically; review still runs Tier 1 + Tier 3 + persona + designed. With a
+chain, `pr-description-fidelity` (Tier 1) and `goal-delivery` (Tier 2) overlap
+on fidelity — the chain lens is authoritative, the description lens still covers
+file-list / claim drift.
 
 | Pool id            | Group          | Brief artifacts                 |
 | ------------------ | -------------- | ------------------------------- |
@@ -70,7 +69,7 @@ the description lens still covers file-list / claim drift.
 ### Tier 3 — diff-fingerprint auto-select
 
 The dispatcher fingerprints the diff and fires each specialist **only when its
-surface is touched** — keeps each review focused and the all-severity fix loop
+surface is touched** — keeps the review focused, the all-severity fix loop
 bounded. A lens fires if ANY of its triggers match.
 
 | Pool id             | Fires when the diff touches …                                                                      |
@@ -90,33 +89,33 @@ Tier 1 + selected Tier 2/3 lenses can be edited at the gate (add/drop).
 
 `--persona <id>` / `--personas <a,b,c>` (top-level flags, scoped to this
 channel) — comma-separated union+dedup. Unknown id → abort with valid-id list.
-`--no-persona` skips picker.
-
-Default: interactive picker at the gate (numbered list; `none` is the safe
-explicit default). Persona's `lenses:` union with baseline. Missing lens id in
-persona → hard error.
+`--no-persona` skips picker. Default: interactive picker at the gate (numbered
+list; `none` is the safe default). Persona's `lenses:` union with baseline.
+Missing lens id → hard error.
 
 ### Per-PR designed lenses (L7+)
 
 Designed against the diff's risk surface per `lenses/README.md` § "Designing
-per-PR lenses" — wire contract, schema fidelity, mapping / dispatch invariants,
-coupling, naming, wire-up symmetry. With Tier 1–3 now covering most recurring
+per-PR lenses" — wire contract, schema fidelity, mapping/dispatch invariants,
+coupling, naming, wire-up symmetry. With Tier 1–3 covering most recurring
 surfaces, designed lenses are the **exception** (0–2): reach for one only when
-the diff has a risk no pool lens captures. If a designed lens would duplicate a
-selected pool lens, drop it.
+the diff has a risk no pool lens captures. Duplicating a selected pool lens →
+drop.
 
 ## Execution
 
-Agent: `@orrgal1/forge:forge-lens-reviewer`.
+Agent (Task `subagent_type`): exact string `@orrgal1/forge:forge-lens-reviewer`
+— **`/` before `forge`, `:` before the agent name**. Not `@orrgal1:forge:…`
+(all-colons fails: "Agent type not found").
 
-One Agent call per selected lens, all sent in **a single message** for true
+One Agent call per selected lens, all in **a single message** for true
 parallelism. Each agent gets its own brief — instructions + lens-specific
 artifacts — and returns structured findings.
 
 ### Subagent brief
 
-The `forge-lens-reviewer` agent bakes severity tiers, line format, scope guard,
-and read-full-files rule. The brief only supplies context.
+The agent bakes severity tiers, line format, scope guard, read-full-files rule.
+The brief supplies context only.
 
 For always-on lenses, brief is assembled mechanically from the pool entry:
 
@@ -144,8 +143,7 @@ Two modes:
 
 ## Finding shape
 
-Each agent returns findings in the forge-native shape — no normalization needed
-for this channel:
+Findings in the forge-native shape — no normalization needed for this channel:
 
 ```json
 {
@@ -165,7 +163,7 @@ for this channel:
 
 ## Severity mapping
 
-Native severities are already forge's 4-tier — identity mapping:
+Native severities are forge's 4-tier — identity mapping:
 
 | Lens output | Forge   | Notes                                                |
 | ----------- | ------- | ---------------------------------------------------- |
@@ -177,8 +175,7 @@ Native severities are already forge's 4-tier — identity mapping:
 Each pool lens declares its `severity-floor:` in frontmatter; body documents
 promotion rules. The agent honors floors per-lens.
 
-`severity_cap` in this channel's config is `null` (no cap) — lens findings keep
-their native severity all the way through.
+`severity_cap` is `null` (no cap) — lens findings keep native severity through.
 
 ## Channel-scoped config
 
@@ -205,15 +202,14 @@ Per-channel artifacts under the channel id:
   synthesis.md      # this channel's synthesis (local; not tracked)
 ```
 
-Aggregated synthesis across all channels lives one level up at
+Aggregated synthesis across all channels: one level up at
 `.pr-artifacts/<slug>/forge/review/synthesis.md`.
 
 ## Notes for /forge-review
 
-- This channel **always exists**. Operator dropping it
-  (`--drop-channel lens-fanout`) is honored but flagged at the gate as unusual.
-- Consultation gate for this channel covers: lens edits (add/drop/rename/
-  merge/split), persona selection, order. Other channels have their own gate
-  sections.
+- **Always exists.** Dropping it (`--drop-channel lens-fanout`) is honored but
+  flagged at the gate as unusual.
+- Consultation gate covers: lens edits (add/drop/rename/merge/split), persona
+  selection, order. Other channels have their own gate sections.
 - `/forge-review-green` drives this channel's findings at **every** severity
   (blocker through nit) to zero — no severity-tier skipping.

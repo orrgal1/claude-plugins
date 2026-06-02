@@ -1,6 +1,7 @@
 ---
 name: forge-goals
-description: "Capture the PR's intended end-state as a goal list, loyal to its source."
+description:
+  "Capture the PR's intended end-state as a goal list, loyal to its source."
 argument-hint: '[<source>] [--slug <name>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge goals"
@@ -21,12 +22,11 @@ user-invocable: true
 
 # /forge-goals — capture PR goals (operator-led)
 
-First link in the chain. **Most interactive skill** — goals are the spine,
-getting them wrong cascades. Operator drives; sources are reference.
+First link. **Most interactive skill** — goals are the spine; wrong goals
+cascade. Operator drives; sources are reference.
 
 A **goal** = future end-state the PR commits to. Not tasks, not file lists —
-what the system **will support** or **will be**. If it doesn't fit, it's
-implementation detail.
+what the system **will support** or **will be**. Else it's impl detail.
 
 ## Goal shape
 
@@ -40,14 +40,13 @@ Pick one phrasing:
 
 Wrong: "Refactor X" (task), "Add tests" (means), "Fix the bug" (no specificity).
 
-**How a goal is proven** depends on its shape. Behavioral goals (capability /
-end-state / invariant with a runtime observable) are proven by **scenarios**
-(`/forge-scenarios` → component tests). **Removal** and structural goals — whose
-end-state is a source-level fact with no runtime observable ("the field is
-gone") — are proven by **validations** (`/forge-validations` → a `git grep` /
-build predicate, or agent attestation). A goal may carry both: the removal as
-validations plus one behavioral guard scenario. Either kind counts as a proof;
-every goal needs ≥1 proof, not ≥1 of each.
+**Proof depends on shape.** Behavioral goals (capability / end-state / invariant
+with a runtime observable) → **scenarios** (`/forge-scenarios` → component
+tests). **Removal** + structural goals — end-state is a source-level fact with
+no runtime observable ("the field is gone") → **validations**
+(`/forge-validations` → `git grep` / build predicate, or agent attestation). A
+goal may carry both: removal as validations + one behavioral guard scenario.
+Every goal needs ≥1 proof, not ≥1 of each.
 
 ## Count — hard cap 3, floor 1
 
@@ -64,13 +63,12 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
 1. **Resolve slug + worktree.** Branch name sanitized (lowercase,
    alphanumerics + dashes, strip `feat/` / `fix/` / `chore/`). `--slug`
    overrides.
-2. **Open dialogue first.** Before fetching anything:
+2. **Open dialogue first**, before fetching:
 
    > How do you see this PR? Main thing it delivers? Anything else on the side?
 
-   Operator's framing is the seed; sources corroborate. If operator points at
-   Jira / PR body → fetch, then ask "Source says X — match your view, or source
-   stale?"
+   Operator's framing is the seed; sources corroborate. Operator points at Jira
+   / PR body → fetch, then ask "Source says X — match your view, or stale?"
 
 3. **Pull reference in parallel:**
 
@@ -103,8 +101,8 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
    `--drop G<n>` `--promote G<n>` `--out-of-scope` `--remove-from-scope`. Loop
    until `y`. Re-present current state each loop.
 
-5. **Write `.pr-artifacts/<slug>/forge/goals.md`** per Output shape below.
-   Bootstrap the artifact dir + root forge gitignore:
+5. **Write `.pr-artifacts/<slug>/forge/goals.md`** per Output shape. Bootstrap
+   artifact dir + root forge gitignore:
 
    ```bash
    mkdir -p ".pr-artifacts/${slug}/forge"

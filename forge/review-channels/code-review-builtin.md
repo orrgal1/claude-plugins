@@ -19,28 +19,26 @@ introduced-by: forge-review (peer-channel pattern)
 
 # Built-in /code-review wrapper
 
-Wraps Claude Code's built-in `/code-review` skill as a forge review channel.
-Adds a broad, off-the-shelf safety net alongside the targeted lens fan-out:
-correctness bugs, simplification opportunities, reuse / efficiency cleanups, and
-(rarely) security implications.
+Wraps Claude Code's built-in `/code-review` skill as a forge review channel. A
+broad off-the-shelf safety net alongside the targeted lens fan-out: correctness
+bugs, simplification opportunities, reuse/efficiency cleanups, and (rarely)
+security implications.
 
-Shipped always-on (`default_enabled: true`) — a broad safety net runs alongside
-the lens fan-out on every review. Disable per-repo via
+Shipped always-on (`default_enabled: true`). Disable per-repo via
 `[review.channels.code-review-builtin].enabled = false` in `.forge/forge.toml`
 or per-run with `--drop-channel code-review-builtin`.
 
 ## Selection
 
 Wholesale — the wrapped skill picks its own scope from the current diff. No
-per-file or per-lens selection from this channel. Anything not covered by the
-wrapped skill's effort level (`low` / `medium` / `high` / `max` / `ultra`) is
-simply not raised; this channel never extends scope beyond what `/code-review`
-chose to surface.
+per-file or per-lens selection. Anything outside the wrapped skill's effort
+level (`low` / `medium` / `high` / `max` / `ultra`) is not raised; this channel
+never extends scope beyond what `/code-review` surfaced.
 
 ## Execution
 
-1. Resolve diff scope: `/forge-review` already established the PR + worktree.
-   The wrapped skill reads the diff from the current worktree.
+1. Diff scope: `/forge-review` already established PR + worktree; the wrapped
+   skill reads the diff from the current worktree.
 2. Skill-call `/code-review` with channel config (no `--comment`, no `--fix`):
 
    ```
@@ -49,12 +47,12 @@ chose to surface.
 
    Default `--effort medium`. Override via channel config or per-run flag
    (`--channel code-review-builtin --effort high`). Never pass `--fix` — forge
-   owns the fix-loop via `/forge-review-green`, not the wrapped skill.
+   owns the fix-loop via `/forge-review-green`.
 
-3. Capture the wrapped skill's output verbatim into
+3. Capture output verbatim into
    `.pr-artifacts/<slug>/forge/review/code-review-builtin/raw.md`.
-4. Parse + normalize per **Finding shape** and **Severity mapping** below.
-5. Emit findings to the dispatcher for aggregation.
+4. Parse + normalize per **Finding shape** + **Severity mapping** below.
+5. Emit findings to the dispatcher.
 
 ### Parallelism
 
@@ -73,7 +71,7 @@ Runs alongside other channels in `/forge-review`'s dispatch. No special ordering
 
 ## Finding shape
 
-Each parsed finding emits the unified channel shape:
+Each parsed finding emits the unified shape:
 
 ```json
 {
@@ -98,27 +96,25 @@ Each parsed finding emits the unified channel shape:
 
 ### Parsing rules
 
-The wrapped skill's output is markdown-ish, not a strict schema. Parse rules:
+Output is markdown-ish, not a strict schema. Parse rules:
 
 - Each finding starts with a `path:line` anchor (or `path` alone when
-  line-unresolved). Missing anchor → record `line: 0` + a parse note.
-- Body lines following the anchor up to the next anchor or blank-line-blank-line
+  line-unresolved). Missing anchor → `line: 0` + a parse note.
+- Body lines after the anchor up to the next anchor or blank-line-blank-line
   separator form the `body`.
 - `Fix:` / `Suggested:` / `**Fix**` sub-block → `fix`. Absent → `fix: null`.
-- Category inferred from headings or explicit
-  `[correctness] / [reuse] / [security] / …` tags the wrapped skill emits.
-  Untagged + body contains bug-language ("missing check", "incorrect", "race",
-  "off-by-one") → `correctness`. Untagged + body contains cleanup-language
-  ("could", "redundant", "consider", "simpler") → `simplification`. Else
-  `uncertain`.
+- Category from headings or explicit `[correctness] / [reuse] / [security] / …`
+  tags. Untagged + bug-language ("missing check", "incorrect", "race",
+  "off-by-one") → `correctness`. Untagged + cleanup-language ("could",
+  "redundant", "consider", "simpler") → `simplification`. Else `uncertain`.
 
-Anything that can't be parsed cleanly emits a single advisory finding
+Unparseable output emits a single advisory finding
 `{severity: minor, body: "channel produced output the parser could not structure", fix: "see raw.md"}`
 rather than dropping signal.
 
 ## Severity mapping
 
-Mapping table (frontmatter copy, repeated here as the operator-facing contract):
+Frontmatter copy, repeated as the operator-facing contract:
 
 | Category         | Forge severity | Rationale                                                        |
 | ---------------- | -------------- | ---------------------------------------------------------------- |
@@ -130,15 +126,14 @@ Mapping table (frontmatter copy, repeated here as the operator-facing contract):
 | `uncertain`      | minor          | High/max/ultra effort can produce uncertain findings — advisory. |
 | `style`          | nit            | Cosmetic.                                                        |
 
-**Cap discipline.** This channel ships with `severity_cap: null` — mapped
-severities pass through unmodified. Repos that distrust the wrapped skill should
-set `[review.channels.code-review-builtin].severity_cap = "minor"` in
-`.forge/forge.toml` so this channel never drives the green-loop.
+**Cap discipline.** Ships `severity_cap: null` — mapped severities pass through
+unmodified. Repos distrusting the wrapped skill set
+`[review.channels.code-review-builtin].severity_cap = "minor"` so it never
+drives the green-loop.
 
-**Promotion.** A `correctness` finding the operator considers must-fix can be
-promoted to `blocker` by editing the `severity_mapping` in
-`.forge/review-channels/code-review-builtin.md` (host override) or in the config
-subtable. Promotion is per-repo, not per-finding.
+**Promotion.** A must-fix `correctness` finding can be promoted to `blocker` by
+editing `severity_mapping` in `.forge/review-channels/code-review-builtin.md`
+(host override) or the config subtable. Per-repo, not per-finding.
 
 ## Channel-scoped config
 

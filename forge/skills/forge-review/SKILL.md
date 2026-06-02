@@ -29,11 +29,11 @@ user-invocable: true
 
 # /forge-review — forge-chain-aware multi-channel PR review
 
-Runs N **review channels** in parallel and aggregates their findings into a
-single ranked verdict. Ground truth comes from the forge chain (`goals.md`,
-`links.json`, linked tests) rather than guesses from the PR body.
+Runs N **review channels** in parallel, aggregates findings into one ranked
+verdict; ground truth is the forge chain (`goals.md`, `links.json`, linked
+tests), not the PR body.
 
-The forge plugin ships three channels (`forge/review-channels/`):
+Ships three channels (`forge/review-channels/`):
 
 | Channel                   | Kind          | Default     | Wraps                                                           |
 | ------------------------- | ------------- | ----------- | --------------------------------------------------------------- |
@@ -41,51 +41,46 @@ The forge plugin ships three channels (`forge/review-channels/`):
 | `code-review-builtin`     | skill-wrapper | **enabled** | Claude Code's built-in `/code-review`                           |
 | `security-review-builtin` | skill-wrapper | **enabled** | Claude Code's built-in `/security-review`                       |
 
-A host repo extends or overrides by dropping channel files into
+Host repo extends/overrides by dropping channel files into
 `$FORGE_HOME/review-channels/` (same shape as `forge/review-channels/<id>.md` —
 see `forge/review-channels/README.md`).
 
-If the PR has no forge chain → `/forge-review` still runs, but channels that
-declare `needs: forge-chain` are skipped. If the chain is broken → run `/forge`
-first (or at minimum `/forge-goals`, `/forge-scenarios`, `/forge-tests`,
-`/forge-audit`) to restore chain-semantic coverage.
+No forge chain → still runs, channels declaring `needs: forge-chain` skipped.
+Broken chain → run `/forge` first (or `/forge-goals`, `/forge-scenarios`,
+`/forge-tests`, `/forge-audit`) to restore chain-semantic coverage.
 
 ## Pipeline
 
 1. Resolve slug + worktree + PR (per `/forge` rules).
 2. Load `.pr-artifacts/<slug>/forge/{goals.md,links.json}`. Missing either →
-   continue in **no-chain mode**: channels needing `forge-chain` are dropped
-   with a one-line note.
-3. Run `/forge-audit` (cached if recent). FAIL → refuse to review; point at the
-   report. Review budget too expensive for noise.
+   **no-chain mode**: channels needing `forge-chain` dropped with a one-line
+   note.
+3. Run `/forge-audit` (cached if recent). FAIL → refuse, point at report.
 4. Scope intake: PR metadata, file list, +A/-D, base ref, stack position.
-5. Risk hot-spots — 3-5 anchored to concrete paths, from the diff. Available to
-   channels that ask for them.
-6. **Channel selection.** Read enabled channels from `$FORGE_HOME/forge.toml`
-   `[review]` `default_channels`, intersected with discovered channel files
-   (`forge/review-channels/` + override `$FORGE_HOME/review-channels/`). Apply
-   CLI overrides: `--channels` replaces the set, `--add-channel <id>` /
-   `--drop-channel <id>` mutate. Each channel's `needs` checked against context
-   — unmet need → channel dropped with a one-line note (`needs: forge-chain` on
-   a no-chain PR).
-7. **Per-channel design.** For each selected channel, run its body's
-   `## Selection` step to build its work plan (e.g. `lens-fanout` runs
-   lens-design baseline + persona + designed; `code-review-builtin` is
-   wholesale).
-8. **Consultation gate** (mandatory). Operator approves the channel set + each
-   channel's per-run config (see § "Gate output").
-9. **Dispatch.** Per channel, follow its body's `## Execution` section.
-   `agent-fanout` channels send all subagent calls in **a single message** for
-   true parallelism. `skill-wrapper` channels Skill-call and ingest output.
-   `command-wrapper` channels run + parse. Channels run in parallel when
-   possible; a channel's body declares serial constraints when needed.
-10. **Normalize.** For each channel, apply its body's `## Severity mapping`
-    - `## Finding shape` to produce the unified finding shape.
+5. Risk hot-spots — 3-5 anchored to concrete diff paths. Available to channels
+   that ask.
+6. **Channel selection.** Enabled channels from `$FORGE_HOME/forge.toml`
+   `[review].default_channels`, intersected with discovered channel files
+   (`forge/review-channels/` + override `$FORGE_HOME/review-channels/`). CLI
+   overrides: `--channels` replaces, `--add-channel <id>` /
+   `--drop-channel <id>` mutate. Each channel's `needs` checked — unmet →
+   dropped with one-line note.
+7. **Per-channel design.** Run each selected channel's `## Selection` to build
+   its work plan (`lens-fanout`: lens-design baseline + persona + designed;
+   `code-review-builtin`: wholesale).
+8. **Consultation gate** (mandatory). Operator approves channel set + each
+   channel's per-run config (§ "Gate output").
+9. **Dispatch.** Per channel, follow its `## Execution`. `agent-fanout`: all
+   subagent calls in **a single message** for parallelism. `skill-wrapper`:
+   Skill-call + ingest. `command-wrapper`: run + parse. Parallel when possible;
+   channel body declares serial constraints.
+10. **Normalize.** Apply each channel's `## Severity mapping` +
+    `## Finding shape` to produce the unified shape.
 11. **Aggregate.** Cap each finding against `severity_cap` (frontmatter + config
-    override). Tag with `channel: <id>` (and `lens: <id>` where applicable).
-    Dedupe by `(file, line, content-hash)` — collapsed findings list all source
+    override). Tag `channel: <id>` (and `lens: <id>` where applicable). Dedupe
+    by `(file, line, content-hash)` — collapsed findings list all source
     channels.
-12. **Synthesize, rank, emit verdict + ask** (per § "Synthesis output" + §
+12. **Synthesize, rank, emit verdict + ask** (§ "Synthesis output" + §
     "Verdict").
 
 ## Channel selection on the CLI
@@ -103,18 +98,17 @@ allowed per invocation. Unknown channel id → abort with the valid-id list.
 
 ## Persona selection (lens-fanout channel)
 
-Top-level convenience flags, implicitly scoped to the `lens-fanout` channel
-(backward compat with pre-channel `/forge-review`):
+Top-level flags, implicitly scoped to `lens-fanout` (backward compat with
+pre-channel `/forge-review`):
 
 - `--persona <id>` / `--personas <a,b,c>` — comma-separated union+dedup. Unknown
   id → abort with valid-id list.
 - `--no-persona` — skip picker, baseline only.
 - Default — interactive picker at the gate (numbered list; `none` is the safe
-  explicit default). No personas in pool → silent skip.
+  default). No personas in pool → silent skip.
 
-A persona's `lenses:` union with the lens-fanout baseline. Missing lens id in
-persona → hard error. This flag has no effect when `lens-fanout` is dropped from
-the channel set.
+A persona's `lenses:` union with the lens-fanout baseline. Missing lens id →
+hard error. No effect when `lens-fanout` is dropped.
 
 ## Gate output
 
@@ -156,19 +150,19 @@ Approve? [y / edit / abort]
 ```
 
 `needs:` failures show inline beside the dropped channel:
-`✗ <id> (skipped — needs forge-chain)`. Operator can override with
-`--add-channel <id>` only if the channel body permits forced execution;
-otherwise the channel stays skipped.
+`✗ <id> (skipped — needs forge-chain)`. Operator override via
+`--add-channel <id>` only if the channel body permits forced execution; else
+stays skipped.
 
 ## Severity
 
 Forge-native 4-tier: `blocker` / `major` / `minor` / `nit`. Every channel
-declares a `severity_mapping` in its frontmatter + body — that's the contract
-translating native severities into forge's tiers. `severity_cap` optionally
-ceilings a channel; the operator overrides in config or at the gate.
+declares a `severity_mapping` (frontmatter + body) — the contract translating
+native severities into forge tiers. `severity_cap` optionally ceilings a
+channel; operator overrides in config or at the gate.
 
-`/forge-review-green` (the fix-loop) chases `blocker` + `major` regardless of
-source channel.
+`/forge-review-green` (fix-loop) chases `blocker` + `major` regardless of source
+channel.
 
 ## Verdict
 
@@ -187,16 +181,15 @@ Extends `/forge`'s wrap-verdict ladder:
 
 `--embed` appends a `## Review` section **inside** the existing `<details>`
 wrapper of the `<!-- forge-audit:begin -->` / `<!-- forge-audit:end -->` block,
-then rewrites `<summary>` to reflect joint state:
+then rewrites `<summary>`:
 
 ```
 <summary>🔨 forge — audit: <verdict> · review: <findings> · <slug></summary>
 ```
 
 `<findings>` is short count (`1 blocker · 2 majors` or `clean`), aggregated
-across all channels. Idempotent overwrite — preserves the audit block above. No
-`open` attribute. No embed-block yet → refuse with "run `/forge-audit --embed`
-first".
+across channels. Idempotent overwrite — preserves the audit block. No `open`
+attribute. No embed-block yet → refuse: "run `/forge-audit --embed` first".
 
 ## Artifact directory
 
@@ -215,25 +208,25 @@ first".
 ## Synthesis output
 
 Main thread merges normalized findings from every channel. Aggregation mode from
-`$FORGE_HOME/forge.toml` `[review].aggregation` (`interleave` default, `grouped`
-alternative):
+`$FORGE_HOME/forge.toml` `[review].aggregation` (`interleave` default,
+`grouped`):
 
-- **interleave** (default) — findings sorted by `(file, line)`. Each line
-  carries a `[<channel-id>]` tag (and `<lens-id>` when present). Cross- channel
-  duplicates collapsed; all source channels cited.
+- **interleave** (default) — sorted by `(file, line)`. Each line carries a
+  `[<channel-id>]` tag (and `<lens-id>` when present). Cross-channel duplicates
+  collapsed; all source channels cited.
 - **grouped** — one section per channel, findings within sorted blocker >
   major > minor > nit. Cross-channel duplicates surface once in their primary
-  channel with a `(also: <other-channels>)` note.
+  channel with `(also: <other-channels>)`.
 
-Both modes close with a verdict block leading with the smallest blocking set + a
+Both close with a verdict block leading with the smallest blocking set +
 numbered action set + one action-choice question.
 
 ## Out-of-PR proposals
 
-Any fix that would touch a file outside this PR's scope (follow-up PR, unrelated
+Any fix touching a file outside this PR's scope (follow-up PR, unrelated
 refactor, sibling-module backfill, ticket) goes in a separate
-`## Out-of-PR proposals` section, one bullet each, framed as a yes/no question —
-never buried in the numbered fix list. Operator owns those scope decisions.
+`## Out-of-PR proposals` section, one bullet each, framed as yes/no — never
+buried in the numbered fix list. Operator owns scope decisions.
 
 ## Next step
 

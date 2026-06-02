@@ -20,8 +20,9 @@ user-invocable: true
 
 # /forge-verify-tests — scenarios attached to real tests
 
-Layer 3 of the attestation chain. For each `SG<n>.<m>`, confirm a real test
-file + function exists and the tier is component-or-higher (unit rejected).
+Layer 3 of the attestation chain. For each `SG<n>.<m>`, confirm a real test file
+
+- function exists and tier is component-or-higher (unit rejected).
 
 ## Inputs
 
@@ -52,16 +53,15 @@ Plus audit-cache side (cross-check vs `links.json` when present):
 | **DANGLING** | `links.json` entry for a scenario that's no longer in `goals.md`.                                 |
 | **DESYNC**   | `links.json` and the `- test:` sub-bullet in `goals.md` disagree about `test_path` or `function`. |
 
-`links.json` is the audit cache, not the canonical link. When `goals.md` and
-`links.json` disagree, `goals.md` wins; surface as `DESYNC` and offer to re-run
-`/forge-tests` to rebuild the cache.
+`links.json` is the audit cache, not the canonical link. On disagreement
+`goals.md` wins; surface as `DESYNC` and offer to re-run `/forge-tests` to
+rebuild the cache.
 
 ## Tier check
 
-Scenarios are high-level concerns. By definition they cover behavior exposable
-by hitting the actual service endpoint — so the linked test must be
-**component** (or higher: integration, e2e, blackbox). Unit-tier tests do not
-exercise the endpoint surface and cannot attest a scenario.
+Scenarios cover behavior exposable by hitting the actual service endpoint — so
+the linked test must be **component** or higher (integration, e2e, blackbox).
+Unit-tier tests don't exercise the endpoint surface and can't attest a scenario.
 
 For each LINKED scenario, read the `- tier: <tier>` sub-bullet directly under
 the `- test:` sub-bullet:
@@ -73,9 +73,8 @@ the `- test:` sub-bullet:
 | **TIER-MISSING** | No `- tier:` sub-bullet. Defaults to `component` for the check, but surface as a finding to annotate.       |
 | **TIER-UNKNOWN** | `tier` value is not in the allowed set (`unit \| component \| integration \| e2e \| qa \| blackbox`). FAIL. |
 
-`tier: e2e` or `qa` without an accompanying `tier_reason` is a **WARN**, not a
-fail — component is the default; the operator owes a one-liner when deviating
-up.
+`tier: e2e` or `qa` without a `tier_reason` is a **WARN**, not a fail —
+component is the default; operator owes a one-liner when deviating up.
 
 ## Process
 
@@ -155,13 +154,9 @@ dangling: <N>   desync: <N>
 
 ## Next step
 
-PASS → advance to body-match audit.
+PASS → `/forge-verify-match`, `/forge-audit`, `/forge-status`.
 
-- `/forge-verify-match` — next link in the attestation chain
-- `/forge-audit` — full chain verdict
-- `/forge-status` — chain state + drift
-
-FAIL → fix per finding, then re-run this skill.
+FAIL → fix per finding, re-run:
 
 - `/forge-tests` — attach a test for any UNLINKED scenario
 - `/forge-tests --refresh SG<n>.<m>` — re-resolve STALE / DESYNC links after a

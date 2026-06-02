@@ -10,42 +10,36 @@ introduced-by: deep-review
 
 # Completeness Lens
 
-Missing callers, type system updates, parallel paths.
-
-## What This Agent Does
-
-Find what the PR forgot to change. The code it did change may be correct — but
-are all the places that need to change actually updated?
+Find what the PR forgot to change. The changed code may be correct — but are all
+the places that need to change actually updated? Missing callers, type-system
+updates, parallel paths.
 
 ## Process
 
-1. **For every changed function signature:** grep for all callers. Are they all
-   updated? Include both direct callers and indirect callers (via interface
-   implementations, function pointers, reflection).
+1. **Every changed function signature:** grep all callers — direct and indirect
+   (interface implementations, function pointers, reflection). All updated?
 
-2. **For every new type/enum value:** grep for ALL switch/match/dispatch/map
-   sites that branch on that type. Every one must handle the new value. Common
-   miss: a new vault type is added to the enum but the type-to-chain mapping,
-   balance refresh task dispatcher, and audit log formatter don't handle it.
+2. **Every new type/enum value:** grep ALL switch/match/dispatch/map sites that
+   branch on that type. Every one must handle the new value. Common miss: a new
+   vault type added to the enum but the type-to-chain mapping, balance-refresh
+   dispatcher, and audit-log formatter don't handle it.
 
-3. **For every new code path that parallels an existing one:** diff the original
-   path's operations against the new path. Are ALL post-operation steps
-   included? Common miss: new entity creation path copies the core logic but
-   forgets audit logs, risk score updates, notification triggers, or counter
-   increments.
+3. **Every new code path paralleling an existing one:** diff the original path's
+   operations against the new path. ALL post-operation steps included? Common
+   miss: new entity-creation path copies core logic but forgets audit logs, risk
+   score updates, notification triggers, or counter increments.
 
-4. **For every changed/deprecated field:**
+4. **Every changed/deprecated field:**
    - Search by field name, type name, AND ticket ID
-   - Check serialization/deserialization (JSON tags, proto mappings, Pydantic
-     models)
-   - Check database queries that filter/project on this field
-   - Check UI components that render this field
+   - Check serialization (JSON tags, proto mappings, Pydantic models)
+   - Check DB queries that filter/project on the field
+   - Check UI components that render it
 
-5. **For every new configuration/flag:** is it set in all environments? (dev,
-   staging, production, test fixtures)
+5. **Every new configuration/flag:** set in all environments (dev, staging,
+   production, test fixtures)?
 
-6. **For every new interface:** is it instantiated with a real implementation in
-   production, not just in tests?
+6. **Every new interface:** instantiated with a real implementation in
+   production, not just tests?
 
 ## Output Format
 

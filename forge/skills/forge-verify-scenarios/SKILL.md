@@ -1,6 +1,7 @@
 ---
 name: forge-verify-scenarios
-description: "Verify each goal is covered by ≥1 proof — a scenario or a validation."
+description:
+  "Verify each goal is covered by ≥1 proof — a scenario or a validation."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify scenarios"
@@ -21,7 +22,7 @@ user-invocable: true
 # /forge-verify-scenarios — scenarios cover goals
 
 Layer 2 of the attestation chain. Reads `goals.md`, emits per-goal coverage
-verdict. PASS iff every `Gn` is COVERED.
+verdict. PASS iff every `Gn` COVERED.
 
 ## Inputs
 
@@ -37,17 +38,17 @@ header. Missing → exit 2 with `BLOCKED_NO_GOALS`.
 
 For each `Gn` enumerated from `goals.md`:
 
-| Verdict     | Meaning                                                                                         |
-| ----------- | ----------------------------------------------------------------------------------------------- |
-| **COVERED** | ≥1 proof under `Gn`: a `## Scenarios` block with ≥1 endpoint-observable `SG<n>.<m>`, **or** a `## Validations` block with ≥1 `VG<n>.<m>`. |
+| Verdict     | Meaning                                                                                                                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **COVERED** | ≥1 proof under `Gn`: a `## Scenarios` block with ≥1 endpoint-observable `SG<n>.<m>`, **or** a `## Validations` block with ≥1 `VG<n>.<m>`.                                      |
 | **PARTIAL** | Scenarios present but ≥1 has a vague `then:` OR an internal-only `then:` (not service-surface). A goal also covered by a validation does not go PARTIAL on the scenario alone. |
-| **MISSING** | Neither a `## Scenarios` block (with entries) **nor** a `## Validations` block under `Gn`.       |
+| **MISSING** | Neither a `## Scenarios` block (with entries) **nor** a `## Validations` block under `Gn`.                                                                                     |
 
-A scenario by definition covers an aspect exposable by hitting the actual
-service endpoint. `then:` must name an externally-observable signal — HTTP
-response, RPC result, queue message, persisted record, log line, metric, render
-output. "Returns from private method X", "internal state Y becomes Z", or
-"function W is called" are NOT endpoint-observable and surface as **PARTIAL**.
+A scenario covers an aspect exposable by hitting the actual service endpoint.
+`then:` must name an externally-observable signal — HTTP response, RPC result,
+queue message, persisted record, log line, metric, render output. "Returns from
+private method X", "internal state Y becomes Z", "function W is called" are NOT
+endpoint-observable → **PARTIAL**.
 
 Plus scenario-side:
 
@@ -57,7 +58,7 @@ Plus scenario-side:
 | **PARKED** | Scenario lives under a `## Orphan scenarios` block (operator parked a harvested `when:` / `then:` with no goal). |
 
 `PARKED` is **WARN**, not a fail — operator chose to keep the annotation
-visible. Surface the count + scenario IDs; do not fail the chain.
+visible. Surface count + scenario IDs; don't fail the chain.
 
 ## Process
 
@@ -126,13 +127,9 @@ orphans: <N>   parked: <N>
 
 ## Next step
 
-PASS → advance to test linkage.
+PASS → `/forge-verify-tests`, `/forge-audit`, `/forge-status`.
 
-- `/forge-verify-tests` — next link in the attestation chain
-- `/forge-audit` — full chain verdict
-- `/forge-status` — chain state + drift
-
-FAIL → fix per finding, then re-run this skill.
+FAIL → fix per finding, re-run:
 
 - `/forge-scenarios` — draft scenarios for any MISSING goal
 - `/forge-scenarios --goal G<n>` — tighten PARTIAL scenarios (vague /

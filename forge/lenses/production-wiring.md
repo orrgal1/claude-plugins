@@ -10,53 +10,38 @@ introduced-by: deep-review
 
 # Production Wiring Lens
 
-Interfaces instantiated, constructors called, flags set.
-
-## What This Agent Does
-
-Verify that new code is actually reachable in production. Code that compiles and
-passes tests can still be dead in production if it's not wired up.
+Verify new code is reachable in production. Code that compiles and passes tests
+can still be dead if it's not wired up.
 
 ## Process
 
-1. **New interfaces/abstractions:** for each new interface or abstract type
-   introduced:
-   - Is there a concrete implementation?
-   - Is that implementation instantiated in production code (not just tests)?
-   - Is it injected/registered in the right place (DI container, constructor,
+1. **New interfaces/abstractions:** for each new interface or abstract type:
+   - A concrete implementation?
+   - Instantiated in production code (not just tests)?
+   - Injected/registered in the right place (DI container, constructor,
      factory)?
 
-2. **New constructors:** for each new constructor or factory function:
-   - Is it called from production code?
-   - If it replaces an old constructor, are all production call sites updated?
-   - Are new optional parameters actually passed in production? (common miss:
+2. **New constructors:** for each new constructor or factory:
+   - Called from production code?
+   - If it replaces an old one, all production call sites updated?
+   - New optional params actually passed in production? (common miss:
      `NewFooWithBar()` exists but production still calls `NewFoo()`)
 
-3. **New endpoints/RPCs:**
-   - Registered in the router/server?
-   - Auth middleware attached?
-   - Rate limiting configured?
-   - Documentation updated (OpenAPI, proto)?
+3. **New endpoints/RPCs:** registered in the router/server? Auth middleware
+   attached? Rate limiting? Docs updated (OpenAPI, proto)?
 
-4. **New background jobs/workers:**
-   - Registered in the scheduler/runner?
-   - Started in the service bootstrap?
-   - Monitored (health check, metrics)?
+4. **New background jobs/workers:** registered in the scheduler/runner? Started
+   in service bootstrap? Monitored (health check, metrics)?
 
-5. **Feature flags:**
-   - If the feature has a flag, is it enabled in the right environments?
-   - Is there a kill switch for the new behavior?
-   - Is the default value correct for production?
+5. **Feature flags:** enabled in the right environments? Kill switch? Default
+   value correct for production?
 
-6. **Configuration:**
-   - New config values added to all environments? (dev, staging, prod)
-   - Sensible defaults for missing config?
-   - Config validation at startup?
+6. **Configuration:** new values added to all environments (dev, staging, prod)?
+   Sensible defaults for missing config? Validated at startup?
 
-7. **Database/migration wiring:**
-   - Migration files registered in `*_db_definitions.py`?
-   - New collections/indexes created?
-   - Migration order correct relative to code that depends on it?
+7. **Database/migration wiring:** migration files registered in
+   `*_db_definitions.py`? New collections/indexes created? Migration order
+   correct relative to dependent code?
 
 ## Output Format
 

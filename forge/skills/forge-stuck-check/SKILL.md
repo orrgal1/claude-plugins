@@ -161,16 +161,9 @@ JSON (`--json`):
 ## Hook from autopilot
 
 Autopilot doesn't call this directly; the patch loop owns counters. Runner
-receipts with `verdict: confirmed` bubble up as `STUCK` halts. In autopilot's
-Bias-to-progress: `suspected` is not a halt; `confirmed` halts with the named
-reason.
-
-## Next step
-
-- `halt-STUCK` → caller halts; operator follows reason-specific action.
-- `continue-raise-threshold` → caller continues with bumped threshold.
-- `continue` → caller continues unchanged.
-- `/forge-status` — re-assess after halt + operator action.
+receipts with `verdict: confirmed` bubble up as `STUCK` halts. In
+Bias-to-progress: `suspected` ≠ halt; `confirmed` halts with the named reason.
+After a halt + operator action, `/forge-status` re-assesses.
 
 ## Usage
 

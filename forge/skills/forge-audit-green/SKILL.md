@@ -26,12 +26,9 @@ user-invocable: true
 
 # /forge-audit-green — drive structural audit to PASS
 
-Wraps `/forge-audit` in a fix-loop. **This skill is the loop _controller_** per
-`/forge` § "Loop contract": it owns iteration count, budget, signals, and the
-PASS verdict, and offloads each iteration's two heavy halves to
-`forge-step-runner` subagents — the **check** is the `verify` aggregator step
-(`/forge-audit` itself), the **fix** is `audit-fix` (one finding's mechanical
-delta + commit). Sister to `/forge-ci-green` + `/forge-impl-green`.
+Loop per `/forge` § Loop contract. Target: `/forge-audit` PASS. Check = the
+`verify` aggregator step (`/forge-audit` itself); fix = `audit-fix` (one
+finding's mechanical delta + commit).
 
 ## Inputs
 
@@ -42,11 +39,9 @@ delta + commit). Sister to `/forge-ci-green` + `/forge-impl-green`.
 
 ## State (file-backed loop memory)
 
-`.pr-artifacts/<slug>/forge/loop/forge-audit-green-<slug>/` — `plan.md` (one
-bullet per open finding) + `scratchpad.md` (append-only `## iter <N>` log).
-Every offloaded subagent reads `scratchpad.md` on entry and appends on exit; the
-controller threads the check's `## handoff` (smallest blocking set) into each
-`audit-fix` brief.
+Slot `.pr-artifacts/<slug>/forge/loop/forge-audit-green-<slug>/` per `/forge` §
+Loop contract. `plan.md` — one bullet per open finding. Controller threads the
+check's `## handoff` (smallest blocking set) into each `audit-fix` brief.
 
 ## Chain-contract guard (enforced in `audit-fix`, re-checked by controller)
 
@@ -112,14 +107,16 @@ settle BUDGET_EXHAUSTED
 ```
 
 Embed (`/forge-audit --embed`) is a one-shot on PASS — no fix-loop, no push.
+`/forge-audit` is the aggregator over verify-\* skills + inline L5 design; it
+doubles as the loop's **check** — controller never calls per-layer skills
+directly.
 
 ## Offloaded units
 
 - **check** = `forge-step-runner step: verify` → runs `/forge-audit`, returns
-  per-layer verdicts + `## handoff` = the smallest blocking set. Read-only;
-  never applies a fix.
-- **fix** = `forge-step-runner step: audit-fix` → applies one finding's
-  mechanical delta + commit, contract-guarded. Returns the commit + signals.
+  per-layer verdicts + `## handoff` = the smallest blocking set. Read-only.
+- **fix** = `forge-step-runner step: audit-fix` → one finding's mechanical delta
+  - commit, contract-guarded. Returns commit + signals.
 
 Commit + decisions log live in `audit-fix`:
 
@@ -138,14 +135,12 @@ forge-audit-green: <SG or layer> <one-line fix>
 
 ## Stuck detection (controller-owned)
 
-Fold each subagent's `## signals`: `same-finding-recurs`, `same-file-edited`,
+Signals folded: `same-finding-recurs`, `same-file-edited`,
 `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
 `subagent-same-blocker`. On hard trip →
-`/forge-stuck-check --slug <slug> --phase audit --signal <name> --iter <N> --json`:
-
-- `confirmed` → halt loop, settle `STUCK` with the named reason.
-- `suspected` → bump threshold once, log, continue.
-- `none` → log false-alarm, continue.
+`/forge-stuck-check --slug <slug> --phase audit --signal <name> --iter <N> --json`
+→ `confirmed` settles `STUCK` (named reason); `suspected` bumps threshold once;
+`none` logs false-alarm.
 
 ## Settle
 

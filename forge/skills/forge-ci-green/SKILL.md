@@ -27,15 +27,12 @@ user-invocable: true
 
 # /forge-ci-green — drive CI to green, chain-aware
 
-Runs the forge **loop contract** (`/forge` § "Loop contract") against GitHub PR
-CI. **This skill is the loop _controller_** — it owns iteration count, budget,
-signals, the green verdict, and **the inter-tick wait**, and offloads each
-iteration's two heavy halves to `forge-step-runner` subagents: **`ci-check`**
-(mergeability gate + three-probe snapshot + classify → verdict) and **`ci-fix`**
-(diagnose one failing run, minimal fix, commit + push). Two CI-specific traits
-carry over — poll-based verify (CI can't compress to one exit code) and
-push-per-iteration (CI can't verify a local commit) — plus a chain-contract
-guard, forge-tagged commits, and decisions-log integration.
+Loop per `/forge` § Loop contract against GitHub PR CI. Check = **`ci-check`**
+(mergeability gate + three-probe snapshot + classify → verdict); fix =
+**`ci-fix`** (diagnose one failing run, minimal fix, commit + push). CI-specific
+overrides: controller owns **the inter-tick wait**; verify is poll-based (CI
+can't compress to one exit code); **push per iteration** (CI can't verify a
+local commit) — overriding the contract's never-push.
 
 ## Inputs
 
@@ -52,11 +49,10 @@ No PR → settle `NO_PR`. `mergeable=CONFLICTING` or
 
 ## State (file-backed loop memory)
 
-`.pr-artifacts/<slug>/forge/loop/forge-ci-green-<slug>/` — `plan.md` +
-`scratchpad.md`. Every offloaded subagent reads `scratchpad.md` on entry,
-appends on exit; the controller threads each `ci-check` `## handoff` (failing
-runs) into the `ci-fix` brief and each `ci-fix` `## handoff` (pushed HEAD sha)
-into the next `ci-check`.
+Slot `.pr-artifacts/<slug>/forge/loop/forge-ci-green-<slug>/` per `/forge` §
+Loop contract. Controller threads each `ci-check` `## handoff` (failing runs)
+into the `ci-fix` brief and each `ci-fix` `## handoff` (pushed HEAD sha) into
+the next `ci-check`.
 
 ## Chain-contract guard (enforced in `ci-fix`, re-checked by controller)
 
@@ -190,14 +186,12 @@ phase.
 
 ## Stuck detection (controller-owned)
 
-Fold each subagent's `## signals`: `same-check-fails`, `same-error-string`,
-`same-file-edited`, `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
+Signals folded: `same-check-fails`, `same-error-string`, `same-file-edited`,
+`diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
 `subagent-same-blocker`. On hard trip →
-`/forge-stuck-check --slug <slug> --phase ci-green --signal <name> --iter <N> --json`:
-
-- `confirmed` → halt, settle `STUCK` with reflect's reason.
-- `suspected` → bump threshold once, log, continue.
-- `none` → log false-alarm, continue.
+`/forge-stuck-check --slug <slug> --phase ci-green --signal <name> --iter <N> --json`
+→ `confirmed` settles `STUCK` (reflect's reason); `suspected` bumps threshold
+once; `none` logs false-alarm.
 
 ## Settle
 

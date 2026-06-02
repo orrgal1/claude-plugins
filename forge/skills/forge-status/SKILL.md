@@ -38,9 +38,9 @@ Slug rule per `/forge-goals`: lowercase, alphanumerics + dashes, strip leading
 
 ### 0. Setup gate
 
-Confirm `$FORGE_HOME/forge.toml` exists with `[meta].ready = true` for this
-repo. Absent → emit `phase: NOT_SET_UP`, next move `run /forge-setup`, and stop
-(skip the rest of the report — there's no chain to read yet). Exit non-zero.
+Confirm `$FORGE_HOME/forge.toml` has `[meta].ready = true` for this repo. Absent
+→ emit `phase: NOT_SET_UP`, next move `run /forge-setup`, stop (no chain to read
+yet). Exit non-zero.
 
 ### 1. Resolve slug + worktree
 
@@ -112,10 +112,9 @@ Earliest unsatisfied phase wins:
 
 Manual-mode AWAIT verdicts (phases 4-9): `AWAIT_TESTS_REVIEW`,
 `AWAIT_IMPL_REVIEW`, `AWAIT_AUDIT_REVIEW`, `AWAIT_CI_REVIEW`,
-`AWAIT_REVIEW_REVIEW`. Detect via `wip.mode_manual` flag in `decisions.md` +
+`AWAIT_REVIEW_REVIEW`. Detect via `wip.mode_manual` in `decisions.md` +
 phase-completion signal without matching `approvals.json` entry.
-(`AWAIT_SCENARIOS_REVIEW` is always-on across both modes — see phase table
-above.)
+(`AWAIT_SCENARIOS_REVIEW` is always-on across both modes — see table above.)
 
 ### 6. Drift
 
@@ -191,16 +190,15 @@ JSON (`--json`):
 - `/forge` at entry → `--json`. `status.phase` drives entry phase. Any
   `severity=block` drift → halt `BLOCKED_DRIFT`. `--from` overrides.
 - `/forge approve` / `/forge iterate` → `--json` to detect the awaiting phase.
-  - One `AWAIT_<phase>_REVIEW` → target that phase.
-  - Multiple AWAITs (defensive) → require `--phase <phase>`.
-  - None → refuse "no awaiting phase".
+  One `AWAIT_<phase>_REVIEW` → target it. Multiple AWAITs → require
+  `--phase <phase>`. None → refuse "no awaiting phase".
 - `approve` writes `{"<phase>": "<sha>"}` to `approvals.json`.
-  `iterate "<feedback>"` re-spawns the phase skill with `--iterate --push`; the
+  `iterate "<feedback>"` re-spawns the phase skill with `--iterate --push`;
   prior sha goes stale on commit.
 
 ## Symbol presence check
 
-`links.json` entries are validated via language-aware grep — `def`, `func`,
+`links.json` entries validated via language-aware grep — `def`, `func`,
 `it(`/`test(`/`describe(`. Miss → drift `links.test_id_missing` (block).
 
 ## Out of scope

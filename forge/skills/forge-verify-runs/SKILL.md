@@ -48,8 +48,8 @@ For each LINKED `SG<n>.<m>` in `goals.md`, look up its result in `run.json`:
 | **STALE**    | `run.json` mtime is older than the linked test file's mtime — last run does not reflect current code.   |
 | **DANGLING** | `run.json` has a result for an SG no longer in `goals.md`.                                              |
 
-`SKIPPED` is treated as PASS for the chain verdict — operator explicitly opted
-the scenario out at runtime (e.g. environment-gated). Surface the count.
+`SKIPPED` = PASS for the chain verdict — operator explicitly opted the scenario
+out at runtime (e.g. environment-gated). Surface the count.
 
 ## Process
 
@@ -121,15 +121,15 @@ passed: <N>   failed: <N>   errored: <N>   skipped: <N>   missing: <N>   stale: 
 
 ## Next step
 
-PASS → chain attested.
+PASS → chain attested:
 
-- `/forge-audit` — re-aggregate and (with `--embed`) write the report into the
-  PR body
-- `/forge-status` — confirm chain state, check for drift
-- `/forge` — close the chain if the PR is ready (CI-green + review-green still
+- `/forge-audit` — re-aggregate, with `--embed` write the report into the PR
+  body
+- `/forge-status` — confirm chain state, check drift
+- `/forge` — close the chain if PR is ready (CI-green + review-green still
   required separately)
 
-FAIL → fix per finding, then re-run this skill.
+FAIL → fix per finding, re-run:
 
 - `/forge-impl-green` — refresh STALE `run.json`; drive FAIL / ERROR scenarios
   green

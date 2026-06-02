@@ -1,8 +1,9 @@
 ---
 name: forge-map-events
-description: "Generator: write the event / message-bus map ($FORGE_HOME/maps/main/events.json). Dispatched by /forge-map."
-argument-hint:
-  "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
+description:
+  "Generator: write the event / message-bus map
+  ($FORGE_HOME/maps/main/events.json). Dispatched by /forge-map."
+argument-hint: "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
   - "forge map events"
   - "map message bus"
@@ -20,44 +21,46 @@ user-invocable: false
 
 # /forge-map-events — generate the event / message-bus map
 
-Generator dispatched by `/forge-map`. Scans the host repo for pub/sub
-publishers + consumers across Kafka, NATS, RabbitMQ, AWS SQS/SNS, GCP Pub/Sub,
-Azure Service Bus, Redis Streams / Pub/Sub, MQTT, Kinesis, ZeroMQ, and
-in-process event buses. Writes `$FORGE_HOME/maps/main/events.json` plus a `[maps.events]`
-entry in `$FORGE_HOME/forge.toml`.
+Generator dispatched by `/forge-map`. Scans the host repo for pub/sub producers
 
-Not user-invocable directly — go through `/forge-map events`.
+- consumers across Kafka, NATS, RabbitMQ, AWS SQS/SNS, GCP Pub/Sub, Azure
+  Service Bus, Redis Streams / Pub/Sub, MQTT, Kinesis, ZeroMQ, and in-process
+  event buses; writes `$FORGE_HOME/maps/main/events.json` plus a `[maps.events]`
+  entry in `$FORGE_HOME/forge.toml`. Shared envelope + write/registry contract:
+  see `/forge-map` § "Shared JSON envelope".
+
+Not user-invocable — go through `/forge-map events`.
 
 ## Inputs
 
-| Input            | Required | Notes                                                             |
-| ---------------- | -------- | ----------------------------------------------------------------- |
-| `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                |
-| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/events.json`.          |
-| `--refresh`      | optional | No-op — every run rewrites. Accepted for API parity.              |
-| `--quiet`        | optional | Suppress one-line summary.                                        |
+| Input            | Required | Notes                                                              |
+| ---------------- | -------- | ------------------------------------------------------------------ |
+| `--scope <path>` | optional | Restrict scan to a subtree. Default `<repo-root>`.                 |
+| `--out <file>`   | optional | Override output path. Default `$FORGE_HOME/maps/main/events.json`. |
+| `--refresh`      | optional | No-op — every run rewrites. Accepted for API parity.               |
+| `--quiet`        | optional | Suppress one-line summary.                                         |
 
 ## Detection signals
 
-| Transport         | Signal                                                                          |
-| ----------------- | ------------------------------------------------------------------------------- |
+| Transport         | Signal                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Kafka             | `kafkajs`, `confluent-kafka`, `sarama`, `kafka-python`, `spring-kafka`. Calls: `producer.send`, `consumer.subscribe / .run`, `@KafkaListener`. |
-| NATS              | `nats.connect`, `nc.publish`, `nc.subscribe`, JetStream `js.publish / sub`.     |
-| RabbitMQ (amqp)   | `amqplib`, `pika`, `streadway/amqp`. Calls: `channel.publish`, `channel.consume`, queue + exchange declarations. |
-| AWS SQS           | `sqs.sendMessage`, `sqs.receiveMessage`, `@SqsListener`, queue URLs / names.    |
-| AWS SNS           | `sns.publish`, topic ARNs / names.                                              |
-| AWS Kinesis       | `kinesis.putRecord(s)`, `kinesis.getRecords`, KCL consumers.                    |
-| GCP Pub/Sub       | `topic.publish`, `subscription.on('message')`, `pubsub.publisher / subscriber`. |
-| Azure Service Bus | `sender.sendMessages`, `receiver.receiveMessages`, `ServiceBusClient`.          |
-| Redis Streams     | `XADD`, `XREAD`, `XREADGROUP`.                                                  |
-| Redis Pub/Sub     | `PUBLISH`, `SUBSCRIBE`, `PSUBSCRIBE`.                                           |
-| MQTT              | `client.publish(topic, …)`, `client.subscribe(topic, …)`.                       |
-| ZeroMQ            | `socket.send` / `socket.recv` on `PUB` / `SUB` / `PUSH` / `PULL` socket types.  |
-| In-process bus    | Node `EventEmitter`, NestJS `EventEmitterModule`, `event-bus` libs, Go channels exposed as a bus. Flagged `in_process: true`. |
+| NATS              | `nats.connect`, `nc.publish`, `nc.subscribe`, JetStream `js.publish / sub`.                                                                    |
+| RabbitMQ (amqp)   | `amqplib`, `pika`, `streadway/amqp`. Calls: `channel.publish`, `channel.consume`, queue + exchange declarations.                               |
+| AWS SQS           | `sqs.sendMessage`, `sqs.receiveMessage`, `@SqsListener`, queue URLs / names.                                                                   |
+| AWS SNS           | `sns.publish`, topic ARNs / names.                                                                                                             |
+| AWS Kinesis       | `kinesis.putRecord(s)`, `kinesis.getRecords`, KCL consumers.                                                                                   |
+| GCP Pub/Sub       | `topic.publish`, `subscription.on('message')`, `pubsub.publisher / subscriber`.                                                                |
+| Azure Service Bus | `sender.sendMessages`, `receiver.receiveMessages`, `ServiceBusClient`.                                                                         |
+| Redis Streams     | `XADD`, `XREAD`, `XREADGROUP`.                                                                                                                 |
+| Redis Pub/Sub     | `PUBLISH`, `SUBSCRIBE`, `PSUBSCRIBE`.                                                                                                          |
+| MQTT              | `client.publish(topic, …)`, `client.subscribe(topic, …)`.                                                                                      |
+| ZeroMQ            | `socket.send` / `socket.recv` on `PUB` / `SUB` / `PUSH` / `PULL` socket types.                                                                 |
+| In-process bus    | Node `EventEmitter`, NestJS `EventEmitterModule`, `event-bus` libs, Go channels exposed as a bus. Flagged `in_process: true`.                  |
 
-Schema sources (best-effort, joined to events when discoverable):
-`**/*.avsc` (Avro), `**/*.proto` (Protobuf — message types only; service RPCs
-stay out of scope here), `schemas/**/*.json`.
+Schema sources (best-effort, joined to events when discoverable): `**/*.avsc`
+(Avro), `**/*.proto` (Protobuf — message types only; service RPCs stay out of
+scope here), `schemas/**/*.json`.
 
 Unknown transport → emit gap `{reason: unsupported-transport, detail: <files>}`.
 Multiple transports coexist — parse each, attribute each event.
@@ -81,26 +84,24 @@ Multiple transports coexist — parse each, attribute each event.
    step 6.
 
 3. **Parse per transport.** Each call site contributes one of:
-
    - **producer site** — file/line/symbol + transport + topic literal.
-   - **consumer site** — file/line/symbol + transport + topic literal +
-     optional consumer-group / subscription name.
+   - **consumer site** — file/line/symbol + transport + topic literal + optional
+     consumer-group / subscription name.
 
    Topic literals:
-
    - String literal → record verbatim.
    - Constant / enum / config lookup → resolve when the value is statically
      discoverable in the same file or a sibling const file. Else record
-     `topic: "<dynamic>"` + gap `{reason: dynamic-topic, detail: <file>:<line>}`.
+     `topic: "<dynamic>"` + gap
+     `{reason: dynamic-topic, detail: <file>:<line>}`.
    - Templated (`f"users.{tenant}.created"`) → record the template with
      placeholders preserved + gap `{reason: templated-topic, detail: ...}`.
 
    Payload type discovery (best-effort):
-
-   - Type annotation on the publish/consume callback → record `payload.type`
-     and `payload.ref` (`<file>:<line>` of the type decl).
-   - Schema file (Avro `.avsc` or Protobuf `.proto`) whose declared subject
-     name matches the topic → set `payload.schema_file`.
+   - Type annotation on the publish/consume callback → record `payload.type` and
+     `payload.ref` (`<file>:<line>` of the type decl).
+   - Schema file (Avro `.avsc` or Protobuf `.proto`) whose declared subject name
+     matches the topic → set `payload.schema_file`.
    - Else `payload: { type: "unknown" }` + gap `{reason: payload-unresolved}`.
 
 4. **Group by topic.** Collapse all producer/consumer sites that share
@@ -140,21 +141,20 @@ Multiple transports coexist — parse each, attribute each event.
    ```
 
    Field rules:
-
    - `topic` — string verbatim from source. Dynamic / templated values stay
      unresolved and gapped.
    - `transport` — one of the signal keys (`kafka`, `nats`, `rabbitmq`, `sqs`,
      `sns`, `kinesis`, `gcp-pubsub`, `azure-servicebus`, `redis-streams`,
      `redis-pubsub`, `mqtt`, `zeromq`, `in-process`).
-   - `producers[]` / `consumers[]` — `file` / `line` mandatory; `symbol` is
-     the function or method name (`<anonymous>` for inline closure);
+   - `producers[]` / `consumers[]` — `file` / `line` mandatory; `symbol` is the
+     function or method name (`<anonymous>` for inline closure);
      `consumers[].group` is the consumer group / subscription name when the
      transport has one (empty string otherwise).
    - `payload.type` / `payload.ref` — `"unknown"` / `null` when unresolved.
      `payload.schema_file` — repo-root-relative path or `null`.
    - `delivery` — best-effort: `"at-least-once"` / `"at-most-once"` /
-     `"exactly-once"` / `"unknown"`. Infer from explicit config
-     (Kafka `enable.idempotence`, SQS FIFO queue suffix, etc.); never guess.
+     `"exactly-once"` / `"unknown"`. Infer from explicit config (Kafka
+     `enable.idempotence`, SQS FIFO queue suffix, etc.); never guess.
    - `in_process` — `true` only for in-process bus items.
 
 6. **Write the envelope.** Atomic tmp + `mv -f`:
@@ -167,9 +167,17 @@ Multiple transports coexist — parse each, attribute each event.
      "generated_at": "<ISO-8601 UTC>",
      "repo_root": "<abs path>",
      "scope": "<scope relative to repo_root, or '.'>",
-     "source_files": ["src/users/service.ts", "schemas/user-created.avsc", "..."],
-     "items": [ /* per step 5 */ ],
-     "gaps": [ /* per steps 2–4 */ ]
+     "source_files": [
+       "src/users/service.ts",
+       "schemas/user-created.avsc",
+       "..."
+     ],
+     "items": [
+       /* per step 5 */
+     ],
+     "gaps": [
+       /* per steps 2–4 */
+     ]
    }
    ```
 
@@ -195,14 +203,14 @@ Multiple transports coexist — parse each, attribute each event.
 ## Honesty
 
 - **Never resolve a dynamic topic by guessing.** Templated / config-driven
-  topics stay literal-with-placeholders + gap. Agents reconcile against
-  config maps (see `/forge-map-config`) themselves.
+  topics stay literal-with-placeholders + gap. Agents reconcile against config
+  maps (see `/forge-map-config`) themselves.
 - **Producer-only or consumer-only is valid.** Empty `consumers[]` (or
   `producers[]`) is a real signal — surfaces orphaned topics for the agent.
   Never invent a counterpart.
-- **Payload schemas link, not embed.** Record `schema_file` paths; let the
-  agent open the schema if it needs the full shape. Keeps the map compact.
-- **Read-only on host repo.** Writes confined to `$FORGE_HOME/maps/main/events.json`
-  and `$FORGE_HOME/forge.toml`.
+- **Payload schemas link, not embed.** Record `schema_file` paths; let the agent
+  open the schema if it needs the full shape. Keeps the map compact.
+- **Read-only on host repo.** Writes confined to
+  `$FORGE_HOME/maps/main/events.json` and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every producer / consumer carries
   `file` + `line`. Agents verify against live source before acting.

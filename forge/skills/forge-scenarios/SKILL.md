@@ -1,6 +1,8 @@
 ---
 name: forge-scenarios
-description: "Draft when:/then: scenarios that cover each goal — component-tier-observable behavior only."
+description:
+  "Draft when:/then: scenarios that cover each goal — component-tier-observable
+  behavior only."
 argument-hint: '[--slug <name>] [--goal G<n>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge scenarios"
@@ -33,19 +35,18 @@ source of truth.
   - tier: <component|integration|e2e|blackbox|qa>
 ```
 
-Sub-bullets, not bare indented `key: value` — prettier (the markdown formatter
-on most pre-commit hooks) reflows bare indented continuation lines into one
-wrapped paragraph and destroys the scenario. Sub-bullets are prettier-safe.
+Sub-bullets, not bare indented `key: value` — prettier reflows bare indented
+continuation lines into one wrapped paragraph, destroying the scenario;
+sub-bullets are prettier-safe. `test:` path in backticks — inline code spans
+never wrap, so the path stays atomic across prettier's 80-col reflow.
 
-`test:` path wrapped in backticks — inline code spans never wrap, so the path
-stays atomic across prettier's 80-col reflow.
+Before `/forge-tests`: header + `when:` + `then:` only. After: append `- test:`
 
-Before `/forge-tests` runs: header + `when:` + `then:` only. After: append
-`- test:` + `- tier:`. **Test code carries only `when:` / `then:` comments**;
-the back-link lives in `goals.md`, not in test source.
+- `- tier:`. **Test code carries only `when:` / `then:` comments**; the
+  back-link lives in `goals.md`, not test source.
 
-Parsers tolerate any whitespace inside each line. Downstream regexes accept
-canonical + legacy bare-indented form:
+Parsers tolerate any whitespace per line. Downstream regexes accept canonical +
+legacy bare-indented form:
 
 - scenario header: `^- SG\d+\.\d+\s*$`
 - when line: `^\s+(-\s+)?when:\s+.+$`
@@ -53,42 +54,40 @@ canonical + legacy bare-indented form:
 - test line: ``^\s+(-\s+)?test:\s+`?\S+::\S+`?\s*$``
 - tier line: `^\s+(-\s+)?tier:\s+\S+\s*$`
 
-ID = `SG<n>.<m>`: `SG2.1` is the first scenario under `G2`. Hierarchy keeps goal
-link explicit, survives goal additions, and lets downstream skills enumerate by
-grep (`^- SG\d+\.\d+`). `when:` / `then:` content rules in § "What goes into
-`when:` / `then:`".
+ID = `SG<n>.<m>`: `SG2.1` is the first scenario under `G2`. Hierarchy keeps the
+goal link explicit, survives goal additions, lets downstream skills enumerate by
+grep (`^- SG\d+\.\d+`). Content rules in § "What goes into `when:` / `then:`".
 
 ## Coverage rule
 
-Scenarios are complete when:
+Scenarios complete when:
 
 - Every `Gn` has ≥1 **proof** — a scenario here, or a validation under
   `## Validations` (`/forge-validations`). A removal/structural goal may have
-  **zero scenarios** and be fully proven by validations; that is not an
-  uncovered goal. Behavioral goals still want ≥1 scenario.
-- No scenario is orphaned (every lives under a real `Gn`).
-- Each `then:` is specific enough to be observed. "Works correctly" doesn't
-  count — name the surface.
+  **zero scenarios**, fully proven by validations — not an uncovered goal.
+  Behavioral goals still want ≥1 scenario.
+- No scenario orphaned (each lives under a real `Gn`).
+- Each `then:` specific enough to observe. "Works correctly" doesn't count —
+  name the surface.
 
 ## Scope rule — endpoint behavior only
 
-A scenario describes a high-level concern. By definition, the `then:` is
-exposable by hitting the actual service endpoint — HTTP response, RPC result,
-queue message, persisted record, log line, metric, render output.
+A scenario's `then:` is exposable by hitting the actual service endpoint — HTTP
+response, RPC result, queue message, persisted record, log line, metric, render
+output.
 
-NOT scenarios:
+NOT scenarios (internal → unit-level concern, not a scenario):
 
 - "Returns from private method X with value Y." Internal mechanic.
 - "Field `cache.lastRefresh` becomes Z." Internal state.
-- "Function W is called." Implementation detail.
+- "Function W is called." Impl detail.
 
-If the only honest `then:` is internal, it's not a scenario — it's a unit-level
-concern. Promote the closest endpoint-visible consequence into the `then:`, or
-drop the scenario.
+Only-honest-`then:`-is-internal → promote the closest endpoint-visible
+consequence into the `then:`, or drop the scenario.
 
 Consequence: every scenario gets a **component-or-higher tier test**.
-`/forge-tests` rejects unit-tier attachment for any SG. `/forge-audit`
-re-checks; this skill establishes on first authoring.
+`/forge-tests` rejects unit-tier attachment; `/forge-audit` re-checks; this
+skill establishes on first authoring.
 
 ## Process
 
@@ -96,8 +95,7 @@ re-checks; this skill establishes on first authoring.
    `.pr-artifacts/*/forge/goals.md`).
 2. Read `goals.md`. Enumerate `Gn` via `^## G\d+ —`. Missing file → exit "run
    /forge-goals first".
-3. **Harvest** existing `when:` / `then:` from the PR diff (see § "Harvest"
-   below) — operators often write annotations before formalizing.
+3. **Harvest** existing `when:` / `then:` from the PR diff (§ "Harvest").
 4. **For each goal** (or `--goal G<n>` only):
    - Read existing `## Scenarios` block if present (edit mode).
    - Pre-fill from harvested scenarios matching this goal.
@@ -108,35 +106,18 @@ re-checks; this skill establishes on first authoring.
 6. **Write scenarios inline** in canonical sub-bullet shape. Insert
    `## Scenarios` block immediately under each goal's body.
 7. **Forge narration** — between goal body and `## Scenarios`, add a
-   `### How the scenarios prove this` section. Plain-English paragraph tying SGs
-   (`SG<n>.<m>` or ranges like `SG1.1–SG1.5`) to the goal's end-state.
-   Reviewer-facing only — not parsed by downstream skills. Rewrite when
-   scenarios change.
-8. **Publish goals.md** (only-goals-tracked policy):
-
-   ```bash
-   gi=".pr-artifacts/.gitignore"
-   gm=".pr-artifacts/${slug}/forge/goals.md"
-   if [ ! -f "$gi" ]; then
-     cat > "$gi" <<'EOF'
-   # Forge: ignore everything under <slug>/forge/ except shared review surfaces.
-   */forge/*
-   !*/forge/goals.md
-   !*/forge/design.md
-   EOF
-   fi
-   if git check-ignore -q "$gm"; then
-     git add -f "$gi" "$gm"
-     git commit -m "forge-scenarios: update review artifact"
-   fi
-   ```
-
-9. **`--push`** (orchestrator entry, before `AWAIT_SCENARIOS_REVIEW`): push when
-   local commits ahead (`@{u}..HEAD > 0`); no-op else. SSH-only. `--push`
-   without upstream → `git push -u origin HEAD`.
+   `### How the scenarios prove this` section: plain-English paragraph tying SGs
+   (`SG<n>.<m>` or ranges `SG1.1–SG1.5`) to the goal's end-state.
+   Reviewer-facing only, not parsed downstream. Rewrite when scenarios change.
+8. **Publish goals.md** (only-goals-tracked policy) — gitignore bootstrap +
+   legacy-host force-add per `/forge-goals` §5, commit msg
+   `forge-scenarios: update review artifact`.
+9. **`--push`** (orchestrator entry, before `AWAIT_SCENARIOS_REVIEW`) — push
+   gate per `/forge-goals` §6.
 
 10. Recap — per-goal counts (harvested vs new), orphan resolutions, then
-    `→ /forge-tests next` (or `→ AWAIT_SCENARIOS_REVIEW` when orchestrator-driven).
+    `→ /forge-tests next` (or `→ AWAIT_SCENARIOS_REVIEW` when
+    orchestrator-driven).
 
 ## Iterate mode — `--iterate "<feedback>"`
 
@@ -153,17 +134,16 @@ Orchestrator re-settles `AWAIT_SCENARIOS_REVIEW` after push.
 
 ## Harvest
 
-Operators often write `when:` / `then:` on tests before formalizing. Don't make
+Operators often write `when:` / `then:` on tests before formalizing — don't make
 them re-state.
 
 **Scope:** PR diff only (`gh pr diff --name-only` filtered to test paths +
 non-test files where the diff added annotations to an existing test). Out: tests
 that already had `when:` / `then:` before this PR opened.
 
-**Extract:** language-aware grep for the `when:` / `then:` annotation shape
-directly above a test function. Capture `{file, function, when, then}`. If a
-prior chain run already linked this test (look up path in existing `goals.md`),
-trust the link.
+**Extract:** language-aware grep for the `when:` / `then:` shape directly above
+a test function. Capture `{file, function, when, then}`. Prior chain run already
+linked this test (path in existing `goals.md`) → trust the link.
 
 **Match each candidate to a goal:**
 
@@ -210,13 +190,13 @@ hatch.
 ## Sizing — right-size, not maximize
 
 Target the **smallest set that proves the goal**. The chain proves the feature,
-not characterizes every code path; branch coverage is a separate concern.
+not every code path; branch coverage is separate.
 
-Typical goal: **2-5 scenarios**. Wider needs justification — every scenario
-encodes a distinct observable outcome. Same surface + same `then:` with
-different inputs → merge.
+Typical goal: **2-5 scenarios**. Wider needs justification — each scenario
+encodes a distinct observable outcome. Same surface + same `then:`, different
+inputs → merge.
 
-Checklist for completeness (not a quota — skip ones that don't apply):
+Completeness checklist (not a quota — skip non-applicable):
 
 - **Happy path** — canonical situation. Almost always exactly one.
 - **Stated edges** — edges the goal explicitly names. One per stated edge.
@@ -245,10 +225,9 @@ your head reading top-to-bottom = over-specified.
 - `then:` — the **outcome observable from outside** (return value, error code,
   event, state mutation, response shape). No "calls X with Y" leaks.
 
-Internal-only `then:` ("the cache is warmed", "the mutex held") → flag as
-too-internal. Restate in externally observable terms, or move tier down (if you
-must observe internals it's a unit-tier concern — but scenarios reject unit per
-§ "Scope rule").
+Internal-only `then:` ("the cache is warmed", "the mutex held") → flag
+too-internal. Restate in externally observable terms (observing internals is a
+unit-tier concern — scenarios reject unit per § "Scope rule").
 
 ## Output shape (excerpt)
 

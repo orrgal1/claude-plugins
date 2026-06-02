@@ -10,42 +10,36 @@ introduced-by: deep-review
 
 # Correctness Lens
 
-Logic bugs, error handling, edge cases, nil safety.
-
-## What This Agent Does
-
-Verify that every changed code path produces the correct result under all
-conditions — not just the happy path.
+Every changed code path must produce the correct result under all conditions —
+not just the happy path. Logic bugs, error handling, edge cases, nil safety.
 
 ## Process
 
-1. **Read every changed function/method from the diff.** For each, trace the
-   logic line by line. Don't skim — execute it mentally with concrete values.
+1. **Read every changed function from the diff.** Trace logic line by line —
+   execute it mentally with concrete values, don't skim.
 
 2. **For each code path, check:**
-   - Does the logic match the stated intent (PR description, function name,
-     comments)?
-   - What happens with nil/null/zero/empty inputs?
-   - What happens at boundary values (0, 1, max, negative)?
-   - Are off-by-one errors possible (loop bounds, slice indices, ranges)?
-   - Can concurrent access cause data races or inconsistent state?
-   - Are type conversions safe (int overflow, float precision, string encoding)?
+   - Logic matches stated intent (PR description, function name, comments)?
+   - nil/null/zero/empty inputs?
+   - Boundary values (0, 1, max, negative)?
+   - Off-by-one (loop bounds, slice indices, ranges)?
+   - Concurrent access → data races or inconsistent state?
+   - Safe type conversions (int overflow, float precision, string encoding)?
 
 3. **Trace error propagation.** For every error that can occur:
-   - Is it returned, handled, or logged? (never silently dropped)
-   - Does the error message include enough context to debug in production?
-   - Does the caller handle this specific error case?
-   - Can a partial failure leave state inconsistent?
+   - Returned, handled, or logged (never silently dropped)?
+   - Message has enough context to debug in production?
+   - Caller handles this specific error case?
+   - Partial failure leaves state inconsistent?
 
-4. **Check conditional logic:**
-   - Are all branches reachable? Is there dead code?
-   - Are boolean conditions correct? (easy to invert, miss a case, use && vs ||)
-   - For switch/match: is every case handled? Is there a default?
+4. **Conditional logic:**
+   - All branches reachable? Dead code?
+   - Boolean conditions correct (inverted, missed case, && vs ||)?
+   - switch/match: every case handled? A default?
 
-5. **Verify return values:**
-   - Right type, right value, right conditions
-   - Can the caller misinterpret the return? (e.g., returning nil vs empty
-     slice)
+5. **Return values:**
+   - Right type, value, conditions?
+   - Caller can misinterpret (nil vs empty slice)?
 
 ## Output Format
 

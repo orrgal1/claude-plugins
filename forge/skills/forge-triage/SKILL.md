@@ -21,7 +21,7 @@ user-invocable: true
 
 # /forge-triage — classify failures before drilling
 
-Pre-flight gate. Read-only. Asks "what kind of failure is this?" so patch loops
+Pre-flight gate. Read-only. "What kind of failure is this?" — so patch loops
 (`/forge-ci-green`, `/forge-impl-green`, `/forge-review-green`) don't drill on
 out-of-scope, deferred, flaky, or infra failures.
 
@@ -59,7 +59,7 @@ Failing list sources (cheapest first):
 
 ### 2. Five checks per item
 
-All cheap reads. Verdict is a join — no single signal is sufficient.
+All cheap reads. Verdict is a join — no single signal suffices.
 
 **2a. Diff overlap.** `git diff --name-only <base>..HEAD` →
 `overlap = none | imports-only | file-touched | symbol-touched`.
@@ -75,15 +75,14 @@ All cheap reads. Verdict is a join — no single signal is sufficient.
 | Same single test fails across many checks | `REAL_BUG`                     |
 | All fail with same error string           | `REAL_BUG` (shared root cause) |
 
-**2c. Stack-scope scan.** Heuristic — no pinned format. Sources: `CLAUDE.md`
+**2c. Stack-scope scan.** Heuristic, no pinned format. Sources: `CLAUDE.md`
 (repo + project), top-level docs, `gh pr list --state open` of related branches,
 `git log --oneline -50` on base, prior decisions. Failing symbol/feature named
 in a sibling PR → `stack_hint = <PR-ref>`. Else `none`.
 
-**2d. Memory consult.** If claude-mem available: `mem-search <failing-symbol>`
-
-- `<feature-keyword>` (60d, top 5). Quote ⚖️ / 🔵 observations. Skip silently if
-  unavailable (`mem_available: false`).
+**2d. Memory consult.** claude-mem available: `mem-search <failing-symbol>` +
+`<feature-keyword>` (60d, top 5). Quote ⚖️ / 🔵 observations. Unavailable → skip
+silently (`mem_available: false`).
 
 **2e. Contract proximity.** Read `links.json`. Failing test in `links.json` →
 `contract: true`. Strongly biases against `OUT_OF_PR_SCOPE` /
@@ -114,8 +113,8 @@ in a sibling PR → `stack_hint = <PR-ref>`. Else `none`.
 | `INFRA_FAILURE`       | halt loop; surface to operator                                                                     |
 | `AMBIGUOUS`           | float to operator with the full triage table; do not guess                                         |
 
-**Triage proposes; caller applies.** Contract guard wins — a recommended skip on
-a contract test (`contract: true`) is refused.
+**Triage proposes; caller applies.** Contract guard wins — a skip on a contract
+test (`contract: true`) is refused.
 
 ## Report shape
 
@@ -148,11 +147,13 @@ Call before iteration when failing set ≥2 OR operator hasn't classified. Branc
 on `summary.recommendation`:
 
 - `PROCEED` → enter loop on all items.
-- `PROCEED_WITH_SKIPS` → apply recommended skips under contract guard, commit
-  (`<skill>: defer <SG/test> per /forge-triage (<verdict>)`), enter loop on
-  `REAL_BUG` subset.
+- `PROCEED_WITH_SKIPS` → apply skips under contract guard, commit
+  (`<skill>: defer <SG/test> per /forge-triage (<verdict>)`), loop on `REAL_BUG`
+  subset.
 - `HALT_TRIAGE` → halt with verdict reason (`BLOCKED_FLAKY`, `BLOCKED_INFRA`,
   `NEEDS_OPERATOR` reason `triage-ambiguous`).
+
+After skips, `/forge-status` confirms chain state.
 
 ## Honesty
 
@@ -161,13 +162,6 @@ on `summary.recommendation`:
 - `AMBIGUOUS` is a valid verdict — float, don't guess.
 - Memory miss ≠ signal. Other signals decide.
 - Stay cheap — 5 probes + one optional mem-search + one PR query. No deep reads.
-
-## Next step
-
-- `PROCEED` → caller enters patch loop.
-- `PROCEED_WITH_SKIPS` → caller applies skips, then loops on `REAL_BUG`.
-- `HALT_TRIAGE` → caller halts with verdict reason.
-- `/forge-status` — confirm chain state after skips.
 
 ## Usage
 

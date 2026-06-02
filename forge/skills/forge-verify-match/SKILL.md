@@ -46,11 +46,9 @@ For each LINKED scenario:
 | **NO-COMMENT** | Referenced test exists but carries no `when:` / `then:` comments — re-run `/forge-tests` to annotate.                                                                                                                                  |
 | **NO-AAA**     | Referenced test has `when:` / `then:` but lacks AAA markers in the body — body structure can't be audited against the scenario. Re-run `/forge-tests` to annotate.                                                                     |
 
-The verdict reads the **full triangle** — scenario text in `goals.md`,
-`when:`/`then:` comments above the function, AAA markers and code inside the
-body — and fails if they don't tie together. Test code does **not** carry a
-`prov: SG<n>.<m>` tag — the back-link lives only in `goals.md`, which keeps
-committed test code free of references to uncommitted `.pr-artifacts/` state.
+Test code does **not** carry a `prov: SG<n>.<m>` tag — the back-link lives only
+in `goals.md`, keeping committed test code free of references to uncommitted
+`.pr-artifacts/` state.
 
 ## Process
 
@@ -120,13 +118,9 @@ artifact: .pr-artifacts/<slug>/forge/goals.md
 
 ## Next step
 
-PASS → advance to test-run verification.
+PASS → `/forge-verify-runs`, `/forge-audit`, `/forge-status`.
 
-- `/forge-verify-runs` — next link in the attestation chain
-- `/forge-audit` — full chain verdict
-- `/forge-status` — chain state + drift
-
-FAIL → fix per finding, then re-run this skill.
+FAIL → fix per finding, re-run:
 
 - `/forge-tests --refresh SG<n>.<m>` — re-annotate NO-COMMENT / NO-AAA tests
 - `/forge-scenarios --goal G<n>` — reword scenario when MISMATCH is on the

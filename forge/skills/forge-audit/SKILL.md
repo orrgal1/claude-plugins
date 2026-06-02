@@ -1,6 +1,8 @@
 ---
 name: forge-audit
-description: "Aggregate the full forge attestation chain: goals → scenarios/validations → tests → match → runs → validations-hold."
+description:
+  "Aggregate the full forge attestation chain: goals → scenarios/validations →
+  tests → match → runs → validations-hold."
 argument-hint: "[--slug <name>] [--embed]"
 triggers:
   - "forge verify"
@@ -22,30 +24,28 @@ user-invocable: true
 
 # /forge-audit — full-chain attestation
 
-Aggregator. Calls each verify skill in order, adds the design layer when
-`design.md` exists, emits a single PASS / FAIL + optionally embeds in the PR
-body.
+Calls each verify skill in order, adds the design layer when `design.md` exists,
+emits a single PASS / FAIL + optionally embeds in the PR body.
 
 ## Layers
 
-| Layer | Source                        | Skill                        |
-| ----- | ----------------------------- | ---------------------------- |
-| L1    | `goals.md` + PR body          | `/forge-verify-goals`        |
-| L2    | `goals.md`                    | `/forge-verify-scenarios`    |
-| L3    | `goals.md`, `links.json`      | `/forge-verify-tests`        |
-| L4    | `goals.md`, linked test files | `/forge-verify-match`        |
-| L5    | `design.md` (optional)        | **inline** — see below       |
-| L6    | `run.json`                    | `/forge-verify-runs`         |
-| L7    | `goals.md`, `validations.json`| `/forge-verify-validations`  |
+| Layer | Source                         | Skill                       |
+| ----- | ------------------------------ | --------------------------- |
+| L1    | `goals.md` + PR body           | `/forge-verify-goals`       |
+| L2    | `goals.md`                     | `/forge-verify-scenarios`   |
+| L3    | `goals.md`, `links.json`       | `/forge-verify-tests`       |
+| L4    | `goals.md`, linked test files  | `/forge-verify-match`       |
+| L5    | `design.md` (optional)         | **inline** — see below      |
+| L6    | `run.json`                     | `/forge-verify-runs`        |
+| L7    | `goals.md`, `validations.json` | `/forge-verify-validations` |
 
-Each per-layer skill is the canonical reference for its verdicts and fix
-recommendations.
+Each per-layer skill is canonical for its verdicts and fix recommendations.
 
 **Proof types.** A goal is satisfied by ≥1 proof — a **scenario** (L3/L4/L6:
 linked test that runs green) or a **validation** (L7: a command/attestation
-predicate that holds). L2 coverage accepts either. A removal/structural goal may
-be all-validation (no linked test); a behavioral goal all-scenario; mixed goals
-carry both. L6 and L7 each `SKIPPED` cleanly when their proof type is unused.
+predicate that holds). L2 coverage accepts either. Removal/structural goal may
+be all-validation (no linked test); behavioral all-scenario; mixed carry both.
+L6 and L7 each `SKIPPED` cleanly when their proof type is unused.
 
 ## Layer 5 — design coverage (inline)
 
@@ -109,7 +109,7 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
    <!-- forge-audit:end -->
    ```
 
-   No PR → no-op with hint "no PR yet — open one then re-run with --embed."
+   No PR → no-op, hint "no PR yet — open one then re-run with --embed."
 
 ## Report shape
 
@@ -167,22 +167,16 @@ section name and Layer + verdict pair per row.
 ## Non-goals
 
 - **Not a fixer.** Surfaces findings + the smallest blocking set; never edits
-  artifacts. The fix-loop is `/forge-audit-green`.
+  artifacts. Fix-loop is `/forge-audit-green`.
 - **Not a runtime check.** L6 reads `run.json` statically.
 
 ## Next step
 
-PASS → drive CI green, optionally review.
+PASS → `/forge-ci-green`, `/forge-review` (opt-in), `/forge-status`.
 
-- `/forge-ci-green`
-- `/forge-review` (opt-in)
-- `/forge-status` — chain state + drift
-
-FAIL → re-run the specific failing layer for tighter signal:
-
-- `/forge-verify-goals` | `-scenarios` | `-tests` | `-match` | `-runs` |
-  `-validations`
-- `/forge-audit-green` — auto-fix mechanical findings via fix-loop
+FAIL → re-run the failing layer (`/forge-verify-goals` | `-scenarios` | `-tests`
+| `-match` | `-runs` | `-validations`) for tighter signal, or
+`/forge-audit-green` to auto-fix mechanical findings via fix-loop.
 
 ## Usage
 

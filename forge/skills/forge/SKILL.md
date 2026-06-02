@@ -69,16 +69,12 @@ status → entry phase → phases in order:
 ```
 
 Phases 0/3/4/5a-5f delegate one-shot to `forge-step-runner` subagents. **Green
-phases (5/6/7/8) run their loop _in the main thread_ as a controller** — the
-orchestrator owns iteration count, budget, signal history, and the green
-verdict, and offloads each iteration's two heavy halves to subagents: a `*-fix`
-(one delta + commit) and a `*-check` (re-verify, return verdict). This keeps
-each iteration's reasoning in clean context while the loop's authority stays in
-one place (§ "Loop contract"). Phase 5 uses `impl-fix` / `impl-check`; phase 6
-uses `audit-fix` + the `verify` aggregator as its check; phase 7 uses `ci-fix` /
-`ci-check` (controller owns the inter-tick wait); phase 8 fans out
-`/forge-review` in the main thread for its check (a runner can't nest fan-out)
-and offloads each finding to `review-fix`.
+phases (5/6/7/8) run their loop _in the main thread_ as a controller** (§ "Loop
+contract"). Per-phase fix/check steps: phase 5 `impl-fix` / `impl-check`; phase
+6 `audit-fix` + the `verify` aggregator as check; phase 7 `ci-fix` / `ci-check`
+(controller owns the inter-tick wait); phase 8 fans out `/forge-review` in the
+main thread for its check (a runner can't nest fan-out) and offloads each
+finding to `review-fix`.
 
 ## Inputs
 
@@ -316,9 +312,7 @@ Halts: `BLOCKED_TESTS` (wrong-reason red bar, missing fixture).
 ### 5. impl
 
 **Main-thread controller loop** per § "Loop contract" (`max-impl-iters`, 15
-default). The orchestrator owns iteration / budget / signals / verdict and
-offloads each iteration to step-runner subagents — never delegates the whole
-loop:
+default):
 
 ```
 spawn impl-check (baseline)        # write run.json, return failing set + signals
@@ -394,9 +388,7 @@ After 5f PASS → phase 6. Audit-green's pre-flight typically short-circuits
 
 ### 6. audit-green
 
-**Main-thread controller loop** per § "Loop contract" (`--max-audit-iters`). The
-orchestrator owns iteration / budget / signals / verdict and offloads each
-iteration — never delegates the whole loop:
+**Main-thread controller loop** per § "Loop contract" (`--max-audit-iters`):
 
 ```
 loop until PASS | max:
@@ -434,9 +426,8 @@ Push gate: only push + run CI if local commits ahead (`@{u}..HEAD > 0`). Skip
 entirely if CI already green on HEAD.
 
 When push warranted: **main-thread controller loop** per § "Loop contract"
-(`--max-ci-iters`). The orchestrator owns iteration / budget / signals / verdict
-**and the inter-tick wait** (`ScheduleWakeup` / `Monitor`), offloading each
-iteration to step-runner subagents — never the whole loop:
+(`--max-ci-iters`); controller also owns **the inter-tick wait**
+(`ScheduleWakeup` / `Monitor`):
 
 ```
 push the local commits
@@ -683,15 +674,8 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Stack discipline** — cross-PR refactors surfaced during review → focused
   follow-up PRs, not pulled into this PR.
 
-## Next step
-
-- `READY` → mark PR ready / merge.
-- `AWAIT_*_REVIEW` → submit a GitHub review on the PR (the armed
-  `/forge-review-watch --contract` routes feedback → iterate, approval comment →
-  approve) — or `/forge approve` / `/forge iterate "<feedback>"` by hand.
-- `BLOCKED_*` / `NEEDS_OPERATOR` → fix per decisions.md, `--from <phase>`.
-- `STUCK` → act on stuck-check's reason; `--from <phase>`.
-- `/forge-status` — re-assess any time.
+Next move per terminal state: § "Result summary → next move". `/forge-status`
+re-assesses any time.
 
 ## Usage
 

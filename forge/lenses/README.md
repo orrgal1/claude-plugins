@@ -4,10 +4,9 @@ Reusable lens definitions for forge's lens-designed PR review (`/forge-review`,
 `/forge-review-green`). One lens per file; the markdown body is fed verbatim
 into a reviewer subagent's brief.
 
-This pool ships **inside the forge plugin** — forge has no dependency on any
-other review plugin. A host repo may override or extend it by dropping lens
-files into `.forge/lenses/` (same schema); forge prefers a
-`.forge/lenses/<id>.md` over the bundled one when both exist.
+Ships **inside the forge plugin** — no dependency on any other review plugin. A
+host repo overrides/extends by dropping lens files into `.forge/lenses/` (same
+schema); forge prefers a `.forge/lenses/<id>.md` over the bundled one.
 
 ## File layout
 
@@ -47,22 +46,22 @@ brief.>
 
 ### Frontmatter fields
 
-| Field             | Type   | Meaning                                                                                                                                                                                                                      |
-| ----------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`              | slug   | Stable identifier. Must match filename (`<id>.md`). Referenced by personas + review skills.                                                                                                                                  |
-| `name`            | string | Human-readable label used in consultation-gate proposals and synthesis output.                                                                                                                                               |
-| `tags`            | list   | Free-form categorization (`code-quality`, `security`, `chain-semantic`, …). Used by the consultation-gate picker for filtering / suggestion.                                                                                 |
-| `requires`        | enum   | What the lens needs to operate: `diff` (PR diff only), `forge-chain` (needs `goals.md` and/or `links.json`), or `both`. A review without a chain MUST skip `forge-chain` lenses.                                             |
-| `severity-floor`  | enum   | Lowest severity a finding can carry by default: `blocker`, `major`, `minor`, `nit`. The body may raise above the floor.                                                                                                      |
-| `brief-artifacts` | list   | Forge-chain artifacts to inject verbatim into the subagent brief when this lens is selected. Allowed: `goals.md`, `links.json`, `pr-description`, `linked-test-files`, `full-diff`, `commentary-surface`. Empty = diff only. |
-| `introduced-by`   | string | Which skill / persona introduced this lens. Free text — helps trace provenance as the pool grows.                                                                                                                            |
+| Field             | Type   | Meaning                                                                                                                                                                                                |
+| ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`              | slug   | Stable identifier. Must match filename (`<id>.md`). Referenced by personas + review skills.                                                                                                            |
+| `name`            | string | Human-readable label in consultation-gate proposals + synthesis output.                                                                                                                                |
+| `tags`            | list   | Free-form categorization (`code-quality`, `security`, `chain-semantic`, …). Used by the consultation-gate picker for filtering / suggestion.                                                           |
+| `requires`        | enum   | What the lens needs: `diff` (PR diff only), `forge-chain` (needs `goals.md` and/or `links.json`), or `both`. A review without a chain MUST skip `forge-chain` lenses.                                  |
+| `severity-floor`  | enum   | Lowest default severity: `blocker`, `major`, `minor`, `nit`. The body may raise above the floor.                                                                                                       |
+| `brief-artifacts` | list   | Forge-chain artifacts to inject verbatim into the brief when selected. Allowed: `goals.md`, `links.json`, `pr-description`, `linked-test-files`, `full-diff`, `commentary-surface`. Empty = diff only. |
+| `introduced-by`   | string | Which skill / persona introduced this lens. Free text — traces provenance.                                                                                                                             |
 
 ### Body
 
-The markdown body after the frontmatter is the **lens text fed verbatim into the
-subagent brief**. Write it in the second person ("read every changed function")
-or as a checklist. The fan-out agent (`@orrgal1/forge:forge-lens-reviewer`)
-treats this text as its operating prompt for the lens.
+The body after the frontmatter is the **lens text fed verbatim into the subagent
+brief**. Write it second-person ("read every changed function") or as a
+checklist. The fan-out agent (`@orrgal1/forge:forge-lens-reviewer`) treats this
+as its operating prompt.
 
 Keep it self-contained. The agent receives only the lens body plus PR scope +
 any `brief-artifacts` payload; it doesn't see this README.
@@ -98,17 +97,17 @@ A persona must only reference lens ids that exist in the pool (bundled or
 
 ## Adding a lens
 
-1. Pick a slug. Reuse existing tag vocabulary so personas can find it by tag.
-2. Drop `<slug>.md` here (or in `.forge/lenses/` for a repo-local lens) with
+1. Pick a slug. Reuse existing tag vocabulary so personas find it by tag.
+2. Drop `<slug>.md` here (or in `.forge/lenses/` for repo-local) with
    frontmatter + body.
-3. Decide `requires` honestly. A lens that needs `goals.md` but declares
+3. Decide `requires` honestly. A lens needing `goals.md` but declaring
    `requires: diff` silently produces useless findings on chains lacking those
    artifacts.
-4. Set `severity-floor` by what the lens catches. Hygiene → `minor`; correctness
-   / security → `major` or `blocker`.
+4. Set `severity-floor` by what it catches. Hygiene → `minor`; correctness /
+   security → `major` or `blocker`.
 5. Wire it into a tier in `review-channels/lens-fanout.md` § Selection — Tier 1
    (always-on core), Tier 2 (chain-conditional), or Tier 3 (a diff-fingerprint
-   row, below). The pool itself does not auto-wire lenses.
+   row, below). The pool does not auto-wire lenses.
 
 ## Diff fingerprint → lens
 
@@ -123,16 +122,16 @@ fingerprints the diff at composition time; a lens fires if ANY trigger matches.
 | `observability`     | service code with failure/error paths, async/background work, retries, or outbound external calls (oncall-relevant)                                                     |
 | `test-quality`      | any new or changed test file                                                                                                                                            |
 
-Keep triggers conservative — a lens that fires on everything is just an
-expensive always-on lens. If a surface recurs on most PRs, promote the lens to
-Tier 1 instead of widening its triggers.
+Keep triggers conservative — a lens that fires on everything is an expensive
+always-on lens. If a surface recurs on most PRs, promote the lens to Tier 1
+instead of widening triggers.
 
 ## Designing per-PR lenses (heuristics)
 
 With Tier 1–3 covering recurring surfaces, per-PR designed lenses are the
 **exception** (0–2) — reach for one only when a PR carries a risk no pool lens
 captures. They start inline and get promoted into the pool (and a tier) only
-when the same shape recurs across enough PRs. Common shapes to draw from:
+when the same shape recurs. Common shapes:
 
 - **Wire contract** — proto slots, reserved ranges, oneof shape, additive-only
   guarantees, API request/response shape.
@@ -150,8 +149,8 @@ when the same shape recurs across enough PRs. Common shapes to draw from:
 
 **Sizing:** a review's lens set = Tier 1 core (always) + matched Tier 2/3 +
 persona + 0–2 designed. The dispatcher dedups, so the working set stays focused;
-there is no fixed total cap, but each lens costs one parallel subagent and feeds
-the all-severity fix loop, so don't add a lens that duplicates a selected one.
+no fixed total cap, but each lens costs one parallel subagent and feeds the
+all-severity fix loop, so don't add a lens that duplicates a selected one.
 **Distinct angles:** each lens must catch something a file-by-file pass would
 miss — if two would surface the same finding, merge them.
 

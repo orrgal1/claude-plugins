@@ -1,10 +1,12 @@
 ---
 name: forge-tool
-description: "Capture an ad-hoc flow as a repeatable tool under $FORGE_HOME/tools/ and register it in $FORGE_HOME/forge.toml [tools.<name>]."
+description:
+  "Capture an ad-hoc flow as a repeatable tool under $FORGE_HOME/tools/ and
+  register it in $FORGE_HOME/forge.toml [tools.<name>]."
 argument-hint:
   "[package <name> | list | run <name> [args] | show <name> | delete <name>]
-  [--purpose <text>] [--form script|instructions|dir|agent]
-  [--from-session] [--from-prompt <text>] [--yes] [--dry-run]"
+  [--purpose <text>] [--form script|instructions|dir|agent] [--from-session]
+  [--from-prompt <text>] [--yes] [--dry-run]"
 triggers:
   - "forge tool"
   - "package this flow"
@@ -29,59 +31,57 @@ user-invocable: true
 
 # /forge-tool — package an ad-hoc flow into a reusable tool
 
-A **tool** is an operator-named, user-defined runbook living under
-`$FORGE_HOME/tools/`. Use it when a flow you just figured out (seed a test db,
-rotate staging secrets, backfill a column with care) is one you want
-repeatable without rediscovery next time. Other forge skills can resolve
-tools by name when wired into a capability — tools are first-class.
+A **tool** is an operator-named runbook under `$FORGE_HOME/tools/` — a flow you
+want repeatable without rediscovery (seed a test db, rotate staging secrets,
+backfill a column). First-class: other forge skills resolve tools by name when
+wired into a capability.
 
 Tools are distinct from the other `$FORGE_HOME/` surfaces:
 
-| Surface              | What lives there                            | Who names it           |
-| -------------------- | ------------------------------------------- | ---------------------- |
-| `$FORGE_HOME/commands/`   | canonical capabilities (`test`, `build`, …) | forge (finite set)     |
-| `$FORGE_HOME/review/`     | additive review-mechanism integrations      | forge (one per mechanism) |
-| `$FORGE_HOME/review-channels/` | `/forge-review` channels             | forge (per channel)    |
-| `$FORGE_HOME/maps/`       | read-only domain snapshots                  | `/forge-map` (per area)|
-| `$FORGE_HOME/tools/`      | **open-ended, operator-named runbooks**     | **the operator**       |
+| Surface                        | What lives there                            | Who names it              |
+| ------------------------------ | ------------------------------------------- | ------------------------- |
+| `$FORGE_HOME/commands/`        | canonical capabilities (`test`, `build`, …) | forge (finite set)        |
+| `$FORGE_HOME/review/`          | additive review-mechanism integrations      | forge (one per mechanism) |
+| `$FORGE_HOME/review-channels/` | `/forge-review` channels                    | forge (per channel)       |
+| `$FORGE_HOME/maps/`            | read-only domain snapshots                  | `/forge-map` (per area)   |
+| `$FORGE_HOME/tools/`           | **open-ended, operator-named runbooks**     | **the operator**          |
 
 ## Subcommands
 
-| Subcommand            | Default? | Purpose                                                       |
-| --------------------- | -------- | ------------------------------------------------------------- |
-| `package <name>`      | yes      | Capture a flow as a new tool. Three capture modes (see below).|
-| `list`                |          | Print every registered tool: name, form, purpose, freshness.  |
-| `run <name> [args]`   |          | Resolve + execute the tool. Script form → run; instructions → agent reads + performs; dir form → run `<dir>/run`; agent form → spawn the registered subagent. |
-| `show <name>`         |          | Print the tool file(s) + registry entry.                      |
-| `delete <name>`       |          | Remove tool file(s) + registry entry. Asks before deleting.   |
+| Subcommand          | Default? | Purpose                                                                                                                                                       |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package <name>`    | yes      | Capture a flow as a new tool. Three capture modes (see below).                                                                                                |
+| `list`              |          | Print every registered tool: name, form, purpose, freshness.                                                                                                  |
+| `run <name> [args]` |          | Resolve + execute the tool. Script form → run; instructions → agent reads + performs; dir form → run `<dir>/run`; agent form → spawn the registered subagent. |
+| `show <name>`       |          | Print the tool file(s) + registry entry.                                                                                                                      |
+| `delete <name>`     |          | Remove tool file(s) + registry entry. Asks before deleting.                                                                                                   |
 
-Absent subcommand + a name → `package <name>` (the common case).
+No subcommand + a name → `package <name>` (common case).
 
 ## Inputs
 
-| Input                  | Subcommand     | Notes                                                                                  |
-| ---------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| `<name>`               | most           | Tool id (lowercase slug, hyphens). Reserved: any `$FORGE_HOME/commands/<cap>` capability.   |
-| `--purpose <text>`     | `package`      | One-line summary stored in `[tools.<name>].purpose`. Asked interactively if absent.    |
-| `--form <form>`        | `package`      | Force form: `script` / `instructions` / `dir` / `agent`. Auto-detect when absent.      |
-| `--from-session`       | `package`      | Capture from the current Claude session (recent observations / transcript / git log + edits). Operator confirms before save. |
-| `--from-prompt <text>` | `package`      | One-shot capture: operator provides the full recipe inline; skill packages without further interactive prompts. |
-| `--yes`                | `package`, `delete` | Skip confirmation prompts.                                                        |
-| `--dry-run`            | `run`          | Show what would run; don't execute.                                                    |
+| Input                  | Subcommand          | Notes                                                                                                                        |
+| ---------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `<name>`               | most                | Tool id (lowercase slug, hyphens). Reserved: any `$FORGE_HOME/commands/<cap>` capability.                                    |
+| `--purpose <text>`     | `package`           | One-line summary stored in `[tools.<name>].purpose`. Asked interactively if absent.                                          |
+| `--form <form>`        | `package`           | Force form: `script` / `instructions` / `dir` / `agent`. Auto-detect when absent.                                            |
+| `--from-session`       | `package`           | Capture from the current Claude session (recent observations / transcript / git log + edits). Operator confirms before save. |
+| `--from-prompt <text>` | `package`           | One-shot capture: operator provides the full recipe inline; skill packages without further interactive prompts.              |
+| `--yes`                | `package`, `delete` | Skip confirmation prompts.                                                                                                   |
+| `--dry-run`            | `run`               | Show what would run; don't execute.                                                                                          |
 
-`package` runs in **interactive Q&A** when neither `--from-session` nor
-`--from-prompt` is passed. That's the default and the highest-fidelity capture
-path — operator describes the steps; agent drafts; operator confirms.
+`package` runs **interactive Q&A** when neither `--from-session` nor
+`--from-prompt` is passed — the default, highest-fidelity path (operator
+describes; agent drafts; operator confirms).
 
 ## Tool forms
 
-Auto-detected from the captured content; `--form` overrides.
+Auto-detected from captured content; `--form` overrides.
 
 ### `script`
 
-Single executable file at `$FORGE_HOME/tools/<name>`. Deterministic shell; args
-passed via `$@`. Auto-detected when the captured flow is a sequence of
-shell commands with no conditional logic.
+Executable `$FORGE_HOME/tools/<name>`, deterministic shell, args via `$@`.
+Auto-detected for pure shell, no conditional logic.
 
 ```sh
 #!/usr/bin/env sh
@@ -94,9 +94,9 @@ exec psql "$DATABASE_URL_TEST" -c "INSERT INTO ..."
 
 ### `instructions`
 
-Markdown doc at `$FORGE_HOME/tools/<name>.md` the agent reads and performs.
-Auto-detected when the captured flow has conditionals, judgment calls,
-multi-step health checks, or other content a fixed command can't capture.
+Markdown `$FORGE_HOME/tools/<name>.md` the agent reads and performs.
+Auto-detected for conditionals, judgment calls, multi-step health checks —
+anything a fixed command can't capture.
 
 ```markdown
 # rotate-staging-secrets — how to do it here
@@ -108,9 +108,9 @@ multi-step health checks, or other content a fixed command can't capture.
 
 ### `dir`
 
-Tool dir at `$FORGE_HOME/tools/<name>/` with `run` as the entrypoint and any
-helper files (`lib/...`, `templates/...`). Auto-detected when the captured
-flow includes file fixtures the script reads, or grows past ~50 lines.
+`$FORGE_HOME/tools/<name>/` with `run` entrypoint + helper files (`lib/...`,
+`templates/...`). Auto-detected when the flow includes file fixtures the script
+reads, or grows past ~50 lines.
 
 ```
 $FORGE_HOME/tools/backfill-org-ids/
@@ -121,8 +121,8 @@ $FORGE_HOME/tools/backfill-org-ids/
 
 ### `agent`
 
-Tool that spawns a subagent with a baked prompt. The tool file is markdown
-at `$FORGE_HOME/tools/<name>.md` with frontmatter:
+Spawns a subagent with a baked prompt. Markdown `$FORGE_HOME/tools/<name>.md`
+with frontmatter:
 
 ```markdown
 ---
@@ -135,16 +135,16 @@ inputs:
 
 # audit-feature-flag-usage — agent recipe
 
-When invoked: spawn the `caveman:cavecrew-investigator` agent with this
-prompt template (substitutes `${query}`):
+When invoked: spawn the `caveman:cavecrew-investigator` agent with this prompt
+template (substitutes `${query}`):
 
 > Find every call site of `isEnabled(...)` for flag key `${query}`. Report
-> file:line, call style, and whether it's behind a feature-flag service or
-> a plain env-var check.
+> file:line, call style, and whether it's behind a feature-flag service or a
+> plain env-var check.
 ```
 
-Use when the captured flow is "I ran this subagent with this kind of
-prompt and want to do it again."
+Use when the flow is "I ran this subagent with this prompt and want to repeat
+it."
 
 ## Layout
 
@@ -178,8 +178,8 @@ Resolution order when running a tool (same spirit as `$FORGE_HOME/commands/`):
 
 ## `[tools]` schema in `$FORGE_HOME/forge.toml`
 
-Forge owns the registry. Each tool gets its own subtable. Entries are
-written by `/forge-tool package`; manual edits honored but not recommended.
+Forge owns the registry; one subtable per tool. Written by
+`/forge-tool package`; manual edits honored, not recommended.
 
 ```toml
 # $FORGE_HOME/forge.toml — tools section is owned by /forge-tool.
@@ -219,92 +219,83 @@ Subtable contract:
 - `inputs` — short usage string shown in `/forge-tool list`. Optional.
 - `captured` — ISO-8601 UTC of the most recent `/forge-tool package` run.
   Required, set automatically.
-- `source` — free-text provenance hint: "discovered during PR #X",
-  "from session 2026-05-28". Optional.
-- `agent` — subagent slug (e.g. `caveman:cavecrew-investigator`). Required
-  for `agent` form, omitted otherwise.
+- `source` — free-text provenance hint: "discovered during PR #X", "from session
+  2026-05-28". Optional.
+- `agent` — subagent slug (e.g. `caveman:cavecrew-investigator`). Required for
+  `agent` form, omitted otherwise.
 
 Unknown keys are tolerated (forward-compat) but ignored by `list`.
 
 ## Cross-skill lookup contract
 
-Other forge skills resolve a tool by name through this surface:
+Other forge skills resolve a tool by name:
 
-1. Read `$FORGE_HOME/forge.toml` `[tools.<name>]`. Missing → tool not registered,
-   no fallback discovery.
-2. Resolve the file per the **Resolution order** above.
-3. Invoke per form:
-   - `script` / `dir` → run directly, exit code is success.
-   - `instructions` / `agent` → the calling skill is the one that follows
-     the body. `/forge-tool run` does this on the operator's behalf.
+1. Read `[tools.<name>]`. Missing → not registered, no fallback discovery.
+2. Resolve the file per **Resolution order** above.
+3. Invoke per form: `script` / `dir` → run directly, exit code is success;
+   `instructions` / `agent` → the calling skill follows the body
+   (`/forge-tool run` does this for the operator).
 
 Recommended use sites (advisory, not enforced):
 
-- `$FORGE_HOME/commands/<cap>.md` instruction files can say "before this,
-  invoke `tool: <name>` to set up state" — forge skills honor that hint.
+- `$FORGE_HOME/commands/<cap>.md` instruction files can say "before this, invoke
+  `tool: <name>` to set up state" — forge skills honor that hint.
 - `/forge-impl-green` may resolve `tool: seed-test-db` when an
   `$FORGE_HOME/commands/test.md` references it.
 - `/forge-review-green` may resolve `tool: <name>` from a fix-plan note.
 
-Tools never auto-run from the canonical chain. The chain references them
-only when an instruction file the operator wrote asks for it.
+Tools never auto-run from the canonical chain. The chain references them only
+when an instruction file the operator wrote asks for it.
 
 ## Process
 
 ### `package <name>` — interactive Q&A (default)
 
-1. **Resolve repo root.** `git rev-parse --show-toplevel`. Not a git repo →
-   halt `TOOL_BLOCKED reason not-a-repo`.
+1. **Resolve repo root.** `git rev-parse --show-toplevel`. Not a repo → halt
+   `TOOL_BLOCKED reason not-a-repo`.
 
-2. **Validate name.** Lowercase, alphanumerics + hyphens, ≤40 chars. Not a
-   reserved capability key. Not already registered (re-run with `--yes`
-   overwrites). Else halt `TOOL_BLOCKED reason <invalid|reserved|exists>`.
+2. **Validate name.** Lowercase, alphanumerics + hyphens, ≤40 chars; not a
+   reserved capability key; not already registered (`--yes` overwrites). Else
+   halt `TOOL_BLOCKED reason <invalid|reserved|exists>`.
 
 3. **Bootstrap dir** (idempotent):
 
    ```bash
-   home="$(forge_home)"           # resolves to ~/.claude/forge/<repo-key>/ by default
+   home="$(forge_home)"           # ~/.claude/forge/<repo-key>/ by default
    mkdir -p "$home/tools"
    [ -f "$home/forge.toml" ] || /forge-setup --yes
    ```
 
-   User-layer forge home needs no `.gitignore` (state lives outside any
-   repo). Legacy-layer (`<repo>/.forge/`) keeps the `*` gitignore — but
-   `/forge-setup` owns that step now; don't duplicate here.
+   `/forge-setup` owns `.gitignore` handling; don't duplicate here.
 
-4. **Ask: purpose.** "One line — what does this tool do?" Skip if
-   `--purpose <text>` was passed.
+4. **Ask: purpose.** "One line — what does this do?" Skip if `--purpose` passed.
 
-5. **Ask: steps.** "Describe the steps. Paste commands, or talk through
-   them — pseudo-shell is fine." Operator may include shell history,
-   pasted runs, or narrative.
+5. **Ask: steps.** "Describe the steps — paste commands or talk through;
+   pseudo-shell fine." Operator may include shell history, pasted runs,
+   narrative.
 
-6. **Pick form** (operator may override with `--form`):
-   - Captured content is pure shell, no conditionals, no narrative → `script`.
+6. **Pick form** (`--form` overrides):
+   - Pure shell, no conditionals/narrative → `script`.
    - Conditional / multi-step / health-check / judgment → `instructions`.
-   - Mentions reading helper files / templates → `dir`.
-   - Operator says "I ran subagent X with this prompt" → `agent`.
-   - Ambiguous → propose `instructions`; let operator override.
+   - Reads helper files / templates → `dir`.
+   - "I ran subagent X with this prompt" → `agent`.
+   - Ambiguous → propose `instructions`.
 
-7. **Draft the file content** per form (see § "Tool forms" templates). For
-   `script` form, wrap in the standard stub
-   (`#!/usr/bin/env sh / set -eu / exec ... "$@"`). For `agent` form,
-   require the operator to confirm the subagent slug + render the prompt
-   template with explicit `${var}` placeholders.
+7. **Draft content** per form (§ "Tool forms"). `script` → wrap in standard stub
+   (`#!/usr/bin/env sh / set -eu / exec ... "$@"`). `agent` → confirm subagent
+   slug + render prompt with explicit `${var}` placeholders.
 
-8. **Show preview.** Print the proposed file + the proposed `[tools.<name>]`
-   subtable. Ask: `[y / edit / abort]`.
-   - `edit` → drop the operator into an inline editor loop until accept.
+8. **Show preview.** Proposed file + `[tools.<name>]` subtable. Ask
+   `[y / edit / abort]`; `edit` → inline editor loop until accept.
 
 9. **Write atomically.**
    - File: tmp + `mv -f`. Script + dir-form `run`: `chmod +x` after move.
-   - `forge.toml`: read full file, splice / replace `[tools.<name>]`,
-     atomic tmp + `mv -f`. Preserve every other section + unknown keys.
+   - `forge.toml`: read full, splice / replace `[tools.<name>]`, tmp + `mv -f`.
+     Preserve every other section + unknown keys.
 
-10. **Optional dry-run.** When form is `script` / `dir` and operator didn't
-    pass `--yes`, ask "dry-run now? [y/N]". Yes → run the tool with `--help`
-    if it accepts one, else with no args. Non-zero exit → warn, don't roll
-    back (operator may need to fix the captured content).
+10. **Optional dry-run.** `script` / `dir` + no `--yes` → ask "dry-run now?
+    [y/N]". Yes → run with `--help` if accepted, else no args. Non-zero → warn,
+    don't roll back.
 
 11. **Recap.** Print:
 
@@ -323,24 +314,22 @@ only when an instruction file the operator wrote asks for it.
 
 ### `package <name> --from-session`
 
-Same flow as interactive Q&A, but step 5's content is auto-proposed:
+Like interactive Q&A, but step 5 content auto-proposed:
 
-1. Read the recent session signal (whichever is available, in order):
-   - `mcp__plugin_claude-mem_mcp-search__search` / `timeline` observations
-     from the last 1 hour.
-   - Recent shell commands from this conversation's Bash tool calls.
-   - Recent file edits from `git diff` + `git log --since="1 hour ago"`.
-2. Propose a steps draft to the operator: "Here's what I think this flow
-   did — edit anything wrong." Operator reviews + edits before save.
-3. Continue from step 6 (form picking).
+1. Read recent session signal (first available, in order):
+   `mcp__plugin_claude-mem_mcp-search__search` / `timeline` observations (last
+   1h); recent Bash tool calls; recent edits via `git diff` +
+   `git log --since="1 hour ago"`.
+2. Propose a steps draft: "Here's what I think this flow did — edit anything
+   wrong." Operator reviews + edits before save.
+3. Continue from step 6.
 
-If no session signal is available → fall back to interactive Q&A with a
-note ("session capture found no signal; falling back to manual").
+No session signal → fall back to interactive Q&A with a note.
 
 ### `package <name> --from-prompt <text>`
 
-Skip steps 4–5: take `<text>` as the steps description verbatim. Continue
-from step 6. Useful for one-shot recipe paste:
+Skip steps 4–5: take `<text>` as the steps verbatim, continue from step 6.
+One-shot recipe paste:
 
 ```
 /forge-tool package seed-test-db --purpose "load fixtures" \
@@ -349,12 +338,10 @@ from step 6. Useful for one-shot recipe paste:
 
 ### `list`
 
-1. Read `$FORGE_HOME/forge.toml` `[tools.*]`.
-2. For each tool, compute freshness:
-   - `missing` — `file` not on disk.
-   - `stale` — file mtime older than the registered `captured` (operator
-     edited file outside the skill); flag without judgment.
-   - `fresh` — otherwise.
+1. Read `[tools.*]`.
+2. Per tool, freshness: `missing` (file not on disk); `stale` (file mtime older
+   than `captured` — edited outside the skill; flag without judgment); `fresh`
+   (otherwise).
 3. Print one row per tool:
 
    ```
@@ -369,18 +356,17 @@ from step 6. Useful for one-shot recipe paste:
 ### `run <name> [args]`
 
 1. Read `[tools.<name>]`. Missing → halt `TOOL_NOT_FOUND`.
-2. Resolve file via the resolution order. File missing → halt
+2. Resolve file via resolution order. Missing → halt
    `TOOL_BROKEN reason file-missing`.
-3. `--dry-run` → print the resolved command / instructions body / agent
-   prompt and exit.
+3. `--dry-run` → print resolved command / instructions body / agent prompt,
+   exit.
 4. Execute per form:
    - `script` → `exec "$file" "$@"`.
    - `dir` → `cd "$dir" && exec ./run "$@"`.
-   - `instructions` → read file, perform the steps. Args available as
-     `$1..$N` for substitution into the instructions when they declare
-     `inputs:` in optional frontmatter.
-   - `agent` → render the prompt template with `${var}` substitutions
-     from args, spawn the registered subagent via the Agent tool.
+   - `instructions` → read file, perform steps. Args as `$1..$N` for
+     substitution when frontmatter declares `inputs:`.
+   - `agent` → render prompt with `${var}` substitutions from args, spawn the
+     registered subagent via Agent tool.
 5. Surface stdout/stderr + final exit status.
 
 ### `show <name>`
@@ -391,27 +377,25 @@ Print the resolved file(s) + the registry subtable. No writes.
 
 1. Read `[tools.<name>]`. Missing → halt `TOOL_NOT_FOUND`.
 2. Show file(s) + subtable, ask "delete? [y/N]" unless `--yes`.
-3. Remove the file(s); remove the subtable from `forge.toml` (atomic
-   rewrite). Print recap.
+3. Remove the file(s); remove the subtable from `forge.toml` (atomic rewrite).
+   Print recap.
 
 ## Honesty
 
-- **Never invent steps the operator didn't describe.** Interactive Q&A is
-  the source of truth; `--from-session` proposes, operator confirms.
+- **Never invent steps the operator didn't describe.** Q&A is source of truth;
+  `--from-session` proposes, operator confirms.
 - **Script form requires determinism.** Anything conditional → instructions
-  form. Better to surface a multi-step flow honestly than fake a one-liner.
+  form. Surface a multi-step flow honestly, don't fake a one-liner.
 - **Tools never auto-run during `package`.** Dry-run is opt-in.
-- **`$FORGE_HOME/tools/` lives at the user layer by default** (see
-  `/forge-setup` § "Forge home"). State is operator-local; not tracked
-  by any repo. Repos that want team-shared tools use `/forge-setup
-  --migrate repo` and commit `.forge/tools/` deliberately.
-- **Operator-named, operator-owned.** This skill registers + resolves;
-  it never imposes structure on what the tool does.
+- **`$FORGE_HOME/tools/` is user-layer by default** (see `/forge-setup` § "Forge
+  home"). Operator-local, untracked. Team-shared →
+  `/forge-setup --migrate repo` + commit `.forge/tools/`.
+- **Operator-named, operator-owned.** Registers + resolves; never imposes
+  structure on what the tool does.
 - **No host-repo edits during `package`.** Writes confined to
   `$FORGE_HOME/tools/` + `$FORGE_HOME/forge.toml`.
-- **Source attribution on capture.** `source` field records when + how the
-  tool was captured. Edits over time should refresh `captured`, never
-  rewrite history.
+- **Source attribution on capture.** `source` records when + how. Edits refresh
+  `captured`, never rewrite history.
 
 ## Usage
 

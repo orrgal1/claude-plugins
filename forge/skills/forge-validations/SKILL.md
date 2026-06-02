@@ -1,6 +1,9 @@
 ---
 name: forge-validations
-description: "Draft checkable validations that prove removal/negative/structural goals — predicates bound to a shell command, or agent attestation when no command can express it."
+description:
+  "Draft checkable validations that prove removal/negative/structural goals —
+  predicates bound to a shell command, or agent attestation when no command can
+  express it."
 argument-hint: '[--slug <name>] [--goal G<n>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge validations"
@@ -21,37 +24,35 @@ user-invocable: true
 
 # /forge-validations — validations per goal
 
-Sibling to `/forge-scenarios`. Where a scenario proves a **behavioral** goal by a
-runtime-observable `when:/then:` test, a **validation** proves a
-**removal / negative / structural** goal — one with no runtime observable — by a
-**checkable predicate**.
+Sibling to `/forge-scenarios`. A scenario proves a **behavioral** goal by a
+runtime-observable `when:/then:` test; a **validation** proves a **removal /
+negative / structural** goal — no runtime observable — by a **checkable
+predicate**.
 
-A goal is satisfied by one or more **proofs**. Two proof kinds, and a goal may
-carry either or **both**:
+Two proof kinds; a goal may carry either or **both**:
 
-- **scenario** — `when:/then:` → component test → run → pass. (`/forge-scenarios`)
-- **validation** — an `assert:` predicate bound to a `check:` (a shell command,
-  or `attest`) → executed/attested → evidence recorded. (this skill)
+- **scenario** — `when:/then:` → component test → run → pass.
+  (`/forge-scenarios`)
+- **validation** — `assert:` predicate bound to a `check:` (shell command or
+  `attest`) → executed/attested → evidence recorded. (this skill)
 
 Use validations when the only honest `then:` would be internal or non-existent:
 "the field no longer exists", "the abstraction is gone, not renamed", "the
 package no longer imports X", "the build still compiles after the removal". You
-cannot write a meaningful runtime test that a symbol is *absent*; you grep for it
-and assert zero hits.
+can't runtime-test that a symbol is _absent_; you grep and assert zero hits.
 
 ## When a goal wants validations, not scenarios
 
-Signals the goal is validation-shaped:
+Validation-shaped signals:
 
-- **Removal** goal phrasing ("… will no longer be reachable / will no longer
-  exist").
-- The end-state is a **compile-time / source-level fact** (symbol gone, import
-  dropped, field deleted, proto field removed), not an endpoint behavior.
-- The only test you can imagine asserts an internal mechanic or "still compiles".
+- **Removal** phrasing ("… will no longer be reachable / will no longer exist").
+- End-state is a **compile-time / source-level fact** (symbol gone, import
+  dropped, field deleted, proto field removed), not endpoint behavior.
+- The only imaginable test asserts an internal mechanic or "still compiles".
 
-A goal can be **mixed**: most proofs are validations (the removal) plus one
-behavioral guard scenario (the surviving surface still works). Draft the
-behavioral guard via `/forge-scenarios`, the structural facts here.
+A goal can be **mixed**: validations (the removal) + one behavioral guard
+scenario (surviving surface still works). Guard via `/forge-scenarios`,
+structural facts here.
 
 ## Validation shape
 
@@ -72,13 +73,13 @@ Attestation form, when no command can express the predicate:
 ```
 
 Sub-bullets, not bare indented `key: value` — prettier reflows bare continuation
-lines into one paragraph and destroys the block. Sub-bullets are prettier-safe.
-`check:` command wrapped in backticks — inline code spans never wrap, so the
-command stays atomic across prettier's 80-col reflow.
+lines into one paragraph, destroying the block; sub-bullets are prettier-safe.
+`check:` command in backticks — inline code spans never wrap, so it stays atomic
+across prettier's 80-col reflow.
 
-ID = `VG<n>.<m>`: `VG2.1` is the first validation under `G2`. The `VG` prefix is
-distinct from scenarios' `SG` so downstream enumeration never collides
-(`^- VG\d+\.\d+` vs `^- SG\d+\.\d+`).
+ID = `VG<n>.<m>`: `VG2.1` is the first validation under `G2`. `VG` prefix is
+distinct from scenarios' `SG` so enumeration never collides (`^- VG\d+\.\d+` vs
+`^- SG\d+\.\d+`).
 
 Downstream regexes (canonical + legacy bare-indented tolerated):
 
@@ -89,27 +90,25 @@ Downstream regexes (canonical + legacy bare-indented tolerated):
 
 ## Prefer command over attest — mechanical first
 
-A validation is only as trustworthy as its check. **Default to `kind: command`.**
-An agent "reading the code and signing off" is a self-graded test — confirmation
-bias. A command is deterministic and re-runnable by anyone.
+A validation is only as trustworthy as its check. **Default to
+`kind: command`.** An agent "reading the code and signing off" is a self-graded
+test — confirmation bias. A command is deterministic and re-runnable by anyone.
 
 Reach for `kind: attest` **only** when no command can express the predicate
-(e.g. "this abstraction is gone, not merely renamed to something semantically
-equivalent" — grep can prove the old name is absent, but not that the *concept*
-didn't migrate). Even then, write the tightest command you can as a **first**
-validation, and reserve attest for the residual judgment.
+(e.g. "this abstraction is gone, not renamed to something semantically
+equivalent" — grep proves the old name absent, not that the _concept_ didn't
+migrate). Even then, write the tightest command as a **first** validation;
+reserve attest for the residual judgment.
 
 ### Writing good `check:` commands
 
-- **Exit 0 = satisfied.** Phrase the command so success means the goal holds.
-  For absence, negate a grep: `` ! git grep -nI '<symbol>' -- <paths> `` (exit 0
-  when there are no matches).
-- **Scope the paths.** Grep the directories the removal actually touches, so an
-  unrelated string match elsewhere doesn't fail the check.
-- **Build / codegen checks resolve through the tooling map**, never hardcoded:
-  cite the capability (`build`, `codegen`, `lint`) by name; the runner resolves
-  it per `$FORGE_HOME/`. Example assert "backend still compiles after removal" →
-  `check: build` (the verify step resolves and runs it).
+- **Exit 0 = satisfied.** Phrase so success means the goal holds. For absence,
+  negate a grep: `! git grep -nI '<symbol>' -- <paths>` (exit 0 = no matches).
+- **Scope the paths** to directories the removal touches, so an unrelated match
+  elsewhere doesn't fail the check.
+- **Build / codegen / lint resolve through the tooling map**, never hardcoded:
+  cite the capability by name; the runner resolves per `$FORGE_HOME/`. E.g.
+  "backend still compiles after removal" → `check: build`.
 - **No side effects.** Validations are read-only predicates; never mutate state.
 
 ## Coverage rule
@@ -129,44 +128,26 @@ A goal needs **≥1 proof total** (scenario or validation), not ≥1 of each.
    `.pr-artifacts/*/forge/goals.md`).
 2. Read `goals.md`. Enumerate `Gn` via `^## G\d+ —`. Missing file → exit "run
    /forge-goals first".
-3. **For each goal** (or `--goal G<n>` only) that is validation-shaped (or mixed):
+3. **For each goal** (or `--goal G<n>` only) that is validation-shaped (or
+   mixed):
    - Read existing `## Validations` block if present (edit mode).
    - Draft validations per § "Validation shape" + "Sizing".
    - Renumber within-goal: `VG<n>.1`, `VG<n>.2`, …; existing IDs stable, new
      ones append.
-   - For each `kind: command`, **dry-run the check now** against the current tree
-     to confirm it is well-formed and resolves (it will likely FAIL pre-impl —
-     that's expected; you are validating the command *shape*, not the result).
-     Capture nothing; this is a lint of the predicate.
+   - For each `kind: command`, **dry-run the check now** against the current
+     tree to confirm it's well-formed and resolves (likely FAILs pre-impl —
+     expected; you're linting the command _shape_, not the result). Capture
+     nothing.
 4. **Write validations inline** in canonical sub-bullet shape. Insert a
    `## Validations` block immediately under each goal — after its `## Scenarios`
    block if one exists, else directly under the goal body / narration.
 5. **Forge narration** — add or extend a `### How the proofs prove this` section
    (shared with scenarios when both exist) tying VGs (and SGs) to the goal's
    end-state. Reviewer-facing; not parsed downstream.
-6. **Publish goals.md** (only-goals-tracked policy — same block as
-   `/forge-scenarios` §8):
-
-   ```bash
-   gi=".pr-artifacts/.gitignore"
-   gm=".pr-artifacts/${slug}/forge/goals.md"
-   if [ ! -f "$gi" ]; then
-     cat > "$gi" <<'EOF'
-   # Forge: ignore everything under <slug>/forge/ except shared review surfaces.
-   */forge/*
-   !*/forge/goals.md
-   !*/forge/design.md
-   EOF
-   fi
-   if git check-ignore -q "$gm"; then
-     git add -f "$gi" "$gm"
-     git commit -m "forge-validations: update review artifact"
-   fi
-   ```
-
-7. **`--push`** (orchestrator entry): push when local commits ahead
-   (`@{u}..HEAD > 0`); no-op else. SSH-only. `--push` without upstream →
-   `git push -u origin HEAD`.
+6. **Publish goals.md** (only-goals-tracked policy) — gitignore bootstrap +
+   legacy-host force-add per `/forge-goals` §5, commit msg
+   `forge-validations: update review artifact`.
+7. **`--push`** (orchestrator entry) — push gate per `/forge-goals` §6.
 8. Recap — per-goal validation counts (command vs attest), then
    `→ /forge-tests next` (for any behavioral guards) or
    `→ /forge-verify-validations` once impl has landed the removal.
@@ -199,8 +180,8 @@ Self-check per candidate:
 
 ## What goes into `assert:` / `check:`
 
-- `assert:` — the **predicate** stated as the end-state, specific enough to check.
-  Name the symbol, file/path, or surface.
+- `assert:` — the **predicate** stated as the end-state, specific enough to
+  check. Name the symbol, file/path, or surface.
 - `check:` — either a backticked **shell command** (exit 0 = satisfied) or the
   literal `attest`. Commands resolve build/codegen/lint through the tooling map
   by capability name.
@@ -243,8 +224,8 @@ the goal body or the `## Scenarios` block.
 
 - **Not a fixer.** Drafts predicates; `/forge-impl-green` makes them true,
   `/forge-verify-validations` checks them.
-- **Not a runtime test.** If the honest proof is a `when:/then:` observable, it's
-  a scenario — use `/forge-scenarios`.
+- **Not a runtime test.** If the honest proof is a `when:/then:` observable,
+  it's a scenario — use `/forge-scenarios`.
 
 ## Next step
 
