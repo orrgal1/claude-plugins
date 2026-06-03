@@ -23,8 +23,10 @@ Only the PR's diff. Resolve base/head from GitHub (`gh pr view`), fall back to
 ## Fix
 
 1. **Comments** — delete comments that restate the code, narrate the obvious, or
-   were clearly auto-generated. Keep only ones that earn their place
-   (non-obvious why, gotcha, invariant). Terse.
+   were clearly auto-generated. Keep only the rare ones that earn their place
+   (non-obvious why, gotcha, invariant). Hard-cap every survivor at one line —
+   collapse anything longer to one line or drop it; two lines only in the rare
+   case one can't carry the rationale, and only with the operator's sign-off.
 2. **Over-complex local code** — collapse needless indirection, dead
    abstraction, and verbose constructs that have a simpler equivalent. Run the
    built-in `/simplify` skill on the changed files for this pass.
