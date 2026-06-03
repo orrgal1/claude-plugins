@@ -1,5 +1,5 @@
 {
-  "description": "Seed registered domain graphs from the main worktree into a fresh worktree on session start (background copy; never builds).",
+  "description": "On session start: seed missing domain graphs from the main worktree, and AST-refresh any graph whose built_at_commit has drifted from HEAD. Both background, never build semantically.",
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +9,11 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/seed-worktree.sh",
             "statusMessage": "graphify-wrapper: checking worktree graphs"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/refresh-stale.sh",
+            "statusMessage": "graphify-wrapper: checking graph freshness"
           }
         ]
       }

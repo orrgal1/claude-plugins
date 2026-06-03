@@ -23,8 +23,14 @@ repo into queryable domains.
   (possibly semantic) layer for free. A `SessionStart` hook does the copy half
   automatically (background, never a build), so graphs are present in any
   worktree without thinking about it.
-- **On-demand builds.** The only automatic action is that seed-copy; all
-  building and refresh stay on-demand — you refresh when you choose.
+- **Drift auto-refresh.** A `SessionStart` hook also compares each graph's
+  `built_at_commit` to `HEAD` and, for any domain the delta touched, runs an AST
+  `update` in the background — so graphs track the tree after a merge/pull
+  without a manual sync. `/graphify-wrapper-status` shows a `FRESH` column
+  (`current` / `behind`).
+- **On-demand semantic.** The automatic actions are AST-only (seed-copy +
+  `update`); the semantic LLM pass never runs on its own — you invoke
+  `--semantic` when you want fresh community naming.
 - **AST default, semantic opt-in.** `update` (AST, free) is the default;
   `--semantic` runs `extract` via the `claude-cli` backend (your Claude Code
   plan — no API key, billed to the plan) or any configured API backend.
