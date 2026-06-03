@@ -22,12 +22,15 @@ didn't evaluate the output.
    - `// create a new instance` above a constructor call
    - `// handle error` above an error handler
    - Any comment restating the next line without adding why
+   - Any comment spanning multiple lines where one line (or none) suffices
 
    **Exception — meaningful comments are NOT slop.** Skip any comment that (a)
    explains genuine _why_ / non-obvious _how_ / a hidden constraint or
    invariant, (b) starts with `when:` or `then:` (test scenario/outcome tags),
    or (c) is an AAA phase marker `// --- arrange` / `// --- act` /
-   `// --- assert`. Only flag free-floating narration restating the code.
+   `// --- assert`. Only flag free-floating narration restating the code. Even a
+   meaningful comment stays one line — the `commentary` lens owns the cap (one
+   line; two only with sign-off) and its severity.
 
 2. **Redundant defensive checks:**
    - Nil check after a function guaranteeing non-nil on success

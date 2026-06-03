@@ -18,9 +18,13 @@ lens is the dedicated audit.
 
 ## Principles
 
-- **Brevity without loss.** A comment is the shortest text that still carries
-  its rationale. Drop any sentence the reader loses no signal without.
-  Multi-paragraph prose where one line fits is a smell.
+- **One line, hard cap.** A comment is one line. Two lines only when a single
+  line genuinely can't carry the rationale, and only with explicit
+  author/operator sign-off. Three+ lines never. Within that line, the shortest
+  text that still carries its rationale — drop any word the reader loses no
+  signal without.
+- **Sparingly.** Most lines need no comment. A comment earns its place only
+  where the code can't speak for itself; default to none.
 - **"Why," not "what."** Well-named identifiers say what. Comments earn their
   place only on non-obvious rationale: a hidden constraint, a subtle invariant,
   a workaround for a specific bug, surprising behavior. Restating code is noise.
@@ -65,6 +69,7 @@ lens is the dedicated audit.
 - Comment cites a PR / ticket / line with nothing pinning it to the comment.
 - Docstring repeats every arg from the signature with no added invariant.
 - Comment narrates the current PR's intent rather than the code's intent.
+- Comment runs more than one line without recorded sign-off.
 
 The brief carries the diff's commentary surface — every added/modified comment,
 docstring, or inline note with surrounding code — plus the rules above. No forge
@@ -74,13 +79,13 @@ artifact.
 
 `forge-review-green` drives only blockers + majors to zero; minors survive to
 merge. So the two failure modes this lens exists to stop — **drift** and
-**sustained verbosity** — promote to major so they are actually forced.
+**over-the-cap verbosity** — promote to major so they are actually forced.
 
-| Severity    | When                                                                                                                                                                                                                                                              |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **minor**   | Isolated low-rot slip: one redundant line, a lone signature-echo param, a banner/divider, a tone word. One comment, no rot vector, reader loses nothing if it ships.                                                                                              |
-| **major**   | **Drift-prone anchor** (PR/issue/ticket number, line-number ref, caller list, session/PR-narration note, author/date stamp, `temporary until …` with no removal condition); OR **sustained verbosity** (a _block_ failing brevity). One finding covers the block. |
-| **blocker** | Misleading: a comment contradicts the code or claims behavior the code doesn't implement, _and_ a future reader would rely on it for a correctness decision (`this never returns null` above code that does).                                                     |
+| Severity    | When                                                                                                                                                                                                                                                                                                                                |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **minor**   | Isolated low-rot slip: one redundant line, a lone signature-echo param, a banner/divider, a tone word. One comment, no rot vector, reader loses nothing if it ships.                                                                                                                                                                |
+| **major**   | **Drift-prone anchor** (PR/issue/ticket number, line-number ref, caller list, session/PR-narration note, author/date stamp, `temporary until …` with no removal condition); OR **over the cap** (any comment exceeding one line without recorded sign-off, or a _block_ of comments failing brevity). One finding covers the block. |
+| **blocker** | Misleading: a comment contradicts the code or claims behavior the code doesn't implement, _and_ a future reader would rely on it for a correctness decision (`this never returns null` above code that does).                                                                                                                       |
 
 When in doubt between minor and major: does this rot or mislead, or is it merely
 redundant? Rot/mislead → major. Merely redundant → minor.

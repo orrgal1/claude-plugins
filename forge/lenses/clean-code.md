@@ -30,7 +30,8 @@ Martin's canonical checklist:
   extracting. Acceptable: legal headers, intent the code can't carry, warnings
   of consequence, TODOs (owner / date), public API docs. Banned: redundant
   comments restating code, misleading comments, journal comments, commented-out
-  code, attributions ("/_ Bob _/").
+  code, attributions ("/_ Bob _/"). Every comment that survives stays one line
+  (two only with sign-off) — the `commentary` lens owns the cap.
 - **Formatting that aids reading** — vertical openness between concepts,
   vertical density within a concept, related concepts near each other, variable
   declared close to use, instance variables grouped at top, caller above callee.

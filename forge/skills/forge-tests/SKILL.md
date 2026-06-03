@@ -39,12 +39,14 @@ Two conventions, per language's comment syntax:
 
 - **`when:` / `then:` header** — comment lines directly above the test function:
   `when: <scenario / precondition>`, `then: <expected observable outcome>`. One
-  line each (combine when short). Use the scenario's text verbatim.
+  line each, hard cap — never wrap to a second line (combine when short). Use
+  the scenario's text verbatim.
 - **Arrange/act/assert body markers** — `// --- arrange: <note>`,
   `// --- act: <note>`, `// --- assert: <note>` (swap `//` for the language's
-  comment marker), flush-left above each phase. Each note is one short clause
-  naming specifics (which fixtures, which call, which assertions) — never the
-  generic phase name. Skip on trivial single-line-per-phase tests.
+  comment marker), flush-left above each phase. Each marker is one line, hard
+  cap — one short clause naming specifics (which fixtures, which call, which
+  assertions), never the generic phase name. Skip on trivial
+  single-line-per-phase tests.
 
 ## Per-scenario decision tree
 

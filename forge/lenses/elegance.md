@@ -21,7 +21,8 @@ Catches over-engineering and under-engineering both.
 - Premature abstraction — extracting a base class / mixin / utility before the
   second caller exists.
 - Intent clarity — can a future reader infer the why without the PR description?
-  Names, structure, small comments at non-obvious seams should carry intent.
+  Names, structure, a one-line comment at a non-obvious seam should carry
+  intent.
 - Test sufficiency for refactor confidence — a stranger should be able to
   refactor with the suite as a safety net. Tests locking in implementation
   detail rob future refactors of that confidence.
