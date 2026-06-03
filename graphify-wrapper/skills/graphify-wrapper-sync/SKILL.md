@@ -38,6 +38,9 @@ For each name, resolve its subtree, then build. The rule:
 
 ```bash
 backend=$(gfx_backend)
+# Image/asset files graphify would otherwise read as text "docs" — token noise
+# with no architectural signal, and the source of oversized chunks that time out.
+exc_args=(); while IFS= read -r p; do [ -n "$p" ] && exc_args+=(--exclude "$p"); done < <(gfx_extract_excludes)
 for name in $names; do
   path=$(gfx_index_field "$name" path)
   [ -n "$path" ] || { echo "skip '$name': not registered"; continue; }
@@ -57,7 +60,7 @@ for name in $names; do
     # claude-cli defaults to Opus; pin the registry model (sonnet) for extraction.
     [ "$backend" = claude-cli ] && export GRAPHIFY_CLAUDE_CLI_MODEL="$(gfx_cli_model)"
     echo "[$name] semantic extract ($backend${GRAPHIFY_CLAUDE_CLI_MODEL:+/$GRAPHIFY_CLAUDE_CLI_MODEL}) on $path"
-    graphify extract "$dst" --backend "$backend"
+    graphify extract "$dst" --backend "$backend" "${exc_args[@]}"
   else
     echo "[$name] AST update on $path"
     graphify update "$dst"
@@ -70,6 +73,11 @@ done
 - `update` is AST-only and free; `extract` runs the LLM backend. `claude-cli` is
   serial — a large `--semantic` domain is slow and consumes plan quota. Prefer
   scoping semantic to the domains that need architecture answers.
+- `extract` sends docs **and images** to the LLM as text. SVG markup and decoded
+  binary bytes are pure token noise (and the cause of oversized chunks that time
+  out), so semantic builds exclude image/asset globs by default — see
+  `gfx_extract_excludes`. Override per-repo with an `.extract_excludes` array in
+  the registry (replaces the default set; list every glob you want dropped).
 - A semantic build seeded onto a worktree is reconciled by AST `update` on later
   plain syncs; the named/semantic layer goes stale until the next `--semantic`
   run. Re-run with `--semantic` when you need fresh community naming.

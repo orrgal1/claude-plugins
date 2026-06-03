@@ -65,6 +65,19 @@ gfx_cli_model() {
   printf 'sonnet\n'
 }
 
+# File globs excluded from semantic `extract`. graphify reads docs AND images as
+# text and asks the LLM to graph them — but SVG markup (path/base64 data) and
+# decoded binary bytes are token-heavy noise with zero architectural signal, and
+# big image-stuffed chunks are what time out. Default to dropping image/asset
+# files; override per-repo with a JSON `.extract_excludes` array in the registry.
+gfx_extract_excludes() {
+  local r; r=$(gfx_registry)
+  if [ -f "$r" ] && jq -e '(.extract_excludes // empty) | type == "array"' "$r" >/dev/null 2>&1; then
+    jq -r '.extract_excludes[]' "$r" 2>/dev/null && return 0
+  fi
+  printf '%s\n' '*.svg' '*.png' '*.jpg' '*.jpeg' '*.gif' '*.webp' '*.bmp' '*.ico' '*.tiff' '*.heic'
+}
+
 # jq read of an index field:  gfx_index_field <name> <field>
 gfx_index_field() {
   jq -r --arg n "$1" --arg f "$2" '.indexes[$n][$f] // empty' "$(gfx_registry)" 2>/dev/null
