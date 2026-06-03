@@ -1,6 +1,6 @@
 {
   "name": "@orrgal1/persona",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simple inlined persona for Claude Code — /setup-persona, /load-persona.",
   "author": "orrgal1",
   "license": "MIT",
