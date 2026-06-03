@@ -4,8 +4,8 @@ description:
   "End-to-end PR forge chain runner — drives a PR from scratch through goals,
   design, scenarios, tests, impl, audit, CI, and lens-designed review to READY."
 argument-hint:
-  "[<source>] [--slug <name>] [--mode auto|manual] [--max-review-cycles <N>]
-  [--persona <id>] [--from <phase>] [--until <phase>]"
+  "[<source>] [--slug <name>] [--mode auto|manual|yolo] [--max-review-cycles
+  <N>] [--persona <id>] [--from <phase>] [--until <phase>]"
 triggers:
   - "forge"
   - "forge autopilot"
@@ -32,7 +32,7 @@ user-invocable: true
 End-to-end PR forge. Drives a PR from any starting state to `READY` (no
 blockers, no majors) by sequencing the chain skills.
 
-Two modes:
+Three modes:
 
 - **`auto` (default)** — pauses at goals + design + scenarios (contract review).
   At each such pause it **arms a `/forge-review-watch --contract <phase>`** so
@@ -40,6 +40,12 @@ Two modes:
   "Contract-pause watch"). Everything else unattended; auto-resolutions log to
   `decisions.md`.
 - **`manual`** — pauses after every phase.
+- **`yolo`** — `auto` minus the three contract pauses. Drives straight to a
+  terminal state, stopping **only at genuine halts** (`BLOCKED_*`,
+  `NEEDS_OPERATOR`, `STUCK`). The goals / design / scenarios gates still run,
+  push their artifacts, and **auto-approve + advance** instead of settling an
+  AWAIT or arming a watch (§ "Yolo mode"). Invoke via `/forge-yolo` (thin
+  wrapper) or `/forge --mode yolo`.
 
 Operator resumes via `/forge approve` or `/forge iterate "<feedback>"` — both
 auto-detect the awaiting phase via `/forge-status`.
@@ -49,9 +55,9 @@ auto-detect the awaiting phase via `/forge-status`.
 ```
 status → entry phase → phases in order:
   0  start              (only when NO_CHAIN + no PR; runs /forge-start)
-  1  goals --push       AWAIT_GOALS_REVIEW (always, both modes)
-  2  design --push      AWAIT_DESIGN_REVIEW (always, both modes)
-  3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (always, both modes)
+  1  goals --push       AWAIT_GOALS_REVIEW (auto/manual; yolo auto-approves)
+  2  design --push      AWAIT_DESIGN_REVIEW (auto/manual; yolo auto-approves)
+  3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (auto/manual; yolo auto-approves)
   4  tests              (+ scaffolds impl surface for red bar)
   5  impl-green
   5a verify-goals
@@ -82,7 +88,7 @@ finding to `review-fix`.
 | --------------------- | ---------------------------------------------------------- |
 | `source`              | auto-detect (`gh pr view` body → conversation)             |
 | `--slug`              | sanitized branch name                                      |
-| `--mode`              | `auto`                                                     |
+| `--mode`              | `auto` (`auto` \| `manual` \| `yolo`)                      |
 | `--base`              | `main`                                                     |
 | `--max-review-cycles` | `5`                                                        |
 | `--max-impl-iters`    | `15`                                                       |
@@ -239,6 +245,23 @@ operator can drive the gate from the PR's review UI:
 - The watch is **additive** — typing `/forge approve` /
   `/forge iterate "<feedback>"` by hand still reaches the same two resumes.
 
+### Yolo mode (phases 1–3 override)
+
+In `yolo` the three contract gates do **not** pause. Each still runs its step
+(with `--yolo`, so the draft is auto-approved per "Auto-decide and continue"),
+still pushes its artifact to the PR, then — instead of settling
+`AWAIT_<PHASE>_REVIEW` and arming `/forge-review-watch` — **auto-writes the
+approval** (`{"<phase>": "<pushed-sha>"}` to `approvals.json`), logs a decision
+(`D<n> <iso> <phase> yolo auto-approved gate at <sha>`), and **advances**. No
+AWAIT, no watch.
+
+Everything downstream is identical to `auto` (phases 4–9 already run
+unattended). Yolo changes **only** whether the operator is asked to approve the
+contract; it **relaxes no honesty bright line** and skips **no** genuine halt —
+`BLOCKED_*`, `NEEDS_OPERATOR`, and `STUCK` still stop the run. The pushed
+artifacts remain on the PR, so the operator can review after the fact and
+`iterate` if needed.
+
 ### 0. start
 
 Runs only when `NO_CHAIN` + no PR. Step-runner `step: start` → `/forge-start`,
@@ -250,10 +273,11 @@ Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists
 
 ### 1. goals
 
-`forge-step-runner step: goals`, `flags: ["--push", "--yolo"]` (auto mode;
-manual drops `--yolo`). **Always** settles `AWAIT_GOALS_REVIEW` after push,
-regardless of mode — goals review is the contract. On settle, arm
-`/forge-review-watch --contract goals` (§ "Contract-pause watch").
+`forge-step-runner step: goals`, `flags: ["--push", "--yolo"]` (auto + yolo;
+manual drops `--yolo`). **Always** settles `AWAIT_GOALS_REVIEW` after push in
+auto / manual — goals review is the contract (yolo auto-approves + advances, §
+"Yolo mode"). On settle, arm `/forge-review-watch --contract goals` (§
+"Contract-pause watch").
 
 Approve → write `{"goals": "<sha>"}` to `approvals.json` → advance. Iterate →
 re-spawn with `["--iterate", "<feedback>", "--push"]`; new push re-settles
@@ -264,8 +288,8 @@ Halts: `BLOCKED_SPEC`.
 ### 2. design
 
 Same shape as phase 1, key `design`. `AWAIT_DESIGN_REVIEW` always settles
-post-push; on settle, arm `/forge-review-watch --contract design` (§
-"Contract-pause watch").
+post-push in auto / manual (yolo auto-approves + advances, § "Yolo mode"); on
+settle, arm `/forge-review-watch --contract design` (§ "Contract-pause watch").
 
 `pause-before-impl:` in `design.md` `## Risk` is informational here — the AWAIT
 pause already gives operator a chance to react. If they want changes, they
@@ -275,7 +299,7 @@ Halts: `BLOCKED_DESIGN` (honest blocker per `/forge-design`).
 
 ### 3. scenarios + validations
 
-`forge-step-runner step: scenarios`, `flags: ["--push", "--yolo"]` (auto mode;
+`forge-step-runner step: scenarios`, `flags: ["--push", "--yolo"]` (auto + yolo;
 manual drops `--yolo`). Then, for any **removal / structural goal** (a `Gn` with
 no runtime-observable end-state — see `/forge-goals` Goal shape), run
 `forge-step-runner step: validations` with the same flags to draft its
@@ -283,13 +307,13 @@ no runtime-observable end-state — see `/forge-goals` Goal shape), run
 validation; behavioral goals get scenarios, removal goals get validations, mixed
 goals get both. If every goal is behavioral, the validations step is a no-op.
 
-**Always** settles `AWAIT_SCENARIOS_REVIEW` after the push(es), regardless of
-mode — scenarios + validations are the proof contract, operator review is the
-gate. On settle, arm `/forge-review-watch --contract scenarios` (§
-"Contract-pause watch"). Auto-resolutions in auto mode: LIKELY harvest →
-best-fit goal, orphans → `## Orphan scenarios`; a goal whose only honest proof
-is a removal fact → draft as a validation rather than forcing a contorted
-scenario.
+**Always** settles `AWAIT_SCENARIOS_REVIEW` after the push(es) in auto / manual
+— scenarios + validations are the proof contract, operator review is the gate
+(yolo auto-approves + advances, § "Yolo mode"). On settle, arm
+`/forge-review-watch --contract scenarios` (§ "Contract-pause watch").
+Auto-resolutions in auto mode: LIKELY harvest → best-fit goal, orphans →
+`## Orphan scenarios`; a goal whose only honest proof is a removal fact → draft
+as a validation rather than forcing a contorted scenario.
 
 Approve → write `{"scenarios": "<sha>"}` to `approvals.json` → advance (the
 `scenarios` approval covers both proof types under this gate). Iterate →
@@ -305,7 +329,7 @@ red bar is assertion-fail OR `forge-tests: unimplemented` marker from `act:`.
 Auto-resolutions: LIKELY existing-test → auto-attach; tier deviations default
 `component`.
 
-Mode: auto → phase 5. Manual → push + `AWAIT_TESTS_REVIEW`, exit.
+Mode: auto / yolo → phase 5. Manual → push + `AWAIT_TESTS_REVIEW`, exit.
 
 Halts: `BLOCKED_TESTS` (wrong-reason red bar, missing fixture).
 
@@ -344,7 +368,7 @@ fails:
 - Attempt to touch linked test file or `goals.md` → hard refusal; `BLOCKED_IMPL`
   (contract surface).
 
-Mode: auto → 5a. Manual → push + `AWAIT_IMPL_REVIEW`, exit.
+Mode: auto / yolo → 5a. Manual → push + `AWAIT_IMPL_REVIEW`, exit.
 
 ### 5a-5f. Per-layer attestation
 
@@ -380,7 +404,7 @@ letting audit-green attempt mechanical recovery on a contract gap):
   or `/forge-validations --iterate` (fix a mis-phrased check) → `--from impl` /
   `--from verify-validations`.
 
-Mode (PASS path): auto → next sub-phase (or 6 after 5f); manual settles
+Mode (PASS path): auto / yolo → next sub-phase (or 6 after 5f); manual settles
 `AWAIT_VERIFY_<LAYER>_REVIEW`, exit (no push — verify skills don't commit).
 
 After 5f PASS → phase 6. Audit-green's pre-flight typically short-circuits
@@ -409,7 +433,7 @@ as `verify-<layer>`.
 On `AUDIT_GREEN`: invoke `/forge-audit --embed` once (no fix-loop). Embed via
 `gh api` — no commit, no push, no CI.
 
-Mode: auto → phase 7. Manual → `AWAIT_AUDIT_REVIEW`, exit.
+Mode: auto / yolo → phase 7. Manual → `AWAIT_AUDIT_REVIEW`, exit.
 
 Halts:
 
@@ -440,7 +464,7 @@ loop until GREEN | max:
     fold signals → stuck check
 ```
 
-Mode: auto → phase 8 on `CI_GREEN`. Manual → `AWAIT_CI_REVIEW`, exit.
+Mode: auto / yolo → phase 8 on `CI_GREEN`. Manual → `AWAIT_CI_REVIEW`, exit.
 
 Halts:
 
@@ -479,7 +503,8 @@ Verdict map:
 Splice sub-skill's `## decision-log entries` tail verbatim into `decisions.md`
 under `## Phase: review`.
 
-Mode: auto → phase 9 on `REVIEW_GREEN`. Manual → `AWAIT_REVIEW_REVIEW`, exit.
+Mode: auto / yolo → phase 9 on `REVIEW_GREEN`. Manual → `AWAIT_REVIEW_REVIEW`,
+exit.
 
 ### 9. final ci-green
 
@@ -591,7 +616,8 @@ Each → one decision-log entry `D<n> <iso> <phase> <rule>`.
 ```markdown
 # Decisions — autopilot run <slug>
 
-Started: <iso> Operator: <git user.email> Last updated: <iso> Mode: auto
+Started: <iso> Operator: <git user.email> Last updated: <iso> Mode: auto |
+manual | yolo
 
 ## Phase: start
 
@@ -616,7 +642,7 @@ verdict: READY | AWAIT_*_REVIEW | BLOCKED_SPEC | BLOCKED_DESIGN | BLOCKED_IMPL
        | BLOCKED_VERIFY_{GOALS,SCENARIOS,TESTS,MATCH,RUNS,VALIDATIONS}
        | BLOCKED_AUDIT | BLOCKED_CI | BLOCKED_REVIEW
        | NEEDS_OPERATOR | STUCK
-mode:    auto | manual
+mode:    auto | manual | yolo
 PR:      #<num> — <title>    (or: "no PR yet")
 slug:    <slug>
 phases:  <list ran this invocation>
@@ -658,10 +684,13 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Runs unattended** between AWAIT pauses. Sub-skill gates auto-resolve — log.
 - **Sequential phases at orchestrator layer.** Lens fan-out happens inside
   `/forge-review`.
-- **Three contract pauses** — goals + design + scenarios always pause (both
-  modes); each arms a `/forge-review-watch --contract <phase>` so the operator's
-  PR review drives the gate (§ "Contract-pause watch").
+- **Three contract pauses** — goals + design + scenarios pause in `auto` /
+  `manual`; each arms a `/forge-review-watch --contract <phase>` so the
+  operator's PR review drives the gate (§ "Contract-pause watch"). `yolo`
+  auto-approves these three and advances (§ "Yolo mode").
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
+- **Yolo skips no genuine halt** — `BLOCKED_*` / `NEEDS_OPERATOR` / `STUCK`
+  still stop the run; only the contract pauses are removed.
 - **Push only where needed** — start, goals, design, scenarios (review
   surfaces), ci-green / final-ci (CI). Local commits otherwise.
 - **No destructive ops** — rm outside design coverage / force-push / branch
@@ -683,6 +712,8 @@ re-assesses any time.
 /forge https://jira/FOO-123           # fresh start, current branch, auto
 /forge                                # resume from earliest unsatisfied
 /forge --mode manual                  # pause after every phase
+/forge --mode yolo                    # no contract pauses; stop only at halts
+/forge-yolo                           # same as --mode yolo (thin wrapper)
 /forge --base develop                 # non-main base
 /forge --max-review-cycles 8          # raise review budget (default 5)
 /forge --max-impl-iters 25            # raise impl budget
