@@ -1,6 +1,6 @@
 {
   "name": "@orrgal1/graphify-wrapper",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Thin harness over the graphify knowledge-graph CLI for monorepos + worktrees — /graphify-wrapper-setup, /graphify-wrapper-map, /graphify-wrapper-index, /graphify-wrapper-sync, /graphify-wrapper-query, /graphify-wrapper-status.",
   "author": "orrgal1",
   "license": "MIT",
@@ -21,6 +21,7 @@
   ],
   "files": [
     ".claude-plugin",
+    "hooks",
     "lib",
     "skills"
   ]

@@ -1,0 +1,17 @@
+{
+  "description": "Seed registered domain graphs from the main worktree into a fresh worktree on session start (background copy; never builds).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/seed-worktree.sh",
+            "statusMessage": "graphify-wrapper: checking worktree graphs"
+          }
+        ]
+      }
+    ]
+  }
+}

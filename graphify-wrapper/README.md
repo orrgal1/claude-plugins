@@ -20,16 +20,19 @@ repo into queryable domains.
   registry.
 - **Worktree seeding.** A fresh worktree copies the main worktree's graph for a
   domain, then AST-reconciles the branch diff — inheriting main's expensive
-  (possibly semantic) layer for free.
-- **On-demand only.** No background hooks. You refresh when you choose.
+  (possibly semantic) layer for free. A `SessionStart` hook does the copy half
+  automatically (background, never a build), so graphs are present in any
+  worktree without thinking about it.
+- **On-demand builds.** The only automatic action is that seed-copy; all
+  building and refresh stay on-demand — you refresh when you choose.
 - **AST default, semantic opt-in.** `update` (AST, free) is the default;
   `--semantic` runs `extract` via the `claude-cli` backend (your Claude Code
   plan — no API key, billed to the plan) or any configured API backend.
 
 ## Skills
 
-| Skill              | Purpose                                                                                                                |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Skill                      | Purpose                                                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `/graphify-wrapper-setup`  | Install the CLI, gitignore `graphify-out/` globally, init the per-repo registry, pick a semantic backend. Idempotent.  |
 | `/graphify-wrapper-map`    | Analyze the repo, propose a focused set of domains, refine interactively, register the chosen ones. Guided front door. |
 | `/graphify-wrapper-index`  | Precise register/remove of a domain (`name path [--semantic]`) when you already know it.                               |
