@@ -26,7 +26,7 @@
     },
     {
       "name": "persona",
-      "description": "Simple inlined persona — /setup-persona writes ~/.claude/persona.md (idempotent) and ensures CLAUDE.md @-imports it. No dependency on other plugins.",
+      "description": "Simple inlined persona — /setup-persona writes ~/.claude/persona.md (idempotent) and ensures CLAUDE.md @-imports it; /load-persona swaps in a named persona from the builtin pool. No dependency on other plugins.",
       "source": "./persona",
       "category": "productivity"
     },

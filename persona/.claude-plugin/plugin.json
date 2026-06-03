@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/persona",
-  "description": "Simple inlined persona for Claude Code. /setup-persona writes ~/.claude/persona.md (idempotent) and ensures ~/.claude/CLAUDE.md @-imports it. No behavioral-skill chain \u2014 persona content lives inline in persona.md.",
-  "version": "1.0.0",
+  "description": "Simple inlined persona for Claude Code. /setup-persona writes ~/.claude/persona.md (idempotent) and ensures ~/.claude/CLAUDE.md @-imports it. /load-persona swaps in a named persona from the builtin pool. No behavioral-skill chain \u2014 persona content lives inline in persona.md.",
+  "version": "1.1.0",
   "author": {
     "name": "orrgal1"
   }

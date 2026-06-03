@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/persona",
-  "version": "1.0.0",
-  "description": "Simple inlined persona for Claude Code \u2014 /setup-persona.",
+  "version": "1.1.0",
+  "description": "Simple inlined persona for Claude Code — /setup-persona, /load-persona.",
   "author": "orrgal1",
   "license": "MIT",
   "repository": {
@@ -19,6 +19,7 @@
   "files": [
     ".claude-plugin",
     "skills",
-    "templates"
+    "templates",
+    "personas"
   ]
 }
