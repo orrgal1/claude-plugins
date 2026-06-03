@@ -58,9 +58,14 @@ for name in $names; do
 
   if [ "$do_sem" = true ]; then
     # claude-cli defaults to Opus; pin the registry model (sonnet) for extraction.
-    [ "$backend" = claude-cli ] && export GRAPHIFY_CLAUDE_CLI_MODEL="$(gfx_cli_model)"
+    # Its subprocess timeout is a fixed 600s, so cap chunk size for this backend.
+    budget_args=()
+    if [ "$backend" = claude-cli ]; then
+      export GRAPHIFY_CLAUDE_CLI_MODEL="$(gfx_cli_model)"
+      budget_args=(--token-budget "$(gfx_cli_token_budget)")
+    fi
     echo "[$name] semantic extract ($backend${GRAPHIFY_CLAUDE_CLI_MODEL:+/$GRAPHIFY_CLAUDE_CLI_MODEL}) on $path"
-    graphify extract "$dst" --backend "$backend" "${exc_args[@]}"
+    graphify extract "$dst" --backend "$backend" "${exc_args[@]}" "${budget_args[@]}"
   else
     echo "[$name] AST update on $path"
     graphify update "$dst"
@@ -78,6 +83,11 @@ done
   out), so semantic builds exclude image/asset globs by default — see
   `gfx_extract_excludes`. Override per-repo with an `.extract_excludes` array in
   the registry (replaces the default set; list every glob you want dropped).
+- The `claude-cli` backend's per-chunk subprocess timeout is a fixed 600s
+  (graphify hardcodes it; `--api-timeout` only affects HTTP API backends), so
+  large chunks fail. Semantic builds on this backend cap `--token-budget` (see
+  `gfx_cli_token_budget`, default 20000) so each chunk finishes in time.
+  Override with `.cli_token_budget` in the registry.
 - A semantic build seeded onto a worktree is reconciled by AST `update` on later
   plain syncs; the named/semantic layer goes stale until the next `--semantic`
   run. Re-run with `--semantic` when you need fresh community naming.

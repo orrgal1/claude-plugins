@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/graphify-wrapper",
   "description": "Thin, repo-agnostic harness over the graphify knowledge-graph CLI, tuned for monorepos + worktrees. /graphify-wrapper-setup installs the CLI, gitignores graphify-out/ globally (never committed), and inits a per-repo registry. /graphify-wrapper-map analyzes the repo and proposes a focused set of named domains to index, refining interactively. /graphify-wrapper-index registers/removes a named domain index (name + subtree path, e.g. backend ./services/backend). /graphify-wrapper-sync refreshes the current worktree's indexes on demand — AST-only by default (free), --semantic for full extract via the claude-cli backend (no API key, plan-billed); seeds a fresh worktree by copying main's graph then reconciling the branch diff. /graphify-wrapper-query routes a question to the right domain graph. /graphify-wrapper-status lists registered indexes and per-worktree freshness. Graphs live in-tree (gitignored); only the registry lives in ~/.claude/graphify/<repo-key>/. No background hooks, no dependency on other plugins.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "orrgal1"
   }

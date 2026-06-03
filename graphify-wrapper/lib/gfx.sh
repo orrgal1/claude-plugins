@@ -78,6 +78,18 @@ gfx_extract_excludes() {
   printf '%s\n' '*.svg' '*.png' '*.jpg' '*.jpeg' '*.gif' '*.webp' '*.bmp' '*.ico' '*.tiff' '*.heic'
 }
 
+# Per-chunk token budget for the claude-cli backend. graphify hardcodes the
+# `claude -p` subprocess timeout at 600s (--api-timeout governs only HTTP API
+# backends), so oversized chunks time out. Cap chunk size below graphify's 60k
+# default so each call finishes under the wall. Override with `.cli_token_budget`.
+gfx_cli_token_budget() {
+  local r; r=$(gfx_registry)
+  if [ -f "$r" ]; then
+    jq -r '.cli_token_budget // "20000"' "$r" 2>/dev/null && return 0
+  fi
+  printf '20000\n'
+}
+
 # jq read of an index field:  gfx_index_field <name> <field>
 gfx_index_field() {
   jq -r --arg n "$1" --arg f "$2" '.indexes[$n][$f] // empty' "$(gfx_registry)" 2>/dev/null
