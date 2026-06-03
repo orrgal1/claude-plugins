@@ -40,6 +40,19 @@ lens is the dedicated audit.
   If a reference is genuinely needed, anchor on stable surfaces: a symbol name,
   an external standard, a public spec URL, an issue body the file outlives.
 
+- **No pure PR-artifacts.** A reference that exists only inside the change
+  process — not in the code's permanent reality — never belongs in a comment.
+  This is the drift rule's hard core: such IDs are meaningless to a future
+  reader and rot the instant the PR merges.
+  - Forge goal / scenario / validation IDs (`G3`, `SCN-2`, `covers scenario 4`).
+  - PR / branch / commit references as code provenance (`per PR #812`,
+    `from the auth-refactor branch`).
+  - Review-thread or task-tracker artifacts (`addresses review comment 3`,
+    `JIRA-1234 follow-up`).
+
+  The code's behavior is the truth; the artifact that produced it is not. If the
+  rationale matters, state the rationale, not the artifact that carried it.
+
 - **No session context.** Comments narrating this PR/fix/rollout —
   `added for the Y flow`, `handles the case from issue #123`,
   `see the design doc on Notion` — belong in the PR description, not the source
@@ -67,6 +80,8 @@ lens is the dedicated audit.
 - TODO without owner or removal condition.
 - Block of commented-out code near actively-edited code.
 - Comment cites a PR / ticket / line with nothing pinning it to the comment.
+- Comment cites a pure PR-artifact (forge goal/scenario/validation ID, PR/branch
+  reference, review-thread number) that vanishes once the change merges.
 - Docstring repeats every arg from the signature with no added invariant.
 - Comment narrates the current PR's intent rather than the code's intent.
 - Comment runs more than one line without recorded sign-off.
@@ -81,11 +96,11 @@ artifact.
 merge. So the two failure modes this lens exists to stop — **drift** and
 **over-the-cap verbosity** — promote to major so they are actually forced.
 
-| Severity    | When                                                                                                                                                                                                                                                                                                                                |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **minor**   | Isolated low-rot slip: one redundant line, a lone signature-echo param, a banner/divider, a tone word. One comment, no rot vector, reader loses nothing if it ships.                                                                                                                                                                |
-| **major**   | **Drift-prone anchor** (PR/issue/ticket number, line-number ref, caller list, session/PR-narration note, author/date stamp, `temporary until …` with no removal condition); OR **over the cap** (any comment exceeding one line without recorded sign-off, or a _block_ of comments failing brevity). One finding covers the block. |
-| **blocker** | Misleading: a comment contradicts the code or claims behavior the code doesn't implement, _and_ a future reader would rely on it for a correctness decision (`this never returns null` above code that does).                                                                                                                       |
+| Severity    | When                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **minor**   | Isolated low-rot slip: one redundant line, a lone signature-echo param, a banner/divider, a tone word. One comment, no rot vector, reader loses nothing if it ships.                                                                                                                                                                                                                                                                 |
+| **major**   | **Drift-prone anchor** (PR/issue/ticket number, line-number ref, caller list, session/PR-narration note, author/date stamp, `temporary until …` with no removal condition) or **pure PR-artifact** (forge goal/scenario/validation ID, PR/branch ref, review-thread number); OR **over the cap** (any comment exceeding one line without recorded sign-off, or a _block_ of comments failing brevity). One finding covers the block. |
+| **blocker** | Misleading: a comment contradicts the code or claims behavior the code doesn't implement, _and_ a future reader would rely on it for a correctness decision (`this never returns null` above code that does).                                                                                                                                                                                                                        |
 
 When in doubt between minor and major: does this rot or mislead, or is it merely
 redundant? Rot/mislead → major. Merely redundant → minor.

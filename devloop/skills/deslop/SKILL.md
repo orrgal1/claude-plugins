@@ -27,6 +27,9 @@ Only the PR's diff. Resolve base/head from GitHub (`gh pr view`), fall back to
    (non-obvious why, gotcha, invariant). Hard-cap every survivor at one line —
    collapse anything longer to one line or drop it; two lines only in the rare
    case one can't carry the rationale, and only with the operator's sign-off.
+   Strip drift-prone PR-artifacts from any comment kept: forge goal/scenario/
+   validation IDs, PR/branch/commit refs, review-thread numbers — keep the
+   rationale, drop the artifact that carried it.
 2. **Over-complex local code** — collapse needless indirection, dead
    abstraction, and verbose constructs that have a simpler equivalent. Run the
    built-in `/simplify` skill on the changed files for this pass.
