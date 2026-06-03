@@ -1,0 +1,24 @@
+{
+  "name": "@orrgal1/welcome",
+  "version": "1.0.0",
+  "description": "Onboarding for the orrgal1 marketplace — /welcome.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "welcome"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "onboarding",
+    "setup"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills"
+  ]
+}

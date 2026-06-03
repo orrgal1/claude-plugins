@@ -47,6 +47,12 @@
       "description": "Thin harness over the graphify knowledge-graph CLI for monorepos + worktrees — /graphify-wrapper-setup, /graphify-wrapper-map (analyze & propose domains to index), /graphify-wrapper-index (register named domains), /graphify-wrapper-sync (on-demand; AST default + --semantic via claude-cli; seeds worktrees from main), /graphify-wrapper-query, /graphify-wrapper-status. Graphs live in-tree (gitignored, never pushed); only the registry lives centrally. No dependency on other plugins.",
       "source": "./graphify-wrapper",
       "category": "development"
+    },
+    {
+      "name": "welcome",
+      "description": "Onboarding for the orrgal1 marketplace — /welcome runs an interactive, idempotent walkthrough: prerequisites (gh, SSH remotes), recommended 3rd-party plugins (claude-mem, caveman, context7, official bundle), persona, graphify-wrapper, per-repo forge setup, then prints a usage guide for every orrgal1 plugin. No dependency on other plugins.",
+      "source": "./welcome",
+      "category": "productivity"
     }
   ]
 }
