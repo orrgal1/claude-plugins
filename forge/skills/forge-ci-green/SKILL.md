@@ -245,7 +245,11 @@ failures look flake-suspicious. If unsure, wait one more tick.
 
 On `CI_GREEN`, the controller spawns one `impl-check` (no fix) to re-run linked
 tests locally and overwrite `run.json` — clears `run.stale` drift on the next
-phase.
+phase. This refresh is **automatic, not offered** (per `/forge` § "Bias to
+progress" — keep metadata current): it runs even when it must first bring up
+local test infra (non-destructive), and is never surfaced as an optional "want
+me to refresh run.json?" question. Skip only when `run.json` is already fresh
+for HEAD (no commits since last green).
 
 ## Stuck detection (controller-owned)
 

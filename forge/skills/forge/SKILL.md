@@ -654,6 +654,16 @@ Default: **decide + log + move forward**. Halting is for genuine no-path
 situations. AWAIT pauses are the **contract**, not halts. No checkpoint between
 cycle synthesis and the fix-loop inside phase 8.
 
+**Keep metadata current — never offer it as a choice.** A non-destructive,
+metadata-updating action — refreshing `run.json` (re-running linked tests,
+**including bringing up local test infra to do so**), re-embedding the audit
+block, refreshing a loop/monitor `status.json`, advancing a drift marker — is
+**done automatically**, not surfaced as an optional "want me to…?" question.
+Bringing up local infra to refresh state is in-scope (it mutates no repo
+content). The bar to _ask_ is the same as to _halt_: a genuinely destructive or
+externally-visible act, or a real ambiguity — not housekeeping. Stale metadata
+forge could have refreshed is a defect, not a courtesy left to the operator.
+
 ### Auto-decide and continue
 
 | Friction                                        | Rule                                                                                                |
