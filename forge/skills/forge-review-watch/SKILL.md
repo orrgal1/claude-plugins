@@ -2,12 +2,12 @@
 name: forge-review-watch
 description:
   "Put forge into watch mode for a PR — a persistent monitor that arms on new
-  reviews, standalone comments, bot/reviewable reviews, or any added comment
-  acting as actionable feedback, dispatches /forge-address-review on each
-  trigger, then re-arms until the operator stops it."
+  reviews, standalone comments, bot / external-tool reviews, or any added
+  comment acting as actionable feedback, dispatches /forge-address-review on
+  each trigger, then re-arms until the operator stops it."
 argument-hint:
-  "[PR# or branch] [--slug <name>] [--source github|<mechanism>|all] [--interval
-  <sec>] [stop]"
+  "[PR# or branch] [--slug <name>] [--source github|all] [--interval <sec>]
+  [stop]"
 triggers:
   - "forge review watch"
   - "watch the forge PR for reviews"
@@ -35,7 +35,8 @@ user-invocable: true
 
 Arms a **persistent monitor** over a forge PR. Every new review-like event —
 GitHub review submission, standalone issue comment, review-thread reply, bot /
-Reviewable review, or any added comment reading as actionable feedback — fires
+external-tool review (e.g. Reviewable summary comments land as GitHub comments),
+or any added comment reading as actionable feedback — fires
 `/forge-address-review`. On completion the cursor advances and the monitor
 **re-arms**. Hands-free between start and stop.
 
@@ -81,7 +82,7 @@ instruction.
 | ------------ | --------------------------------------------------------------------------- |
 | PR# / branch | current branch's forge PR                                                   |
 | `--slug`     | sanitized branch name (per `/forge` rules)                                  |
-| `--source`   | `all` — GitHub baseline + every `$FORGE_HOME/review/`                       |
+| `--source`   | `all` — GitHub threads + self-review (external-tool comments land here too) |
 | `--interval` | `60` (seconds between polls; min 30 for remote APIs)                        |
 | `--contract` | off — contract mode bound to `goals`/`design`/`scenarios` (§ Contract mode) |
 | `stop`       | stop the running watch for this PR and exit                                 |
@@ -125,13 +126,12 @@ Launch one **persistent** `Monitor` (no timeout — lifetime is the session or
     (`created_at > cursor`).
   - issue-level comments acting as review:
     `gh api repos/<o>/<r>/issues/<N>/comments` (`created_at > cursor`).
-  - **bot / Reviewable reviews included** — only `self` is excluded; a
-    Reviewable/bot summary comment counts as a trigger.
-- **Registered mechanisms** (`--source all` / named) — per file in
-  `$FORGE_HOME/review/`, run its "list since `<cursor>`" op; tag each line with
-  its mechanism so the consumer routes replies back.
+  - **bot / external-tool reviews included** — only `self` is excluded; an
+    external review tool's summary comment (e.g. Reviewable, which posts to the
+    GitHub PR) counts as a trigger. `/forge-address-review` drafts the reply;
+    the operator publishes it on the external tool.
 - Emits one compact line per trigger:
-  `TRIGGER <mechanism> <type> <author> <id> — <≤80-char snippet>`.
+  `TRIGGER <source> <type> <author> <id> — <≤80-char snippet>`.
 - Wraps remote calls with `|| true` (transient failure must not kill the watch);
   `sleep <interval>` between passes.
 
@@ -212,10 +212,10 @@ On arm:
 ## /forge-review-watch armed
 
 PR #<N> — <slug>   (branch <name>)
-source:   <github | all | mechanism>
+source:   <github | self | all>
 interval: <sec>s
 cursor:   <iso>
-sources:  github baseline + <n> registered mechanism(s)
+sources:  github threads + self-review (external-tool comments land in GitHub)
 
 watching. stop with `/forge-review-watch stop` or TaskStop.
 ```
@@ -223,7 +223,7 @@ watching. stop with `/forge-review-watch stop` or TaskStop.
 Per dispatch (streamed as it happens):
 
 ```
-trigger: <mechanism> <type> by <author> — <snippet>
+trigger: <source> <type> by <author> — <snippet>
 dispatch: /forge-address-review --auto → <verdict line>
 re-armed at <iso>.
 ```

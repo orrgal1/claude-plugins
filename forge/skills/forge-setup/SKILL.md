@@ -58,7 +58,6 @@ shares it.
     test              #   executable script  (run directly)
     codegen.md        #   instructions doc   (agent reads + performs)
   tools/              # operator-named runbooks (see /forge-tool)
-  review/             # additive review mechanisms (see Capabilities below)
   review-channels/    # /forge-review channel overrides (see /forge-review)
   lenses/             # host-repo lens overrides (see /forge-review)
   personas/           # host-repo persona overrides (see /forge-review)
@@ -121,34 +120,30 @@ Stability properties:
 Logical operations forge resolves through the map. All optional — wire only what
 this repo has.
 
-| Capability        | What it runs                                                         | Used by                                         |
-| ----------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
-| `test`            | Run tests. Forge appends an optional selector as the last arg.       | `/forge-impl-green`, `/forge-tests`, audit runs |
-| `build`           | Compile / build                                                      | `/forge-ci-green`, impl loop                    |
-| `lint`            | Lint                                                                 | `/forge-ci-green`                               |
-| `typecheck`       | Static type check                                                    | `/forge-ci-green`, impl loop                    |
-| `codegen`         | Regenerate generated code (mocks, proto, clients)                    | impl loop recovery, `/forge`                    |
-| `devenv`          | Bring up a dev environment (optional)                                | manual / component-tier flows                   |
-| `localenv`        | Bring up local infra for component-tier tests (optional)             | component-tier test runs                        |
-| review automation | Drive review threads: list unresolved / reply / resolve / re-request | `/forge-address-review`                         |
+| Capability        | What it runs                                                                                      | Used by                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, audit runs |
+| `build`           | Compile / build                                                                                   | `/forge-ci-green`, impl loop                    |
+| `lint`            | Lint                                                                                              | `/forge-ci-green`                               |
+| `typecheck`       | Static type check                                                                                 | `/forge-ci-green`, impl loop                    |
+| `codegen`         | Regenerate generated code (mocks, proto, clients)                                                 | impl loop recovery, `/forge`                    |
+| `devenv`          | Bring up a dev environment (optional)                                                             | manual / component-tier flows                   |
+| `localenv`        | Bring up local infra for component-tier tests (optional)                                          | component-tier test runs                        |
+| review automation | GitHub `gh` baseline: list unresolved / reply / resolve / re-request. External tools → draft-only | `/forge-address-review`                         |
 
 `test` is the one capability nearly every chain needs; the rest as warranted.
 
-**Review automation is additive — not a single slot.** GitHub `gh` is the
-always-on baseline (forge operates on GitHub PRs). A repo registers
-**additional** mechanisms — multiple coexist (GitHub threads + Reviewable +
-custom bot) — by dropping one file per mechanism in `$FORGE_HOME/review/`:
+**Review automation — GitHub baseline auto-driven, external tools draft-only.**
+GitHub `gh` is the always-on auto-driven channel (forge operates on GitHub PRs):
+list unresolved / reply / resolve / re-request all run through `gh`.
 
-```
-$FORGE_HOME/review/
-  reviewable.md      # instructions: list/reply/resolve/re-request on Reviewable
-  internal-bot       # executable: `internal-bot <op> [args]` sub-commands
-```
-
-Each integration (instructions or script) covers the same four ops: (1) list
-unresolved threads with ids, (2) reply, (3) resolve, (4) re-request reviewers.
-`/forge-address-review` processes feedback across GitHub **and** every file in
-`$FORGE_HOME/review/` — entries stack on the baseline, never replace it.
+External CI / review tools (Reviewable, custom review bots, etc.) are **not**
+auto-driven. They typically dump their comments **as GitHub issue / PR
+comments** — so the `gh` baseline already intakes them — or somewhere else the
+operator points forge at ad-hoc. For those, `/forge-address-review` **drafts**
+replies; the operator posts them (manually, or by ad-hoc instructing the agent
+to use whatever automation they have). Forge never auto-publishes to an external
+tool.
 
 ## Capability resolution (the contract forge skills follow)
 
@@ -168,9 +163,9 @@ order:
 Deterministic forms (1–2) win over instruction forms (3–4) when both present —
 but a capability normally has exactly one wiring.
 
-**Review automation** isn't single-slot — additive: GitHub `gh` baseline always
-runs, plus every file in `$FORGE_HOME/review/` (each resolved as script or
-instructions per the same forms). Never `NEEDS_SETUP` (see Capabilities).
+**Review automation** isn't a `forge.toml` slot: GitHub `gh` is the always-on
+auto-driven baseline; external review tools are draft-only (see Capabilities).
+Never `NEEDS_SETUP`.
 
 ## `forge.toml` shape
 
@@ -203,8 +198,8 @@ typecheck = ""
 codegen   = ""
 devenv    = ""
 localenv  = ""
-# Review automation is NOT a forge.toml slot — GitHub `gh` is the baseline, and
-# additional mechanisms live one-file-each in $FORGE_HOME/review/ (see Capabilities).
+# Review automation is NOT a forge.toml slot — GitHub `gh` is the auto-driven
+# baseline; external review tools are draft-only (see Capabilities).
 
 # Logical capability -> prose instructions the agent reads and carries out.
 # Use for conditional / multi-step operations a single command can't capture.

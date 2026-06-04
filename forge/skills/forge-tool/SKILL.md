@@ -38,13 +38,12 @@ wired into a capability.
 
 Tools are distinct from the other `$FORGE_HOME/` surfaces:
 
-| Surface                        | What lives there                            | Who names it              |
-| ------------------------------ | ------------------------------------------- | ------------------------- |
-| `$FORGE_HOME/commands/`        | canonical capabilities (`test`, `build`, …) | forge (finite set)        |
-| `$FORGE_HOME/review/`          | additive review-mechanism integrations      | forge (one per mechanism) |
-| `$FORGE_HOME/review-channels/` | `/forge-review` channels                    | forge (per channel)       |
-| `$FORGE_HOME/maps/`            | read-only domain snapshots                  | `/forge-map` (per area)   |
-| `$FORGE_HOME/tools/`           | **open-ended, operator-named runbooks**     | **the operator**          |
+| Surface                        | What lives there                            | Who names it            |
+| ------------------------------ | ------------------------------------------- | ----------------------- |
+| `$FORGE_HOME/commands/`        | canonical capabilities (`test`, `build`, …) | forge (finite set)      |
+| `$FORGE_HOME/review-channels/` | `/forge-review` channels                    | forge (per channel)     |
+| `$FORGE_HOME/maps/`            | read-only domain snapshots                  | `/forge-map` (per area) |
+| `$FORGE_HOME/tools/`           | **open-ended, operator-named runbooks**     | **the operator**        |
 
 ## Subcommands
 

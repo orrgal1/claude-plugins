@@ -198,18 +198,17 @@ regenerates mocks / proto / clients. Skills that build, test, lint, or
 regenerate cite the capability by name; the contract above is the single source
 of how it resolves.
 
-**Review automation is wired through the map too — additively.**
+**Review automation — GitHub auto-driven, external tools draft-only.**
 `/forge-address-review` drives review threads (list unresolved / reply / resolve
-/ re-request). **GitHub via `gh` is the always-on baseline** — forge already
-operates on GitHub PRs (`/forge-start` opens one, `/forge-ci-green` reads
-`gh pr checks`), so it works with nothing wired. A repo can register
-**additional** review mechanisms — multiple coexist in one org (e.g. GitHub
-threads **and** Reviewable **and** a custom bot) — by dropping integration files
-in `$FORGE_HOME/review/<name>.md` (instructions) or `$FORGE_HOME/review/<name>`
-(executable), each covering list / reply / resolve / re-request for that
-mechanism. Forge processes feedback across GitHub **and** every registered
-mechanism; a `$FORGE_HOME/review/` entry never replaces the GitHub baseline, it
-stacks on it.
+/ re-request). **GitHub via `gh` is the only auto-driven platform** — forge
+already operates on GitHub PRs (`/forge-start` opens one, `/forge-ci-green`
+reads `gh pr checks`). External CI / review tools (e.g. Reviewable, custom
+review bots) are **not** auto-driven: they typically dump their comments as
+GitHub issue / PR comments — so the `gh` intake already catches them — or
+somewhere the operator points forge at ad-hoc. For those, forge **drafts**
+replies and the operator posts them (manually, or by ad-hoc instructing the
+agent to use whatever automation they have); forge never auto-publishes to an
+external tool.
 
 ## Loop contract
 

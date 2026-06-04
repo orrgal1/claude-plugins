@@ -71,9 +71,12 @@ Broken chain → run `/forge` first (or `/forge-goals`, `/forge-scenarios`,
 8. **Consultation gate** (mandatory). Operator approves channel set + each
    channel's per-run config (§ "Gate output").
 9. **Dispatch.** Per channel, follow its `## Execution`. `agent-fanout`: all
-   subagent calls in **a single message** for parallelism. `skill-wrapper`:
-   Skill-call + ingest. `command-wrapper`: run + parse. Parallel when possible;
-   channel body declares serial constraints.
+   subagent calls in **a single message** for parallelism — pass `subagent_type`
+   as the **exact** string the channel body names. For `lens-fanout` that is
+   `@orrgal1/forge:forge-lens-reviewer` — **`/` before `forge`, `:` before the
+   agent name**; the all-colons form `@orrgal1:forge:…` fails with "Agent type
+   not found". `skill-wrapper`: Skill-call + ingest. `command-wrapper`: run +
+   parse. Parallel when possible; channel body declares serial constraints.
 10. **Normalize.** Apply each channel's `## Severity mapping` +
     `## Finding shape` to produce the unified shape.
 11. **Aggregate.** Cap each finding against `severity_cap` (frontmatter + config
