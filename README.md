@@ -1,6 +1,6 @@
 # forge
 
-A self-contained, repo-agnostic **PR forge chain** for
+A repo-agnostic **PR forge chain** for
 [Claude Code](https://claude.com/claude-code).
 
 forge drives a pull request from a one-line source brief all the way to
@@ -13,12 +13,18 @@ It's built to run **unattended**: it recovers from external blockers on its own
 (waits out a red base PR or an infra incident, then restacks and resumes), keeps
 CI green **continuously until merge** rather than once, and on READY hands off
 to peer review — arming a watch for incoming feedback and proposing the most
-relevant reviewer — while leaving the act of opening the PR for review to you.
+relevant reviewer — while leaving the move from draft to **ready-for-review** to
+you.
 
-It has **no dependency on any other plugin** and **no hard-coded knowledge of
-any repo's tooling**. You teach it how to build/test/lint _your_ repo once, via
-a gitignored `.forge/` map; everything else is generic. Adopt it into any
-project.
+forge has **no hard-coded knowledge of any repo's tooling** — you teach it how
+to build/test/lint _your_ repo once, into a `$FORGE_HOME` map (default
+`~/.claude/forge/<repo-key>/`, shared across worktrees); everything else is
+generic. Adopt it into any project.
+
+**Dependency:** forge requires the **`@orrgal1/devloop`** plugin — it calls
+`/restack` to sync a branch onto its base (every CI iteration, and when resuming
+after an external block). Install both (below). Aside from devloop + the `gh`
+CLI, forge has no other plugin dependencies.
 
 ## The chain
 
@@ -35,7 +41,7 @@ project.
 /forge-review-green  drive the review to 0 findings (every severity)
    ── on READY ──
 /forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
-/forge-find-reviewer   rank the most relevant peer reviewer; gated open+request (your call, even in yolo)
+/forge-find-reviewer   rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
 
@@ -56,23 +62,25 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
   PR CI, a Slack thread, any predicate), then restacks and resumes the chain.
   Genuine halts still stop.
 - **Peer-review handoff** — on READY, forge arms the review watch and proposes a
-  reviewer; **opening the PR for review and requesting the reviewer is a gated
-  author gesture** that needs your approval, even in `yolo`.
+  reviewer; **the PR is already open as a draft, so moving it to
+  ready-for-review and requesting the reviewer is a gated author gesture** that
+  needs your approval, even in `yolo`.
 
 ## Install
 
-As a Claude Code marketplace plugin:
+From the `orrgal1` marketplace (forge + its `devloop` dependency):
 
 ```
-/plugin marketplace add orrgal1/forge
+/plugin marketplace add orrgal1/claude-plugins
 /plugin install forge@orrgal1
+/plugin install devloop@orrgal1
 ```
 
 Or point Claude Code at a local checkout:
 
 ```
-git clone git@github.com:orrgal1/forge.git
-claude --plugin-dir forge/forge
+git clone git@github.com:orrgal1/claude-plugins.git
+claude --plugin-dir claude-plugins/forge --plugin-dir claude-plugins/devloop
 ```
 
 ## Quickstart
@@ -83,32 +91,37 @@ claude --plugin-dir forge/forge
 /forge                               # drive the chain to READY
 ```
 
-## The `.forge/` tooling map
+## The `$FORGE_HOME` tooling map
 
-forge runs **no** repo-specific command directly. `/forge-setup` creates a
-gitignored `.forge/` directory mapping forge's logical capabilities to _your_
-repo's tooling:
+forge runs **no** repo-specific command directly. `/forge-setup` builds a
+`$FORGE_HOME` directory — default `~/.claude/forge/<repo-key>/`, a user-layer
+path keyed to the repo so every worktree shares it — mapping forge's logical
+capabilities to _your_ repo's tooling:
 
 ```
-.forge/
-  forge.toml          # capability → command (+ notes)
+~/.claude/forge/<repo-key>/
+  forge.toml          # capability → command (+ [meta], every other section)
   commands/           # one per capability — a script OR a `<cap>.md` instructions doc
     test
     build
     lint
     typecheck
     codegen
-  review/             # optional: additional review mechanisms, on top of GitHub
+  review/             # optional: extra review mechanisms, stacked on the GitHub baseline
+  review-channels/    # optional: /forge-review channel overrides
+  tools/              # optional: /forge-tool packaged ad-hoc flows
 ```
 
 Each capability is wired as **either** a runnable command/script (deterministic)
 **or** prose instructions the agent follows (for conditional, multi-step flows a
 fixed command can't capture). A capability that isn't mapped surfaces a
-`NEEDS_SETUP` gap — forge never guesses a command.
+`NEEDS_SETUP` gap — forge never guesses a command. (`$FORGE_HOME` overrides the
+default path; an in-repo `.forge/` is honored only as a one-release legacy
+fallback.)
 
 Review automation is **additive**: GitHub (via `gh`) is the always-on baseline;
-drop one file per extra mechanism in `.forge/review/` to integrate other review
-platforms alongside it.
+drop one file per extra mechanism in `$FORGE_HOME/review/` to integrate other
+review platforms alongside it.
 
 ## Review
 
@@ -117,13 +130,13 @@ lenses (goal-delivery, scenario-realism, test-match) + code-quality lenses, plus
 1–3 lenses designed against the diff's risk surface, fanned out to a bundled
 `forge-lens-reviewer` agent. The lens pool (`lenses/`) and reviewer personas
 (`personas/`) ship with the plugin and are extensible per-repo via
-`.forge/lenses/` and `.forge/personas/`.
+`$FORGE_HOME/lenses/` and `$FORGE_HOME/personas/`.
 
 ## Skills
 
 | Skill                                                                                  | Role                                                                              |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `/forge-setup`                                                                         | Map host-repo tooling into `.forge/`                                              |
+| `/forge-setup`                                                                         | Map host-repo tooling into `$FORGE_HOME`                                          |
 | `/forge-start`                                                                         | Bootstrap a chain: source brief → draft PR                                        |
 | `/forge`                                                                               | Orchestrate the whole chain to READY                                              |
 | `/forge-goals` · `/forge-scenarios` · `/forge-design` · `/forge-tests`                 | Chain atoms                                                                       |
@@ -131,16 +144,22 @@ lenses (goal-delivery, scenario-realism, test-match) + code-quality lenses, plus
 | `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green` | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
 | `/forge-review`                                                                        | Lens-designed, chain-aware PR review                                              |
 | `/forge-review-watch` · `/forge-address-review`                                        | Watch for + drive submitted reviewer feedback to resolution                       |
-| `/forge-find-reviewer`                                                                 | Rank the best peer reviewer; gated open+request                                   |
+| `/forge-find-reviewer`                                                                 | Rank the best peer reviewer; gated ready+request                                  |
 | `/forge-find-blocker` · `/forge-wait-for`                                              | Identify an external blocker; wait it out, then restack + resume                  |
 | `/forge-status` · `/forge-triage` · `/forge-stuck-check`                               | Status, triage, loop-health                                                       |
 
 ## State & artifacts
 
-Per-PR chain artifacts live under `.pr-artifacts/<branch-slug>/forge/` (forge
-self-bootstraps a `.pr-artifacts/.gitignore`). The `.forge/` tooling map is
-separate and gitignored by default. Loop scratchpads live under
-`.pr-artifacts/<slug>/forge/loop/`.
+Two locations, by purpose:
+
+- **Per-PR chain artifacts** live in-repo under
+  `.pr-artifacts/<branch-slug>/forge/` (goals, design, links, run, decisions,
+  review cycles; forge self-bootstraps a `.pr-artifacts/.gitignore`). Loop
+  scratchpads and the continuous-CI monitor's status live under
+  `.pr-artifacts/<slug>/forge/loop/`.
+- **The tooling map + repo-scoped state** live at `$FORGE_HOME`
+  (`~/.claude/forge/<repo-key>/`) — a user-layer path, never committed, shared
+  by every worktree of the repo.
 
 ## License
 
