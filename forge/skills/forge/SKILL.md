@@ -72,7 +72,7 @@ status → entry phase → phases in order:
   8  review-green        (continuous ci-green keeps HEAD green as fixes land)
   9  ci-ready            (read continuous monitor — GREEN on current HEAD; no separate final loop)
   9.5 arm /forge-review-watch for peer review
-  9.6 propose reviewer (/forge-find-reviewer) → gated open+request (AWAIT_REVIEW_REQUEST, even yolo)
+  9.6 propose reviewer (/forge-find-reviewer) → gated ready+request (AWAIT_REVIEW_REQUEST, even yolo)
                 ↓
   READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | BLOCKED_* | NEEDS_OPERATOR | STUCK
 ```
@@ -98,7 +98,7 @@ list live.
 
 - **Seed at entry.** On the first invocation, write a todo per phase that will
   run this invocation (entry phase → `--until`), in chain order, **including the
-  READY-phase steps (9.5 arm watch, 9.6 open-for-review gate)**. Resumes seed
+  READY-phase steps (9.5 arm watch, 9.6 ready-for-review gate)**. Resumes seed
   from the resolved entry phase, not phase 0.
 - **One in-progress at a time.** Mark a phase `in_progress` when it starts,
   `completed` when it settles / advances. Exactly one `in_progress`.
@@ -118,21 +118,21 @@ the loop `plan.md` / `scratchpad.md` (durable cross-iteration memory).
 
 ## Inputs
 
-| Input                 | Default                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `source`              | auto-detect (`gh pr view` body → conversation)              |
-| `--slug`              | sanitized branch name                                       |
-| `--mode`              | `auto` (`auto` \| `manual` \| `yolo`)                       |
-| `--base`              | `main`                                                      |
-| `--max-review-cycles` | `5`                                                         |
-| `--max-impl-iters`    | `15`                                                        |
-| `--persona`           | self-select per cycle (delegated to `/forge-review-green`)  |
-| `--from`              | earliest unsatisfied phase                                  |
-| `--until`             | run to `READY`                                              |
-| `--dry-run`           | off                                                         |
-| `--no-review-watch`   | off — at `READY`, arm `/forge-review-watch` for peer review |
-| `--no-review-request` | off — at `READY`, propose a reviewer + gated open (§ 9.6)   |
-| `--no-continuous-ci`  | off — at first `CI_GREEN`, arm continuous ci-green (§ 7.5)  |
+| Input                 | Default                                                            |
+| --------------------- | ------------------------------------------------------------------ |
+| `source`              | auto-detect (`gh pr view` body → conversation)                     |
+| `--slug`              | sanitized branch name                                              |
+| `--mode`              | `auto` (`auto` \| `manual` \| `yolo`)                              |
+| `--base`              | `main`                                                             |
+| `--max-review-cycles` | `5`                                                                |
+| `--max-impl-iters`    | `15`                                                               |
+| `--persona`           | self-select per cycle (delegated to `/forge-review-green`)         |
+| `--from`              | earliest unsatisfied phase                                         |
+| `--until`             | run to `READY`                                                     |
+| `--dry-run`           | off                                                                |
+| `--no-review-watch`   | off — at `READY`, arm `/forge-review-watch` for peer review        |
+| `--no-review-request` | off — at `READY`, propose a reviewer + gated ready+request (§ 9.6) |
+| `--no-continuous-ci`  | off — at first `CI_GREEN`, arm continuous ci-green (§ 7.5)         |
 
 `--from` / `--until` phase set:
 `start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | ci-ready`.
@@ -152,14 +152,14 @@ Common `--until`:
 
 ## Resume sub-commands
 
-| Form                                                 | Behavior                                                                                                                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/forge approve`                                     | Detect AWAIT phase via `/forge-status`. Write `{phase: <sha>}` to `approvals.json`. Advance.                                                                        |
-| `/forge iterate "<feedback>"`                        | Same detection. Re-spawn awaiting phase's skill with `--iterate "<feedback>" --push`. After push, re-settle same AWAIT.                                             |
-| `/forge approve --phase <phase>`                     | Force-target a specific phase.                                                                                                                                      |
-| `/forge iterate --phase <phase> "<feedback>"`        | Same.                                                                                                                                                               |
-| `/forge approve` at `AWAIT_REVIEW_REQUEST`           | Action gate (§ 9.6), not a sha gate: run `/forge-find-reviewer --open` (ready + request the proposed reviewer), record `{review_request: <login>}`, settle `READY`. |
-| `/forge iterate "<steer>"` at `AWAIT_REVIEW_REQUEST` | Re-run `/forge-find-reviewer` with the steer to re-rank before opening; re-settle the gate.                                                                         |
+| Form                                                 | Behavior                                                                                                                                                             |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/forge approve`                                     | Detect AWAIT phase via `/forge-status`. Write `{phase: <sha>}` to `approvals.json`. Advance.                                                                         |
+| `/forge iterate "<feedback>"`                        | Same detection. Re-spawn awaiting phase's skill with `--iterate "<feedback>" --push`. After push, re-settle same AWAIT.                                              |
+| `/forge approve --phase <phase>`                     | Force-target a specific phase.                                                                                                                                       |
+| `/forge iterate --phase <phase> "<feedback>"`        | Same.                                                                                                                                                                |
+| `/forge approve` at `AWAIT_REVIEW_REQUEST`           | Action gate (§ 9.6), not a sha gate: run `/forge-find-reviewer --ready` (ready + request the proposed reviewer), record `{review_request: <login>}`, settle `READY`. |
+| `/forge iterate "<steer>"` at `AWAIT_REVIEW_REQUEST` | Re-run `/forge-find-reviewer` with the steer to re-rank before marking ready; re-settle the gate.                                                                    |
 
 Both refuse if `/forge-status` reports no awaiting phase.
 
@@ -301,10 +301,10 @@ contract; it **relaxes no honesty bright line** and skips **no** genuine halt �
 artifacts remain on the PR, so the operator can review after the fact and
 `iterate` if needed.
 
-**One gate `yolo` does _not_ skip:** the phase 9.6 open-for-review approval
+**One gate `yolo` does _not_ skip:** the phase 9.6 ready-for-review approval
 (`AWAIT_REVIEW_REQUEST`). Marking the PR ready + requesting a reviewer is the
 author's gesture — `yolo` still proposes a reviewer and stops for approval. It
-never opens a PR for peer review autonomously.
+never moves a PR out of draft autonomously.
 
 Because nothing pauses, the **in-session todo list is the operator's only live
 progress signal** — keep it current at every phase transition (§ "Progress
@@ -578,7 +578,7 @@ Persistent `RED` the monitor can't clear → `BLOCKED_CI` (same halt mapping as
 phase 7).
 
 On ready → **arm the peer-review watch** (9.5), run the **gated
-open-for-review** step (9.6), settle `READY`, exit. The continuous monitor
+ready-for-review** step (9.6), settle `READY`, exit. The continuous monitor
 **stays armed past READY** — until the PR merges.
 
 ### 9.5 arm peer-review watch (on READY)
@@ -591,9 +591,10 @@ loop forge used for its own findings. Log `D<n> review-watch armed`. Skip when
 `--no-review-watch`, or when a watch for this PR is already live (the watch's
 own no-double-arm guard).
 
-### 9.6 open for peer review (gated — even in yolo)
+### 9.6 mark ready for review (gated — even in yolo)
 
-After arming the watch, forge **proposes** opening the PR for peer review:
+After arming the watch, forge **proposes** moving the PR out of draft for peer
+review:
 
 1. `/forge-find-reviewer --slug <slug> --json` → ranked candidate(s) + evidence
    (same-stack reviewers > reviewers of the author's work > people the author
@@ -601,19 +602,19 @@ After arming the watch, forge **proposes** opening the PR for peer review:
 2. **Approval gate (hard, all modes including `yolo`).** Marking the PR
    ready-for-review and requesting a reviewer is the **author's gesture** —
    forge never performs it autonomously. It surfaces the proposal + the
-   one-command open (`/forge-find-reviewer --open [--reviewer <login>]`) and
+   one-command ready (`/forge-find-reviewer --ready [--reviewer <login>]`) and
    settles `AWAIT_REVIEW_REQUEST`. An interactive operator may approve inline;
-   otherwise the operator runs the open command (or `/forge approve` at this
+   otherwise the operator runs the ready command (or `/forge approve` at this
    gate) when ready.
-3. **On approval** → `/forge-find-reviewer --open` runs `gh pr ready` +
+3. **On approval** → `/forge-find-reviewer --ready` runs `gh pr ready` +
    `gh pr edit --add-reviewer <login>`; log
-   `D<n> opened for review, requested <login>`; settle `READY` (opened).
+   `D<n> marked ready for review, requested <login>`; settle `READY` (ready).
 4. **Skip** when `--no-review-request`: don't propose; settle `READY` (draft,
-   watch armed). The author opens it later; the watch fires then.
+   watch armed). The author marks it ready later; the watch fires then.
 
 This is the **one** place forge will touch draft→ready / reviewer requests, and
 only through the gate — never on its own, never in `yolo` without approval. The
-armed watch (9.5) covers feedback regardless of who opens the PR.
+armed watch (9.5) covers feedback regardless of who marks it ready.
 
 ## Approvals book-keeping
 
@@ -799,9 +800,9 @@ open blockers: <N>   open majors: <N>
 
 ### next move
 READY                    → peer-review watch armed; merge per workflow
-AWAIT_REVIEW_REQUEST     → reviewer proposed; approve to open+request
-                           (/forge-find-reviewer --open [--reviewer <login>] | /forge approve)
-                           or leave draft (watch fires when you open it)
+AWAIT_REVIEW_REQUEST     → reviewer proposed; approve to ready+request
+                           (/forge-find-reviewer --ready [--reviewer <login>] | /forge approve)
+                           or leave draft (watch fires when you mark it ready)
 AWAIT_*_REVIEW           → watch armed: submit a GitHub review (feedback, or a
                            comment review = approval) | or /forge approve | iterate
 BLOCKED_SPEC             → fix source; re-run /forge
@@ -833,8 +834,8 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
 - **Yolo skips no genuine halt** — `BLOCKED_*` / `NEEDS_OPERATOR` / `STUCK`
   still stop the run; only the contract pauses are removed. Yolo also still
-  stops at the phase 9.6 open-for-review gate (`AWAIT_REVIEW_REQUEST`) — opening
-  a PR for peer review needs author approval even in yolo (§ 9.6).
+  stops at the phase 9.6 ready-for-review gate (`AWAIT_REVIEW_REQUEST`) — moving
+  a PR out of draft needs author approval even in yolo (§ 9.6).
 - **External-block recognizer** — waitable `BLOCKED_*` (base behind/red, infra)
   route through `/forge-find-blocker` → `/forge-wait-for` (auto restack+resume
   in `yolo`/unattended; surfaced as next move in `auto`/`manual`); genuine halts
