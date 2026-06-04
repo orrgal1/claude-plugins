@@ -71,6 +71,7 @@ status → entry phase → phases in order:
   7  ci-green
   8  review-green
   9  ci-green (final on post-review HEAD)
+  9.5 arm /forge-review-watch for peer review (author still opens PR + picks reviewers)
                 ↓
   READY | AWAIT_*_REVIEW | BLOCKED_* | NEEDS_OPERATOR | STUCK
 ```
@@ -109,18 +110,19 @@ the loop `plan.md` / `scratchpad.md` (durable cross-iteration memory).
 
 ## Inputs
 
-| Input                 | Default                                                    |
-| --------------------- | ---------------------------------------------------------- |
-| `source`              | auto-detect (`gh pr view` body → conversation)             |
-| `--slug`              | sanitized branch name                                      |
-| `--mode`              | `auto` (`auto` \| `manual` \| `yolo`)                      |
-| `--base`              | `main`                                                     |
-| `--max-review-cycles` | `5`                                                        |
-| `--max-impl-iters`    | `15`                                                       |
-| `--persona`           | self-select per cycle (delegated to `/forge-review-green`) |
-| `--from`              | earliest unsatisfied phase                                 |
-| `--until`             | run to `READY`                                             |
-| `--dry-run`           | off                                                        |
+| Input                 | Default                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| `source`              | auto-detect (`gh pr view` body → conversation)              |
+| `--slug`              | sanitized branch name                                       |
+| `--mode`              | `auto` (`auto` \| `manual` \| `yolo`)                       |
+| `--base`              | `main`                                                      |
+| `--max-review-cycles` | `5`                                                         |
+| `--max-impl-iters`    | `15`                                                        |
+| `--persona`           | self-select per cycle (delegated to `/forge-review-green`)  |
+| `--from`              | earliest unsatisfied phase                                  |
+| `--until`             | run to `READY`                                              |
+| `--dry-run`           | off                                                         |
+| `--no-review-watch`   | off — at `READY`, arm `/forge-review-watch` for peer review |
 
 `--from` / `--until` phase set:
 `start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | final-ci`.
@@ -540,7 +542,25 @@ exit.
 Re-runs phase 7 to confirm CI stays green on post-review HEAD. Same push gate.
 Skip if no commits since last `CI_GREEN`.
 
-On `CI_GREEN` → settle `READY`, exit. Block verdicts → same mapping as phase 7.
+On `CI_GREEN` → **arm the peer-review watch** (below), settle `READY`, exit.
+Block verdicts → same mapping as phase 7.
+
+### 9.5 arm peer-review watch (on READY)
+
+Reaching `READY` means forge's own bar is clear (review-green green, CI green).
+Forge's last act is to **arm `/forge-review-watch --slug <slug>`** (the
+persistent, non-contract peer-review monitor) so that once peers review, their
+feedback is auto-dispatched to `/forge-address-review` and re-armed —
+hands-free, the same loop forge used for its own findings. Log
+`D<n> review-watch armed`. Skip when `--no-review-watch`, or when a watch for
+this PR is already live (the watch's own no-double-arm guard).
+
+**Author-gesture boundary (hard).** Forge **never** flips the PR draft→ready
+(`gh pr ready`) and **never** requests reviewers (`gh pr edit --add-reviewer` /
+team requests). Opening a PR for peer review and choosing reviewers is the
+**author's** call — forge arms the watch and stops there. The watch polls
+harmlessly while the PR stays draft and fires the moment the author opens it and
+reviews land.
 
 ## Approvals book-keeping
 
@@ -725,7 +745,8 @@ start / goals / design / scenarios+validations+tests / impl / audit-green / ci-g
 open blockers: <N>   open majors: <N>
 
 ### next move
-READY                    → mark PR ready / merge per workflow
+READY                    → peer-review watch armed; mark PR ready + request
+                           reviewers when you choose (author gesture) / merge per workflow
 AWAIT_*_REVIEW           → watch armed: submit a GitHub review (feedback, or a
                            comment review = approval) | or /forge approve | iterate
 BLOCKED_SPEC             → fix source; re-run /forge
@@ -775,6 +796,9 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **`approvals.json` sha-pinned.** Iterate invalidates the prior approval.
 - **Stack discipline** — cross-PR refactors surfaced during review → focused
   follow-up PRs, not pulled into this PR.
+- **Peer-review watch on READY** — forge arms `/forge-review-watch` at `READY`
+  (unless `--no-review-watch`) but **never** marks the PR ready-for-review or
+  requests reviewers — opening for peer review is the author's gesture (§ 9.5).
 
 Next move per terminal state: § "Result summary → next move". `/forge-status`
 re-assesses any time.
@@ -797,6 +821,7 @@ re-assesses any time.
 /forge --until verify-runs            # full per-layer; stop before audit-green
 /forge --from verify-match            # resume mid-attestation
 /forge --dry-run                      # plan only
+/forge --no-review-watch              # don't arm the peer-review watch at READY
 
 # Resume from AWAIT_*_REVIEW:
 /forge approve                                  # detect phase via status

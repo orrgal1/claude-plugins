@@ -44,6 +44,11 @@ pauses) the same monitor instead watches for the operator's review of the
 contract artifact and routes it to `/forge approve` or `/forge iterate` — §
 Contract mode.
 
+`/forge` arms this watch automatically at `READY` (phase 9.5) so incoming peer
+feedback is addressed hands-free. Arming the watch is forge's job; **opening the
+PR for review and requesting reviewers stays the author's gesture** — the watch
+polls harmlessly while the PR is draft and fires once the author opens it.
+
 **Manual lifecycle only** (except `--contract`, bounded to one gate — § Contract
 mode). Starts and stops on operator command (`/forge-review-watch stop` or
 `TaskStop`). Never self-terminates — not on a quiet PR, not after N cycles, not
