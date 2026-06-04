@@ -55,7 +55,7 @@ auto-detect the awaiting phase via `/forge-status`.
 
 ```
 status → entry phase → phases in order:
-  0  start              (only when NO_CHAIN + no PR; runs /forge-start)
+  0  start              (only when NO_CHAIN + no PR; runs /forge-start — scaffolds worktree; stops at HANDOFF_WORKTREE if a new one was created)
   1  goals --push       AWAIT_GOALS_REVIEW (auto/manual; yolo auto-approves)
   2  design --push      AWAIT_DESIGN_REVIEW (auto/manual; yolo auto-approves)
   3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (auto/manual; yolo auto-approves)
@@ -74,7 +74,7 @@ status → entry phase → phases in order:
   9.5 arm /forge-review-watch for peer review
   9.6 propose reviewer (/forge-request-review) → gated ready+request (AWAIT_REVIEW_REQUEST, even yolo)
                 ↓
-  READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | BLOCKED_* | NEEDS_OPERATOR | STUCK
+  READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | HANDOFF_WORKTREE | BLOCKED_* | NEEDS_OPERATOR | STUCK
 ```
 
 Phases 0/3/4/5a-5f delegate one-shot to `forge-step-runner` subagents. **Green
@@ -313,8 +313,19 @@ todos").
 ### 0. start
 
 Runs only when `NO_CHAIN` + no PR. Step-runner `step: start` → `/forge-start`,
-passing `source`, `slug`, `base`. Manual mode settles `AWAIT_START_REVIEW` post
-draft-PR open; auto proceeds.
+passing `source`, `slug`, `base`. forge-start scaffolds the worktree, lands the
+sentinel, pushes, opens the draft PR.
+
+**Worktree handoff.** Read `handoff:` from the receipt:
+
+- `handoff: yes` (start created a new worktree) — the chain now lives in that
+  worktree, not this session's cwd. Surface the handoff and **stop**
+  (`HANDOFF_WORKTREE`): operator switches to a session in the new worktree and
+  re-runs `/forge` / `/forge-yolo` to drive goals→READY. Autopilot does not
+  cross the worktree boundary.
+- `handoff: no` (start ran in-place — cwd already the related worktree) — manual
+  mode settles `AWAIT_START_REVIEW` post draft-PR open; auto/yolo proceed to
+  phase 1.
 
 Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists`
 → `NEEDS_OPERATOR`.
@@ -788,7 +799,7 @@ manual | yolo
 ```
 ## /forge result
 
-verdict: READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | BLOCKED_SPEC | BLOCKED_DESIGN | BLOCKED_IMPL
+verdict: READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | HANDOFF_WORKTREE | BLOCKED_SPEC | BLOCKED_DESIGN | BLOCKED_IMPL
        | BLOCKED_VERIFY_{GOALS,SCENARIOS,TESTS,MATCH,RUNS,VALIDATIONS}
        | BLOCKED_AUDIT | BLOCKED_CI | BLOCKED_REVIEW
        | NEEDS_OPERATOR | STUCK
@@ -811,6 +822,7 @@ open blockers: <N>   open majors: <N>
 
 ### next move
 READY                    → peer-review watch armed; merge per workflow
+HANDOFF_WORKTREE         → switch to a session in the new worktree, then /forge | /forge-yolo
 AWAIT_REVIEW_REQUEST     → reviewer proposed; approve to ready+request
                            (/forge-request-review --ready [--reviewer <login>] | /forge approve)
                            or leave draft (watch fires when you mark it ready)
