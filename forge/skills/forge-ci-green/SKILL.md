@@ -102,6 +102,7 @@ game.
 ```
 iter = 0
 while iter < max:
+    restack (below)                            # always sync base into branch first
     v = spawn ci-check                         # mergeability + 3-probe snapshot → verdict
     v.BLOCKED_RESTACK → settle BLOCKED_RESTACK
     v.GREEN → spawn impl-check to refresh run.json (chain mode) → settle CI_GREEN
@@ -113,6 +114,17 @@ while iter < max:
     fold v.signals → stuck check (below)
 settle BUDGET_EXHAUSTED
 ```
+
+**Restack (every iteration, controller-owned).** At the top of each iteration —
+before `ci-check` — run `/restack` (devloop) to fetch and bring the base into
+the branch, so CI always evaluates against the current base and base-introduced
+breakage surfaces here, not after merge. No new base commits → no-op (HEAD
+unchanged, nothing pushed). A merge **conflict** → settle
+`BLOCKED_RESTACK_CONFLICT` (genuine — operator resolves; do not loop). A restack
+that advances HEAD pushes once (merge per operator preference, never force to a
+shared base) and re-triggers CI; the same-iteration `ci-check` reads the
+restacked HEAD. This proactively clears `mergeStateStatus=BEHIND` rather than
+settling `BLOCKED_RESTACK` for a simply-stale base.
 
 Under `--watch`, the controller never spawns `ci-fix` — it loops `ci-check` +
 WAIT and reports the terminal verdict (GREEN / GATED / still-RED) without
@@ -195,15 +207,16 @@ once; `none` logs false-alarm.
 
 ## Settle
 
-| Verdict            | Meaning                                        |
-| ------------------ | ---------------------------------------------- |
-| `CI_GREEN`         | all required checks pass; `run.json` refreshed |
-| `NO_PR`            | no PR for branch                               |
-| `BLOCKED_RESTACK`  | PR not mergeable                               |
-| `BLOCKED_CONTRACT` | guard refused                                  |
-| `BUDGET_EXHAUSTED` | hit `max=<N>` without converging               |
-| `FLAKY_DETECTED`   | loop settled on a flake-suspect failure        |
-| `RED_PERSISTENT`   | loop stuck — red checks won't clear            |
+| Verdict                    | Meaning                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `CI_GREEN`                 | all required checks pass; `run.json` refreshed                    |
+| `NO_PR`                    | no PR for branch                                                  |
+| `BLOCKED_RESTACK`          | PR not mergeable                                                  |
+| `BLOCKED_RESTACK_CONFLICT` | per-iteration `/restack` hit a merge conflict — operator resolves |
+| `BLOCKED_CONTRACT`         | guard refused                                                     |
+| `BUDGET_EXHAUSTED`         | hit `max=<N>` without converging                                  |
+| `FLAKY_DETECTED`           | loop settled on a flake-suspect failure                           |
+| `RED_PERSISTENT`           | loop stuck — red checks won't clear                               |
 
 ## External-block recognizer (waitable settles)
 
@@ -215,8 +228,9 @@ recognizer", instead of plain-settling: run
 confirmed peripheral blocker, mode-gate the dispatch of
 `/forge-wait-for --condition <spec> --from ci` (`yolo`/unattended → auto
 restack+resume; `auto`/`manual` → surface the command, settle as-is).
-`BLOCKED_FLAKY` is diagnosis-only — **never** waitable; `BLOCKED_CONTRACT` is
-genuine — **never** waitable.
+`BLOCKED_FLAKY` is diagnosis-only — **never** waitable; `BLOCKED_CONTRACT` and
+`BLOCKED_RESTACK_CONFLICT` (a real merge conflict from the per-iteration
+restack) are genuine — **never** waitable.
 
 ## Hooks
 
