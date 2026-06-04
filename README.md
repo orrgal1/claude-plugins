@@ -9,6 +9,12 @@ scenario, designing the implementation, driving tests + CI green, and running a
 lens-designed code review — with attestation at every step so nothing is claimed
 that isn't backed by a goal, a scenario, a test, and a passing run.
 
+It's built to run **unattended**: it recovers from external blockers on its own
+(waits out a red base PR or an infra incident, then restacks and resumes), keeps
+CI green **continuously until merge** rather than once, and on READY hands off
+to peer review — arming a watch for incoming feedback and proposing the most
+relevant reviewer — while leaving the act of opening the PR for review to you.
+
 It has **no dependency on any other plugin** and **no hard-coded knowledge of
 any repo's tooling**. You teach it how to build/test/lint _your_ repo once, via
 a gitignored `.forge/` map; everything else is generic. Adopt it into any
@@ -24,15 +30,34 @@ project.
 /forge-tests   one component-tier test per scenario (the only step that writes test code)
 /forge-impl-green  drive the linked tests to green
 /forge-audit   attest the whole chain: goals ⇐ source · scenarios ⇒ goals · tests ⇒ scenarios · bodies ⇒ when/then · runs green
-/forge-ci-green   drive PR CI to green
+/forge-ci-green   drive PR CI to green — restacks each iteration; after the first green stays armed --until-merge
 /forge-review     lens-designed, chain-aware PR review
-/forge-review-green  drive the review to 0 blockers + 0 majors
+/forge-review-green  drive the review to 0 findings (every severity)
+   ── on READY ──
+/forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
+/forge-find-reviewer   rank the most relevant peer reviewer; gated open+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
 
-`/forge` runs the whole arc end-to-end with two pause points (goals + design) in
-**auto** mode, or a pause after every phase in **manual** mode. Resume with
-`/forge approve` and `/forge iterate "<feedback>"`.
+`/forge` runs the whole arc end-to-end. **Modes:** `auto` (pause at goals +
+design + scenarios), `manual` (pause every phase), `yolo` (no contract pauses —
+drive to READY, stop only at genuine blockers; `/forge-yolo` is the thin
+wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
+
+### Runs unattended
+
+- **Continuous CI until merge** — after CI first goes green, forge keeps a
+  background `/forge-ci-green --until-merge` armed; it re-arms on every new HEAD
+  (review fixes, restacks, base syncs) and drives CI back to green until the PR
+  merges. No one-shot "final CI".
+- **External-block recovery** — when a halt is something an external actor owns
+  (a red/behind base PR, an infra incident), `/forge-find-blocker` identifies
+  the peripheral blocker and `/forge-wait-for` watches that one condition (base
+  PR CI, a Slack thread, any predicate), then restacks and resumes the chain.
+  Genuine halts still stop.
+- **Peer-review handoff** — on READY, forge arms the review watch and proposes a
+  reviewer; **opening the PR for review and requesting the reviewer is a gated
+  author gesture** that needs your approval, even in `yolo`.
 
 ## Install
 
@@ -96,17 +121,19 @@ lenses (goal-delivery, scenario-realism, test-match) + code-quality lenses, plus
 
 ## Skills
 
-| Skill                                                                                  | Role                                            |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `/forge-setup`                                                                         | Map host-repo tooling into `.forge/`            |
-| `/forge-start`                                                                         | Bootstrap a chain: source brief → draft PR      |
-| `/forge`                                                                               | Orchestrate the whole chain to READY            |
-| `/forge-goals` · `/forge-scenarios` · `/forge-design` · `/forge-tests`                 | Chain atoms                                     |
-| `/forge-audit` + `/forge-verify-*`                                                     | Full + per-layer attestation                    |
-| `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green` | Fix-loops to green                              |
-| `/forge-review`                                                                        | Lens-designed, chain-aware PR review            |
-| `/forge-address-review`                                                                | Drive submitted reviewer feedback to resolution |
-| `/forge-status` · `/forge-triage` · `/forge-stuck-check`                               | Status, triage, loop-health                     |
+| Skill                                                                                  | Role                                                                              |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `/forge-setup`                                                                         | Map host-repo tooling into `.forge/`                                              |
+| `/forge-start`                                                                         | Bootstrap a chain: source brief → draft PR                                        |
+| `/forge`                                                                               | Orchestrate the whole chain to READY                                              |
+| `/forge-goals` · `/forge-scenarios` · `/forge-design` · `/forge-tests`                 | Chain atoms                                                                       |
+| `/forge-audit` + `/forge-verify-*`                                                     | Full + per-layer attestation                                                      |
+| `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green` | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
+| `/forge-review`                                                                        | Lens-designed, chain-aware PR review                                              |
+| `/forge-review-watch` · `/forge-address-review`                                        | Watch for + drive submitted reviewer feedback to resolution                       |
+| `/forge-find-reviewer`                                                                 | Rank the best peer reviewer; gated open+request                                   |
+| `/forge-find-blocker` · `/forge-wait-for`                                              | Identify an external blocker; wait it out, then restack + resume                  |
+| `/forge-status` · `/forge-triage` · `/forge-stuck-check`                               | Status, triage, loop-health                                                       |
 
 ## State & artifacts
 
