@@ -1,16 +1,17 @@
 ---
-name: forge-find-reviewer
+name: forge-request-review
 description:
-  "Locate the most relevant peer reviewer(s) for a PR by signal precedence —
-  reviewers of recent same-stack PRs, then reviewers of the author's recent
-  work, then people the author has reviewed (same team), then reviewers of
-  similar code areas / CODEOWNERS. Read-only ranking; --ready executes the gated
-  ready+request."
+  "Pick the most relevant peer reviewer for a PR and (gated) request them. Ranks
+  by signal precedence — reviewers of recent same-stack PRs, then reviewers of
+  the author's recent work, then people the author has reviewed (same team),
+  then reviewers of similar code areas / CODEOWNERS. Read-only ranking by
+  default; --ready executes the gated mark-ready-for-review + request."
 argument-hint:
   "[--slug <name>] [--pr <num>] [--top <N>] [--json] [--ready] [--reviewer
   <login>]"
 triggers:
-  - "forge find reviewer"
+  - "forge request review"
+  - "request review for this pr"
   - "who should review this pr"
   - "suggest a reviewer for the pr"
   - "find the best peer reviewer"
@@ -24,7 +25,7 @@ allowed-tools:
 user-invocable: true
 ---
 
-# /forge-find-reviewer — rank the most relevant peer reviewer(s)
+# /forge-request-review — pick the right peer reviewer, then (gated) request them
 
 Ranks candidate reviewers for a PR by **signal precedence**, strongest first.
 Read-only by default — it _proposes_. `--ready` performs the **gated author
@@ -123,14 +124,21 @@ Human mode adds: `top reviewer: <login> (<signals>) — <evidence[0]>`.
 
 ## Ready is gated
 
-The PR is already open as a **draft** (from `/forge-start`). `--ready` is the
-**only** mutating path — it moves that draft to ready-for-review:
-`gh pr ready <pr>` then `gh pr edit <pr> --add-reviewer <login>` (`--reviewer`,
-else `top`). It exists so an approved ready-for-review is one command — **but
-moving a PR out of draft and requesting review is the author's gesture.** Run
-`--ready` only on explicit operator approval. `/forge` phase 9.6 never invokes
-`--ready` on its own; it proposes and waits for approval, even in `yolo` (§
-`/forge` 9.6).
+The PR is already open as a **draft** (from `/forge-start`). The primary action
+is **requesting the reviewer**; converting draft→ready is a **lazy**
+prerequisite it carries out only if needed. `--ready` is the **only** mutating
+path:
+
+1. **Lazily convert** — read `isDraft` (`gh pr view --json isDraft`); run
+   `gh pr ready <pr>` **only if still a draft** (already ready → skip; the call
+   is idempotent and re-running `--ready` won't error on a non-draft PR).
+2. **Request** — `gh pr edit <pr> --add-reviewer <login>` (`--reviewer`, else
+   `top`).
+
+It exists so an approved request is one command — **but moving a PR out of draft
+and requesting review is the author's gesture.** Run `--ready` only on explicit
+operator approval. `/forge` phase 9.6 never invokes `--ready` on its own; it
+proposes and waits for approval, even in `yolo` (§ `/forge` 9.6).
 
 ## Guardrails
 
@@ -147,18 +155,18 @@ moving a PR out of draft and requesting review is the author's gesture.** Run
 
 ## Next step
 
-- Accept the top candidate → `/forge-find-reviewer --ready` (or `/forge approve`
-  at the phase 9.6 gate).
-- Different reviewer → `/forge-find-reviewer --ready --reviewer <login>`.
+- Accept the top candidate → `/forge-request-review --ready` (or
+  `/forge approve` at the phase 9.6 gate).
+- Different reviewer → `/forge-request-review --ready --reviewer <login>`.
 - Keep it in your court → leave the PR in draft; the armed watch fires once you
   mark it ready for review.
 
 ## Usage
 
 ```
-/forge-find-reviewer                          # ranked proposal for the branch's PR
-/forge-find-reviewer --pr 512 --top 5         # explicit PR, 5 candidates
-/forge-find-reviewer --json                   # machine output for the recognizer
-/forge-find-reviewer --ready                   # gated: ready + request top candidate
-/forge-find-reviewer --ready --reviewer bob    # gated: ready + request bob
+/forge-request-review                          # ranked proposal for the branch's PR
+/forge-request-review --pr 512 --top 5         # explicit PR, 5 candidates
+/forge-request-review --json                   # machine output for the recognizer
+/forge-request-review --ready                   # gated: ready + request top candidate
+/forge-request-review --ready --reviewer bob    # gated: ready + request bob
 ```

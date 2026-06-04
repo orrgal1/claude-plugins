@@ -41,7 +41,7 @@ CLI, forge has no other plugin dependencies.
 /forge-review-green  drive the review to 0 findings (every severity)
    ── on READY ──
 /forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
-/forge-find-reviewer   rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
+/forge-request-review   rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
 
@@ -144,7 +144,7 @@ lenses (goal-delivery, scenario-realism, test-match) + code-quality lenses, plus
 | `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green` | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
 | `/forge-review`                                                                        | Lens-designed, chain-aware PR review                                              |
 | `/forge-review-watch` · `/forge-address-review`                                        | Watch for + drive submitted reviewer feedback to resolution                       |
-| `/forge-find-reviewer`                                                                 | Rank the best peer reviewer; gated ready+request                                  |
+| `/forge-request-review`                                                                 | Rank the best peer reviewer; gated ready+request                                  |
 | `/forge-find-blocker` · `/forge-wait-for`                                              | Identify an external blocker; wait it out, then restack + resume                  |
 | `/forge-status` · `/forge-triage` · `/forge-stuck-check`                               | Status, triage, loop-health                                                       |
 
