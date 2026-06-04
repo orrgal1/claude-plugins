@@ -241,19 +241,16 @@ next:  re-arm, raise --max-wait, or address manually.
 
 ## Hooks
 
-**Standalone today** — invoked by the operator (or another skill) when forge
-parks on an external block. The intended future wiring (not active — kept here
-so the integration point is explicit):
+Invokable standalone, and dispatched by the **external-block recognizer**:
 
-- `/forge-ci-green` settling `BLOCKED_RESTACK` (base behind / base PR red) or
-  `BLOCKED_INFRA` (from `/forge-triage`) could, under `yolo` / unattended,
-  dispatch `/forge-wait-for --condition base-ci` instead of halting.
-- `/forge`'s halt path could route _externally-resolvable_ `BLOCKED_*` here
-  while leaving genuine halts to the operator (the § "External blocks only"
-  split).
-- A companion `forge-find-blocker` could identify the _peripheral_ blocker (via
-  `gh`, Slack, infra signals) and hand its condition spec straight to this
-  skill.
+- `/forge` § "External-block recognizer" — on a waitable `BLOCKED_*`, runs
+  `/forge-find-blocker --json` to confirm a peripheral blocker, then mode-gates
+  a dispatch here (`yolo`/unattended → auto; `auto`/`manual` → surfaced as next
+  move).
+- `/forge-ci-green` — routes `BLOCKED_RESTACK` / `BLOCKED_INFRA` through the
+  same recognizer before settling.
+- `/forge-find-blocker` — the discovery half: emits the `--condition` spec +
+  resume action this skill consumes.
 
 ## Next step
 

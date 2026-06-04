@@ -604,7 +604,43 @@ cycle synthesis and the fix-loop inside phase 8.
 
 Each → one decision-log entry `D<n> <iso> <phase> <rule>`.
 
+### External-block recognizer (waitable halts)
+
+Before floating a `BLOCKED_*` to the operator, decide whether it is an
+_external_ block — resolved by a base PR going green, an infra incident
+clearing, or a sibling PR merging on its own clock — rather than a _genuine_
+halt the operator must act on.
+
+- **Waitable**: `BLOCKED_RESTACK` (base behind / red), `BLOCKED_CI` when the
+  cause is infra or a red base — **not** this PR's own code.
+- **Genuine (never waitable)**: `BLOCKED_SPEC`, `BLOCKED_DESIGN`,
+  `BLOCKED_SCENARIOS`, `BLOCKED_TESTS`, `BLOCKED_IMPL`, `BLOCKED_VERIFY_*`,
+  `BLOCKED_AUDIT`, `BLOCKED_REVIEW`, `BLOCKED_FLAKY` (diagnosis, not waiting),
+  every
+  `NEEDS_OPERATOR reason {loop,architectural,drift,destructive-required,audit-recurrent}`,
+  `STUCK`. These float to the operator unchanged.
+
+On a waitable halt:
+
+1. `/forge-find-blocker --slug <slug> --phase <phase> --halt <verdict> --json` —
+   confirm a _peripheral_ blocker exists and get its condition spec + resume.
+   `found:false` / `waitable:false` → not actually external → float normally.
+2. Mode-gate the dispatch:
+   - `yolo` / unattended → auto-launch
+     `/forge-wait-for --condition <spec> --from <phase>` (mode-gated
+     auto-resume: restack + `/forge --from <phase>` when the condition clears).
+     Log `D<n>`.
+   - `auto` / `manual` → don't auto-launch; settle the halt and surface the
+     ready-to-run `/forge-find-blocker` → `/forge-wait-for` next move.
+
+Honesty bright line holds: genuine halts still stop the run; wait-for only
+defers blocks an external actor owns. Never reclassify a code/contract/stuck
+halt as waitable to dodge it.
+
 ### Float to operator — genuine halts only
+
+Reach here only for **genuine** halts (§ External-block recognizer routes
+waitable ones to `/forge-wait-for` first).
 
 - Cycle 3 (budget) ends with any finding still open → `BLOCKED_REVIEW`.
 - Loop detected (≥2 address↔regress on same finding, post persona swap) →
@@ -703,6 +739,7 @@ BLOCKED_VERIFY_RUNS      → /forge-impl-green; --from impl
 BLOCKED_VERIFY_VALIDATIONS → /forge-impl-green (finish removal) or /forge-validations --iterate; --from impl
 BLOCKED_AUDIT            → see audit report; --from audit
 BLOCKED_CI               → see ci-green log; --from ci
+                           (base/infra cause → /forge-find-blocker → /forge-wait-for)
 BLOCKED_REVIEW           → address open findings (any severity); --from review
 NEEDS_OPERATOR           → see decisions.md; --from <phase>
 STUCK                    → see /forge-stuck-check report; --from <phase>
@@ -720,6 +757,10 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
 - **Yolo skips no genuine halt** — `BLOCKED_*` / `NEEDS_OPERATOR` / `STUCK`
   still stop the run; only the contract pauses are removed.
+- **External-block recognizer** — waitable `BLOCKED_*` (base behind/red, infra)
+  route through `/forge-find-blocker` → `/forge-wait-for` (auto restack+resume
+  in `yolo`/unattended; surfaced as next move in `auto`/`manual`); genuine halts
+  always stop (§ "External-block recognizer").
 - **Push only where needed** — start, goals, design, scenarios (review
   surfaces), ci-green / final-ci (CI). Local commits otherwise.
 - **No destructive ops** — rm outside design coverage / force-push / branch
