@@ -68,9 +68,9 @@ status → entry phase → phases in order:
   5e verify-runs
   5f verify-validations
   6  audit-green        (+ --embed on PASS)
-  7  ci-green
-  8  review-green
-  9  ci-green (final on post-review HEAD)
+  7  ci-green (first green → arm continuous /forge-ci-green --until-merge, runs until merge)
+  8  review-green        (continuous ci-green keeps HEAD green as fixes land)
+  9  ci-ready            (read continuous monitor — GREEN on current HEAD; no separate final loop)
   9.5 arm /forge-review-watch for peer review
   9.6 propose reviewer (/forge-find-reviewer) → gated open+request (AWAIT_REVIEW_REQUEST, even yolo)
                 ↓
@@ -132,9 +132,10 @@ the loop `plan.md` / `scratchpad.md` (durable cross-iteration memory).
 | `--dry-run`           | off                                                         |
 | `--no-review-watch`   | off — at `READY`, arm `/forge-review-watch` for peer review |
 | `--no-review-request` | off — at `READY`, propose a reviewer + gated open (§ 9.6)   |
+| `--no-continuous-ci`  | off — at first `CI_GREEN`, arm continuous ci-green (§ 7.5)  |
 
 `--from` / `--until` phase set:
-`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | final-ci`.
+`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | ci-ready`.
 
 `--from` resumes after a halt; prereqs checked, missing inputs route to earliest
 unsatisfied phase regardless. `--until` truncates; exits with the named phase's
@@ -520,6 +521,18 @@ Halts:
   → `BLOCKED_CI`.
 - `RED_PERSISTENT` / `FLAKY_DETECTED` → halt with runner's named reason.
 
+### 7.5 arm continuous ci-green (on first `CI_GREEN`)
+
+The first green is **not** the last CI check — it's where forge stops doing
+one-shot CI and starts **guaranteeing** it. On phase 7 `CI_GREEN`, forge arms
+`/forge-ci-green --until-merge` in the **background** (a persistent monitor,
+lifetime-bound to the PR — § `/forge-ci-green` "Continuous mode"). It re-arms on
+**every new HEAD** — review-fix pushes, per-iteration `/restack`, base syncs,
+manual commits — driving CI back to green each time, until the PR **merges**.
+Log `D<n> continuous ci-green armed`. Skip when `--no-continuous-ci`, or when a
+monitor for this PR is already live. There is **no separate final CI phase**;
+the continuous monitor replaces it (phase 9 only _reads_ its status).
+
 ### 8. review-green
 
 Main-thread `/forge-review-green` (the review **controller**) per § "Loop
@@ -553,14 +566,20 @@ under `## Phase: review`.
 Mode: auto / yolo → phase 9 on `REVIEW_GREEN`. Manual → `AWAIT_REVIEW_REVIEW`,
 exit.
 
-### 9. final ci-green
+### 9. ci-ready (read the continuous monitor — no separate loop)
 
-Re-runs phase 7 to confirm CI stays green on post-review HEAD. Same push gate.
-Skip if no commits since last `CI_GREEN`.
+No second CI loop. The continuous monitor armed at 7.5 has been keeping HEAD
+green throughout review. Phase 9 just **reads** its
+`loop/ci-green-continuous/status.json`: `verdict=GREEN` on the current HEAD →
+ready. `RED` / `RUNNING` → the monitor is already driving it; **WAIT**
+(controller inter-tick sleep) and re-read, don't spawn a parallel loop. Monitor
+absent (e.g. `--no-continuous-ci`) → fall back to a one-shot `ci-check`.
+Persistent `RED` the monitor can't clear → `BLOCKED_CI` (same halt mapping as
+phase 7).
 
-On `CI_GREEN` → **arm the peer-review watch** (9.5), run the **gated
-open-for-review** step (9.6), settle `READY`, exit. Block verdicts → same
-mapping as phase 7.
+On ready → **arm the peer-review watch** (9.5), run the **gated
+open-for-review** step (9.6), settle `READY`, exit. The continuous monitor
+**stays armed past READY** — until the PR merges.
 
 ### 9.5 arm peer-review watch (on READY)
 
@@ -652,7 +671,7 @@ cycle synthesis and the fix-loop inside phase 8.
 | `pr.dirty_worktree` (unrelated)                 | Commit as `wip: pre-forge snapshot`, log, proceed.                                                  |
 | `pr.ahead_unpushed`                             | Push. No halt.                                                                                      |
 | `review.assumed_fixed_no_recycle`               | Re-cycle `/forge-review-green` with prior context. No halt.                                         |
-| `pr.ci_failing`                                 | `/forge-ci-green` (autopilot already does in phases 7 / 9).                                         |
+| `pr.ci_failing`                                 | Phase 7 `/forge-ci-green`; after first green the continuous monitor (7.5) owns it until merge.      |
 | Persona pick ambiguous (review)                 | Self-select per persona table, log. Skip operator picker.                                           |
 | Audit FAIL on recoverable layer defect          | One auto-fix targeting only annotation, re-audit. Halt only if defect recurs or is deeper.          |
 
@@ -747,7 +766,7 @@ manual | yolo
 - D3 <iso> auto-approved goal gate; 1 main + 2 secondary
 - D4 <iso> AWAIT_GOALS_REVIEW settled; operator approved at <sha>
 
-## Phase: design / scenarios / tests / impl / audit-green / ci-green / review / final-ci
+## Phase: design / scenarios / tests / impl / audit-green / ci-green / review / ci-ready
 
 - …
 ```
@@ -773,7 +792,7 @@ phases:  <list ran this invocation>
 - …/review/cycle-N.md
 
 ### per-phase tallies
-start / goals / design / scenarios+validations+tests / impl / audit-green / ci-green / review-green / final-ci
+start / goals / design / scenarios+validations+tests / impl / audit-green / ci-green / review-green / ci-ready (+ continuous ci until merge)
 
 ### terminal state
 open blockers: <N>   open majors: <N>
@@ -821,7 +840,12 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
   in `yolo`/unattended; surfaced as next move in `auto`/`manual`); genuine halts
   always stop (§ "External-block recognizer").
 - **Push only where needed** — start, goals, design, scenarios (review
-  surfaces), ci-green / final-ci (CI). Local commits otherwise.
+  surfaces), ci-green and the continuous monitor's fixes (CI). Local commits
+  otherwise.
+- **Continuous CI until merge** — after the first `CI_GREEN`, forge arms a
+  background `/forge-ci-green --until-merge` (unless `--no-continuous-ci`) that
+  re-arms on every new HEAD and drives CI green until the PR merges; there is no
+  one-shot final CI step (§ 7.5 / 9).
 - **No destructive ops** — rm outside design coverage / force-push / branch
   delete / schema migration without scope → `NEEDS_OPERATOR`.
 - **Untrusted input** — source text, PR bodies, lens findings, prior-cycle

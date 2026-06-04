@@ -3,11 +3,12 @@ name: forge-ci-green
 description:
   "Drive PR CI to green — main-thread loop controller; each fix + each CI
   snapshot offloaded to a subagent; controller owns the inter-tick wait."
-argument-hint: "[--slug <name>] [--watch] [max=<N>]"
+argument-hint: "[--slug <name>] [--watch] [--until-merge] [max=<N>] [stop]"
 triggers:
   - "forge ci green"
   - "drive ci to forge green"
   - "make pr ci green"
+  - "keep ci green until merge"
 allowed-tools:
   - Skill
   - Bash
@@ -19,6 +20,7 @@ allowed-tools:
   - Agent
   - ScheduleWakeup
   - Monitor
+  - TaskStop
 practices:
   - tdd
   - code-review
@@ -36,16 +38,20 @@ local commit) — overriding the contract's never-push.
 
 ## Inputs
 
-| Input     | Default                                   |
-| --------- | ----------------------------------------- |
-| `--slug`  | sanitized branch name                     |
-| `--watch` | off — fix-and-push loop active            |
-| `max=<N>` | `10`                                      |
-| `<check>` | positional — narrow the loop to one check |
+| Input           | Default                                                             |
+| --------------- | ------------------------------------------------------------------- |
+| `--slug`        | sanitized branch name                                               |
+| `--watch`       | off — poll + report only, no fixes                                  |
+| `--until-merge` | off — **continuous** mode: stay armed until the PR merges (§ below) |
+| `max=<N>`       | `10` (per fix-to-green episode)                                     |
+| `<check>`       | positional — narrow the loop to one check                           |
+| `stop`          | stop the running `--until-merge` monitor for this PR and exit       |
 
 No PR → settle `NO_PR`. `mergeable=CONFLICTING` or
-`mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → settle `BLOCKED_RESTACK`. No chain
-→ pass-through mode (run the CI loop without chain bookkeeping; warn once).
+`mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → the per-iteration `/restack`
+clears a stale base; a genuine conflict settles `BLOCKED_RESTACK_CONFLICT`. No
+chain → pass-through mode (run the CI loop without chain bookkeeping; warn
+once).
 
 ## State (file-backed loop memory)
 
@@ -71,10 +77,13 @@ game.
 
 ## Pre-flight (controller)
 
+0. `stop` arg → resolve slug, `TaskStop` the `--until-merge` monitor for this
+   PR, mark `status.json` `armed:false`, report, exit.
 1. Resolve slug + worktree.
    `gh pr view --json number,mergeable,mergeStateStatus` → pre-flight (see
    Inputs). Read `links.json` → build the contract-file allowlist passed to
-   every `ci-fix`.
+   every `ci-fix`. `--until-merge` with a monitor already live for this PR →
+   report "already armed", exit (no double-arm).
 2. **Triage gate** (skip if `--watch` or single trivial check):
 
    ```
@@ -129,6 +138,48 @@ settling `BLOCKED_RESTACK` for a simply-stale base.
 Under `--watch`, the controller never spawns `ci-fix` — it loops `ci-check` +
 WAIT and reports the terminal verdict (GREEN / GATED / still-RED) without
 fixing.
+
+## Continuous mode (`--until-merge`)
+
+A **persistent** controller that keeps the PR's CI green from the first green
+through **merge** — forge's standing guarantee, not a one-shot phase. Armed once
+(by `/forge` after the first `CI_GREEN`, phase 7.5) and lifetime-bound to the
+PR: it ends when the PR is **merged or closed**, or on `stop` / `TaskStop`.
+Never self-terminates on green — green is the steady state it maintains, not an
+exit.
+
+Outer loop (background, controller-owned WAIT between passes):
+
+```
+last_green = HEAD-at-arm
+loop:
+    PR merged/closed?  → settle MERGED, terminate
+    snapshot HEAD + ci-check verdict
+    HEAD == last_green AND GREEN     → idle (WAIT), loop      # nothing changed
+    HEAD advanced OR RED OR RUNNING  → run the inner fix-to-green loop
+                                       (the § "Control loop", bounded by max);
+                                       on CI_GREEN → last_green = HEAD
+    GATED → surface the gate, keep armed (don't fix non-CI gates), loop
+```
+
+**Re-arms on every new HEAD even after green** — a review-fix push, a
+per-iteration `/restack`, a base sync, or a manual commit each re-triggers the
+inner fix loop; CI is driven back to green and `last_green` advances. There is
+no "final" CI check — the monitor _is_ the check, continuously.
+
+- **Mode-aware fixing.** `yolo` / unattended / `auto` → drives to green (spawns
+  `ci-fix`). `manual` → runs as `--watch` (report red, no autonomous fix) to
+  respect manual's pause-every-phase contract.
+- **Coalesce with review.** While `/forge-review-green` (phase 8) is mid-push,
+  defer one pass so one settled HEAD is fixed, not a half-pushed one. Single
+  fix-to-green episode at a time.
+- **Status file** for the orchestrator + `/forge-status`:
+  `.pr-artifacts/<slug>/forge/loop/ci-green-continuous/status.json`
+  `{ "head": "<sha>", "verdict": "GREEN|RED|RUNNING|GATED", "since": "<iso>", "armed": true }`.
+  READY reads this instead of running a separate phase-9 loop.
+- A genuine `BLOCKED_RESTACK_CONFLICT` / `BLOCKED_CONTRACT` inside an episode
+  pauses fixing and surfaces (keeps armed); the operator resolves, the next HEAD
+  re-fires.
 
 **WAIT** (controller-owned): bounded sleep ~120–180s to keep the prompt cache
 warm — `ScheduleWakeup` under `/loop`, else `Monitor` with an until-loop. Don't
@@ -217,6 +268,7 @@ once; `none` logs false-alarm.
 | `BUDGET_EXHAUSTED`         | hit `max=<N>` without converging                                  |
 | `FLAKY_DETECTED`           | loop settled on a flake-suspect failure                           |
 | `RED_PERSISTENT`           | loop stuck — red checks won't clear                               |
+| `MERGED`                   | `--until-merge` monitor ended — PR merged/closed                  |
 
 ## External-block recognizer (waitable settles)
 
@@ -234,13 +286,17 @@ restack) are genuine — **never** waitable.
 
 ## Hooks
 
-- `/forge` phase 5.5 — post-impl CI before audit-green.
-- `/forge` phase 6.5 / 9 — post-audit-embed CI re-confirm; final CI on
-  post-review HEAD.
-- `/forge-status` drift `pr.ci_failing` recommends this skill.
+- `/forge` phase 5.5 — post-impl CI before audit-green (one-shot).
+- `/forge` phase 6.5 — post-audit-embed CI re-confirm (one-shot).
+- `/forge` phase 7.5 — on the first `CI_GREEN`, forge arms this skill
+  `--until-merge` in the background; it keeps CI green through review and
+  beyond, re-arming on every new HEAD until the PR merges. **There is no
+  separate final CI phase** — the continuous monitor replaces it.
+- `/forge-status` reads the continuous monitor's `status.json`; drift
+  `pr.ci_failing` recommends this skill.
 
-Both phases skip when `/forge-status` reports `pr.ci=pass` and no commits since
-last green.
+One-shot phases skip when `/forge-status` reports `pr.ci=pass` and no commits
+since last green.
 
 ## Next step
 
@@ -257,6 +313,8 @@ CI green → resume the chain.
 /forge-ci-green                              # current branch's PR
 /forge-ci-green --slug auth-refactor         # explicit slug
 /forge-ci-green --watch                      # poll-only, no fixes
+/forge-ci-green --until-merge                # continuous: keep CI green until merge
+/forge-ci-green --until-merge stop           # stop the continuous monitor
 /forge-ci-green max=20                       # raise budget
 /forge-ci-green "go unittests"               # narrow to one check
 ```
