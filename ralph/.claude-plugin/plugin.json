@@ -1,8 +1,0 @@
-{
-  "name": "@orrgal1/ralph",
-  "description": "/ralph — general bounded-autonomy iteration loop toward any verifiable target. Grinds to green, commits each step, stops at success or budget. Repo-agnostic and self-contained: takes a target plus a verify command and iterates. Designed to be wrapped by more specific fix-loops, but depends on no other plugin.",
-  "version": "1.0.0",
-  "author": {
-    "name": "orrgal1"
-  }
-}

@@ -23,7 +23,7 @@ The marketplace ships seven plugins:
 | `forge`            | `/forge`              | drive a PR from a brief to READY with attestation         |
 | `devloop`          | `/restack` `/deslop`  | restack a PR stack on its base; strip AI slop from a diff |
 | `diagnose`         | `/root-cause`         | find the root cause of a bug, flake, or regression        |
-| `ralph`            | `/ralph`              | grind a bounded verifiable target to green, committing    |
+| `grind`            | `/grind`              | grind a bounded verifiable target to green, committing    |
 | `graphify-wrapper` | `/graphify-wrapper-*` | structural knowledge-graph search across a monorepo       |
 | `persona`          | `/load-persona`       | swap behavioral guidance Claude loads every session       |
 | `reviewable`       | `/reviewable-*`       | drive Reviewable.io review threads                        |
@@ -154,7 +154,7 @@ Print the plugin table at the top of this file, then the canonical entry points:
 - **Keep a PR stack current** → `/restack` (one) / `/restack-all` (stack).
 - **Clean a diff before review** → `/deslop`.
 - **Debug something broken** → `/root-cause` (or `/diagnose` to route).
-- **Grind to green autonomously** → `/ralph <verifiable target>`.
+- **Grind to green autonomously** → `/grind <verifiable target>`.
 - **Orient in a domain** → `/graphify-wrapper-query <domain> "…"`.
 - **Switch behavior** → `/load-persona <name>`.
 

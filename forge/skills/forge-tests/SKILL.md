@@ -268,7 +268,7 @@ timestamps, tier-deviation rationales. `/forge-proof` reads `goals.md` first;
 Tests linked → drive impl green.
 
 - `/forge-design` — optional design layer (recommended for non-trivial impl)
-- `/forge-impl-green` — ralph the linked tests to green; replace
+- `/forge-impl-green` — drive the linked tests to green; replace
   `forge-tests: unimplemented` markers with real impl
 - `/forge-status` — chain state + drift
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, diagnose, ralph, persona, reviewable, devloop)",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, diagnose, grind, persona, reviewable, devloop)",
   "owner": {
     "name": "orrgal1"
   },
@@ -19,9 +19,9 @@
       "category": "development"
     },
     {
-      "name": "ralph",
-      "description": "/ralph — general bounded-autonomy iteration loop toward any verifiable target; grinds to green, commits each step, stops at success or budget. Self-contained, repo-agnostic.",
-      "source": "./ralph",
+      "name": "grind",
+      "description": "/grind — general bounded-autonomy iteration loop toward any verifiable target; grinds to green, commits each step, stops at success or budget. Self-contained, repo-agnostic.",
+      "source": "./grind",
       "category": "development"
     },
     {

@@ -1,11 +1,11 @@
 ---
-name: ralph
+name: grind
 description:
   Grind a bounded verifiable target to green — iterate, commit each step, stop
   at success or budget.
 argument-hint: "<target with verification> | max=<N>"
 triggers:
-  - "ralph loop"
+  - "grind loop"
   - "grind on this until"
   - "iterate until tests pass"
   - "keep going until"
@@ -22,7 +22,7 @@ allowed-tools:
   - TodoWrite
 ---
 
-# /ralph
+# /grind
 
 Inspired by Geoffrey Huntley's "Ralph Wiggum as a software engineer" — adapted
 for a single Claude session. Pick the next item from the plan, do it, verify,
@@ -41,7 +41,7 @@ write down what you learned, repeat. Stop at success or budget exhaustion.
 - Each step needs taste or human approval.
 - Blast radius is high: production data, irreversible ops, shared infra.
 - The task is debug-discovery — diagnose the root cause first (a hypothesis or
-  root-cause pass), then reach for `/ralph` once the fix shape is mechanical.
+  root-cause pass), then reach for `/grind` once the fix shape is mechanical.
 
 ## Inputs
 
@@ -67,7 +67,7 @@ Refuse to start (and report) if any of these fail:
 4. `1 ≤ max ≤ 200`.
 5. Resolve the slot: explicit `slot=<slug>` if passed, else `default`. Normalize
    to lowercase, alphanum + dash, max 40 chars; reject anything else.
-6. If `.pr-artifacts/<slug>/ralph/<slot>/target.md` exists with a _different_
+6. If `.pr-artifacts/<slug>/grind/<slot>/target.md` exists with a _different_
    target, surface the diff and ask: resume against the old target, replace, or
    abort. Loops in _other_ slots are ignored — they're independent.
 
@@ -76,12 +76,12 @@ If the baseline verification already exits 0, declare `SUCCESS` immediately
 
 ## Scratchpad layout
 
-State lives under `.pr-artifacts/<slug>/ralph/<slot>/`, gitignored via the
+State lives under `.pr-artifacts/<slug>/grind/<slot>/`, gitignored via the
 `.pr-artifacts` allowlist policy (see `/pr-artifacts`). Each slot is an
 independent loop — concurrent runs in different slots never share files:
 
 ```
-.pr-artifacts/<slug>/ralph/
+.pr-artifacts/<slug>/grind/
   .gitignore           # nested allowlist from /pr-artifacts bootstrap
   <slot>/
     target.md          # Goal + verification command (frozen at run start)
@@ -93,15 +93,15 @@ independent loop — concurrent runs in different slots never share files:
 
 Bootstrap the dir + nested `.gitignore` via `/pr-artifacts` (inline the slug
 
-- bootstrap recipes with `SKILL_NAME="ralph"`) on first run; re-used on resume.
-  None of the slot files are tracked — ralph state is all operator-local
+- bootstrap recipes with `SKILL_NAME="grind"`) on first run; re-used on resume.
+  None of the slot files are tracked — grind state is all operator-local
   scratch.
 
 ## Process
 
 ### Iteration 0 — initialize
 
-All paths below are under `.pr-artifacts/<slug>/ralph/<slot>/`.
+All paths below are under `.pr-artifacts/<slug>/grind/<slot>/`.
 
 1. Write `target.md`: goal + verification command, exactly as given.
 2. Run verification once; record baseline tail + exit code in `scratchpad.md`.
@@ -129,7 +129,7 @@ For each iteration up to `max`:
    - plan delta: <added/removed/reordered, if anything>
    ```
 6. **Commit** (per `/commit-often`): one local commit with message
-   `ralph: iter <N> — <step title>`. Skip only if the iteration produced zero
+   `grind: iter <N> — <step title>`. Skip only if the iteration produced zero
    file changes — and log that as a no-op.
 7. **Stuck check**. If the last 3 iterations produced the _same_ verification
    failure signature with no scratchpad-recorded learning, stop with `BLOCKED` —
@@ -148,7 +148,7 @@ For each iteration up to `max`:
 Author-facing only — never embed in a PR description.
 
 ```
-## /ralph result
+## /grind result
 
 verdict: SUCCESS | BUDGET_EXHAUSTED | BLOCKED
 iterations: <used>/<max>
@@ -163,26 +163,26 @@ last verification: exit <code> — <one-line tail>
 ### next move (if not SUCCESS)
 <one concrete suggestion: refine plan, narrow target, raise budget, hand off to a diagnosis pass, …>
 
-state: .pr-artifacts/<slug>/ralph/<slot>/ — edit plan.md or target.md, then re-invoke /ralph slot=<slot> max=<N> to resume.
+state: .pr-artifacts/<slug>/grind/<slot>/ — edit plan.md or target.md, then re-invoke /grind slot=<slot> max=<N> to resume.
 ```
 
 ## Resume protocol
 
-When `/ralph` stops without `SUCCESS`:
+When `/grind` stops without `SUCCESS`:
 
 1. Identify the slot. If the operator didn't pin one, list all outstanding slots
-   (`ls .pr-artifacts/<slug>/ralph/*/target.md` and read each) and ask which to
+   (`ls .pr-artifacts/<slug>/grind/*/target.md` and read each) and ask which to
    resume.
-2. Read `.pr-artifacts/<slug>/ralph/<slot>/scratchpad.md` and
-   `.pr-artifacts/<slug>/ralph/<slot>/plan.md`.
+2. Read `.pr-artifacts/<slug>/grind/<slot>/scratchpad.md` and
+   `.pr-artifacts/<slug>/grind/<slot>/plan.md`.
 3. Course-correct in the files: drop dead-end steps, add new ones, refine the
    target if needed.
-4. Re-invoke `/ralph slot=<slot> max=<N>` (target argument optional — falls back
+4. Re-invoke `/grind slot=<slot> max=<N>` (target argument optional — falls back
    to the pinned `target.md`). The skill detects existing state and continues.
 
-To start clean for one loop: delete `.pr-artifacts/<slug>/ralph/<slot>/` and
+To start clean for one loop: delete `.pr-artifacts/<slug>/grind/<slot>/` and
 re-invoke with a fresh target. To wipe everything: delete
-`.pr-artifacts/<slug>/ralph/` (will lose every loop's state).
+`.pr-artifacts/<slug>/grind/` (will lose every loop's state).
 
 ## Guardrails
 
@@ -206,7 +206,7 @@ re-invoke with a fresh target. To wipe everything: delete
   instead.
 - Letting the loop swallow a real refactor. If scratchpad shows thrash, stop and
   rethink the plan; don't grind harder.
-- Running `/ralph` in a worktree that shares mutable state (DBs, dev servers)
+- Running `/grind` in a worktree that shares mutable state (DBs, dev servers)
   with another active task. Slots scope scratchpad files but not the underlying
   environment — two loops touching the same shared dev environment will still
   collide.

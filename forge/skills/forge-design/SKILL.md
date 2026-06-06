@@ -272,7 +272,7 @@ panic-bodied functions, unimplemented endpoint handlers) so the red bar is
 assertion-or-marker, not compile error. `/forge-impl-green` fills the bodies.
 
 - `/forge-tests` — write tests + scaffold the design-named shape; red bar
-- `/forge-impl-green` — ralph the linked tests; replace
+- `/forge-impl-green` — drive the linked tests to green; replace
   `forge-tests: unimplemented` markers with real impl
 - `/forge-status` — chain state + drift
 

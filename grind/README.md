@@ -1,7 +1,7 @@
-# @orrgal1/ralph
+# @orrgal1/grind
 
 A general **bounded-autonomy iteration loop** for
-[Claude Code](https://claude.com/claude-code). Give `/ralph` a target plus a way
+[Claude Code](https://claude.com/claude-code). Give `/grind` a target plus a way
 to verify it, and it grinds: pick the next step, do it, verify, write down what
 it learned, commit, repeat — stopping at success or budget exhaustion.
 
@@ -30,9 +30,9 @@ Not for "looks good" targets — only mechanical checks survive a loop.
 ## Usage
 
 ```
-/ralph "make `npm test` pass" max=20
-/ralph "fix all `eslint .` errors"
-/ralph "migrate callers off deprecated fooBar() until `rg fooBar` is empty"
+/grind "make `npm test` pass" max=20
+/grind "fix all `eslint .` errors"
+/grind "migrate callers off deprecated fooBar() until `rg fooBar` is empty"
 ```
 
 Requires `git` and whatever your verify command needs.

@@ -39,13 +39,13 @@ loop iteration N → Layer 1 hard signal → /forge-stuck-check
 
 ## Inputs
 
-| Input      | Default                               |
-| ---------- | ------------------------------------- |
-| `--slug`   | sanitized branch name                 |
-| `--phase`  | infer from `decisions.md` tail        |
-| `--signal` | strongest tripped signal in counters  |
-| `--iter`   | infer from receipt / ralph scratchpad |
-| `--json`   | off                                   |
+| Input      | Default                              |
+| ---------- | ------------------------------------ |
+| `--slug`   | sanitized branch name                |
+| `--phase`  | infer from `decisions.md` tail       |
+| `--signal` | strongest tripped signal in counters |
+| `--iter`   | infer from receipt / loop scratchpad |
+| `--json`   | off                                  |
 
 Phase values: `impl` | `ci-green` | `proof` | `temper` | `review`.
 
@@ -68,7 +68,7 @@ Soft trip → continue + log. Hard trip → call this skill.
 
 ## Process
 
-1. Resolve slug, phase, iter (args or scan `decisions.md` tail + ralph state).
+1. Resolve slug, phase, iter (args or scan `decisions.md` tail + loop state).
 2. Read cheap context — `decisions.md` tail, `git log --oneline` since phase
    start, `git diff --stat`, last subagent receipt, `run.json`, latest cycle
    file. No file-by-file analysis.
