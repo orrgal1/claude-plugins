@@ -215,8 +215,9 @@ Two locations, by purpose:
   status. `$FORGE_ART` is `.forge` by default, or `<prefix>/.forge` when
   `[artifacts].prefix` is set. **What of this metadata git tracks is
   configurable** via `[artifacts].track` (default: everything), enforced by a
-  generated `$FORGE_ART/.gitignore` scoped to `branches/…`. Categories: `chain`,
-  `loop`, `review`, `monitor`.
+  generated `$FORGE_ART/.gitignore` scoped to `branches/…`. Categories: `spec`
+  (goals + design), `proof` (machine chain state), `loop`, `review`, `monitor` —
+  e.g. `track = ["spec"]` tracks only `goals.md` + `design.md`.
 - **The tooling map + repo-scoped state** live at `$FORGE_HOME`
   (`~/.claude/forge/<repo-key>/`) — a user-layer path, never committed, shared
   by every worktree of the repo. Maps, tools, and commands live here,

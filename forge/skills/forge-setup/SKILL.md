@@ -140,43 +140,52 @@ via `[artifacts].track`; `/forge-setup` (and the first per-PR writer, as a
 bootstrap) regenerates `$FORGE_ART/.gitignore` from it. The file is the single
 enforcement point, committed so the policy travels with the repo.
 
-**Category → ignore globs** (relative to `$FORGE_ART`, all under `branches/`):
+**Category → re-include globs** (relative to `$FORGE_ART`, all under
+`branches/`):
 
-| Category  | Globs                                                                                                                                                                                                                             |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `chain`   | top-level per-PR files: `branches/*/goals.md` `branches/*/design.md` `branches/*/links.json` `branches/*/run.json` `branches/*/validations.json` `branches/*/decisions.md` `branches/*/approvals.json` `branches/*/.harvest.json` |
-| `loop`    | `branches/*/loop/`                                                                                                                                                                                                                |
-| `review`  | `branches/*/review/` `branches/*/reviewer/`                                                                                                                                                                                       |
-| `monitor` | `branches/*/blocker/` `branches/*/wait/`                                                                                                                                                                                          |
+| Category  | Globs                                                                                                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`    | human review surfaces: `branches/*/goals.md` `branches/*/design.md`                                                                                                               |
+| `proof`   | machine chain state: `branches/*/links.json` `branches/*/run.json` `branches/*/validations.json` `branches/*/decisions.md` `branches/*/approvals.json` `branches/*/.harvest.json` |
+| `loop`    | `branches/*/loop/`                                                                                                                                                                |
+| `review`  | `branches/*/review/` `branches/*/reviewer/`                                                                                                                                       |
+| `monitor` | `branches/*/blocker/` `branches/*/wait/`                                                                                                                                          |
 
-The four categories partition every per-PR artifact, so `track = [list]` never
-leaks an uncategorized file; `none` collapses to `branches/*/` (ignores all).
+`spec` is the review-facing pair (goals + design); `proof` is the machine state
+the chain regenerates — `track = ["spec"]` keeps a repo's tracked surface to the
+two human artifacts.
 
-Generation — ignore the **complement** of the tracked set:
+Generation is **allowlist**, not denylist: ignore everything under `branches/`,
+then re-include only the tracked categories. This is deliberate — a PR's
+artifact dir also accumulates uncategorized scratch (`brief.md`, `*.log`, ad-hoc
+notes); a denylist would leak those into git, an allowlist never does.
 
 ```bash
 art="$(forge_art)"; mkdir -p "$art/branches"
-gi="$art/.gitignore"
+gi="$art/.gitignore"   # at $FORGE_ART root, above branches/ — always tracked
 {
   echo "# Forge per-PR artifact tracking — generated from forge.toml [artifacts].track"
   echo "# Governs only branches/<slug>/ metadata. Edit [artifacts].track + re-run /forge-setup."
-  echo "!.gitignore"
   case "$track" in
-    all)  : ;;                                  # track everything → ignore nothing
-    none) echo "branches/*/" ;;                 # ignore all per-PR metadata
-    *)    # list form: emit globs for every category NOT in the tracked list
-          for cat in chain loop review monitor; do
-            in_list "$cat" "$track" || emit_globs "$cat"
+    all)  : ;;                          # track everything → ignore nothing
+    none) echo "branches/**" ;;         # ignore all per-PR metadata
+    *)    echo "branches/**"            # ignore all, then re-include tracked
+          echo "!branches/*/"           #   (descend into slug dirs)
+          for cat in $track; do
+            for g in $(globs_for "$cat"); do
+              echo "!$g"
+              case "$g" in */) echo "!$g**" ;; esac   # dir glob → also re-include contents
+            done
           done ;;
   esac
 } > "$gi"
 ```
 
-Always emits `!.gitignore` so the policy file itself stays tracked even under
-`none`. `chain` excluded only when the operator explicitly drops it (unusual —
-it is the proof surface). This recipe is canonical; per-PR writers
-(`/forge-goals`, `/forge-design`, `/forge-start`) bootstrap it on first write
-and otherwise leave it alone.
+`none`/`[list]` ignore only `branches/**`, so the `.gitignore` (above
+`branches/`) stays tracked without a `!` rule. Dropping `spec` is unusual — it
+is the review surface. This recipe is canonical; per-PR writers (`/forge-goals`,
+`/forge-design`, `/forge-start`) bootstrap it on first write and otherwise leave
+it alone.
 
 ## Repo identity
 
@@ -297,12 +306,13 @@ track  = "all"     # what of per-PR metadata git tracks. Default tracks everythi
                    #   "none" -> ignore every branches/<slug>/ artifact
                    #   [list] -> track only these categories, ignore the rest
                    # Categories:
-                   #   chain    goals.md design.md links.json run.json
-                   #            validations.json decisions.md
+                   #   spec     goals.md design.md       (human review surfaces)
+                   #   proof    links.json run.json validations.json
+                   #            decisions.md approvals.json .harvest.json
                    #   loop     loop/**     (green-loop scratchpads)
                    #   review   review/**   (cycles, synthesis, watch)
                    #   monitor  blocker/** wait/**
-                   # e.g. track = ["chain", "review"]  ignores loop/ + blocker/ + wait/
+                   # e.g. track = ["spec"]  tracks only goals.md + design.md
                    # /forge-setup regenerates $FORGE_ART/.gitignore from this.
 
 # Logical capability -> shell command (deterministic). A script at
@@ -472,7 +482,7 @@ See `/forge-map` for the full ground-truth + absorption flow.
 
    [artifacts]
    prefix = ""        # "" -> .forge ; "<prefix>" -> <prefix>/.forge
-   track  = "all"     # all (default) | none | [chain, loop, review, monitor]
+   track  = "all"     # all (default) | none | [spec, proof, loop, review, monitor]
    TOML
    ```
 

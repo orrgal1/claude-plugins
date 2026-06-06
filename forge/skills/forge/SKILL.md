@@ -640,9 +640,9 @@ Each value = HEAD sha at `/forge approve` time. Phase advancement reads at entry
 to AWAIT-bearing phases. Subsequent `iterate` invalidates the matching entry
 (re-spawn lands a new commit; next `approve` writes fresh sha). If sha no longer
 matches the artifact's last-touching commit, phase is **unapproved** and the
-next `/forge` run re-settles its AWAIT. Tracked with the `chain` category by
-default (`[artifacts].track`); exclude it via `$FORGE_ART/.gitignore` to keep
-approvals local.
+next `/forge` run re-settles its AWAIT. Tracked with the `proof` category by
+default (`[artifacts].track`); drop `proof` to keep approvals + machine state
+local.
 
 ## No-waste gates (per phase boundary)
 
