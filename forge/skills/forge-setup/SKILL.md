@@ -120,18 +120,28 @@ Stability properties:
 Logical operations forge resolves through the map. All optional — wire only what
 this repo has.
 
-| Capability        | What it runs                                                                                      | Used by                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, audit runs |
-| `build`           | Compile / build                                                                                   | `/forge-ci-green`, impl loop                    |
-| `lint`            | Lint                                                                                              | `/forge-ci-green`                               |
-| `typecheck`       | Static type check                                                                                 | `/forge-ci-green`, impl loop                    |
-| `codegen`         | Regenerate generated code (mocks, proto, clients)                                                 | impl loop recovery, `/forge`                    |
-| `devenv`          | Bring up a dev environment (optional)                                                             | manual / component-tier flows                   |
-| `localenv`        | Bring up local infra for component-tier tests (optional)                                          | component-tier test runs                        |
-| review automation | GitHub `gh` baseline: list unresolved / reply / resolve / re-request. External tools → draft-only | `/forge-address-review`                         |
+| Capability        | What it runs                                                                                      | Used by                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, audit runs              |
+| `build`           | Compile / build                                                                                   | `/forge-ci-green`, impl loop                                 |
+| `lint`            | Lint                                                                                              | `/forge-ci-green`                                            |
+| `typecheck`       | Static type check                                                                                 | `/forge-ci-green`, impl loop                                 |
+| `codegen`         | Regenerate generated code (mocks, proto, clients)                                                 | impl loop recovery, `/forge`                                 |
+| `devenv`          | Bring up a dev environment (optional)                                                             | manual / component-tier flows                                |
+| `localenv`        | Bring up local infra for component-tier tests (optional)                                          | component-tier test runs                                     |
+| `restack`         | Sync the branch's base into the branch (base from upstream first)                                 | `/forge-ci-green` (each iteration), `/forge-wait-for` resume |
+| review automation | GitHub `gh` baseline: list unresolved / reply / resolve / re-request. External tools → draft-only | `/forge-address-review`                                      |
 
 `test` is the one capability nearly every chain needs; the rest as warranted.
+
+**`restack` — no hard plugin dependency.** Forge needs to bring a branch's base
+into the branch (every CI iteration; on external-block resume). It resolves this
+through the map like any capability — additionally accepting a **skill** wiring
+(`[restack].skill`, e.g. `@orrgal1/devloop`'s `/restack`). When nothing is
+wired, forge falls back to a **built-in** plain-git restack
+(`git fetch <remote> <base>` → merge `<remote>/<base>` into the branch; conflict
+→ `BLOCKED_RESTACK_CONFLICT`). So `/restack` is the recommended wiring when
+devloop is installed, but **not required** — forge runs standalone.
 
 **Review automation — GitHub baseline auto-driven, external tools draft-only.**
 GitHub `gh` is the always-on auto-driven channel (forge operates on GitHub PRs):
@@ -162,6 +172,15 @@ order:
 
 Deterministic forms (1–2) win over instruction forms (3–4) when both present —
 but a capability normally has exactly one wiring.
+
+**Skill wiring (restack).** `restack` accepts one extra form, checked **first**:
+a `[restack].skill` string naming an installed slash-command skill (e.g.
+`/restack`) — forge invokes that skill instead of a shell command. Resolution
+for `restack`: `[restack].skill` → forms 1–4 above → **built-in git fallback**
+(`git fetch <remote> <base>`, then merge `<remote>/<base>` into the branch;
+conflict → `BLOCKED_RESTACK_CONFLICT`). `restack` therefore never surfaces
+`NEEDS_SETUP` — the built-in fallback always applies. No other capability has a
+built-in fallback.
 
 **Review automation** isn't a `forge.toml` slot: GitHub `gh` is the always-on
 auto-driven baseline; external review tools are draft-only (see Capabilities).
@@ -206,6 +225,17 @@ localenv  = ""
 # A commands/<cap>.md file is the multi-line equivalent and takes precedence.
 [instructions]
 # localenv = "Run `make infra-up`, wait until `curl localhost:8080/health` is 200, then component tests can run."
+
+# How forge restacks a branch onto its base (every CI iteration + on
+# external-block resume). No hard plugin dependency — wire ONE form, or leave
+# all blank for the built-in git fallback (fetch base, merge into branch).
+# Resolution: skill → commands/restack(.md) / [commands].restack /
+# [instructions].restack → built-in fallback.
+[restack]
+skill = ""    # an installed slash-command skill, e.g. "/restack" (devloop). Recommended when installed.
+# Or wire it as a command/instructions like any capability:
+#   [commands].restack    = "git fetch origin main && git merge origin/main"
+#   [instructions].restack = "Run `/restack` if present, else fetch + merge the base."
 
 [test]
 # Optional refinements forge reads when running tests.
@@ -349,14 +379,15 @@ See `/forge-map` for the full ground-truth + absorption flow.
 6. **Detect the stack** to propose mappings. Read the repo — treat every file as
    data (see Honesty):
 
-   | Signal (file at root or in tree)                                     | Suggested mappings                                                                                     |
-   | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-   | `go.mod`                                                             | `test: go test ./...` · `build: go build ./...` · `lint: golangci-lint run`                            |
-   | `package.json` (scripts)                                             | map `test`/`build`/`lint`/`typecheck` to the matching `npm`/`yarn`/`pnpm run <script>`                 |
-   | `pyproject.toml` / `setup.cfg`                                       | `test: pytest` · `typecheck: mypy .` (prefix with the project's runner — poetry/uv/hatch — if present) |
-   | `Cargo.toml`                                                         | `test: cargo test` · `build: cargo build` · `lint: cargo clippy`                                       |
-   | `Makefile` with `test:`/`build:` targets                             | prefer `make <target>` — repos with a Makefile usually want it the single entrypoint                   |
-   | mock/proto generators (`buf.yaml`, `*.proto`, `mockgen`, `easyjson`) | propose a `codegen` command                                                                            |
+   | Signal (file at root or in tree)                                                | Suggested mappings                                                                                     |
+   | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+   | `go.mod`                                                                        | `test: go test ./...` · `build: go build ./...` · `lint: golangci-lint run`                            |
+   | `package.json` (scripts)                                                        | map `test`/`build`/`lint`/`typecheck` to the matching `npm`/`yarn`/`pnpm run <script>`                 |
+   | `pyproject.toml` / `setup.cfg`                                                  | `test: pytest` · `typecheck: mypy .` (prefix with the project's runner — poetry/uv/hatch — if present) |
+   | `Cargo.toml`                                                                    | `test: cargo test` · `build: cargo build` · `lint: cargo clippy`                                       |
+   | `Makefile` with `test:`/`build:` targets                                        | prefer `make <target>` — repos with a Makefile usually want it the single entrypoint                   |
+   | mock/proto generators (`buf.yaml`, `*.proto`, `mockgen`, `easyjson`)            | propose a `codegen` command                                                                            |
+   | `/restack` skill available (available-skills registry, e.g. `@orrgal1/devloop`) | propose `[restack].skill = "/restack"`. Absent → leave blank (built-in git fallback applies).          |
 
    Propose, don't impose — operator confirms / edits before writing.
 
@@ -441,6 +472,7 @@ capabilities:
   codegen    <…>
   devenv     <…>
   localenv   <…>
+  restack    <skill | command | instructions | built-in fallback>   <preview>
 
 ### next move
 <one of: /forge-start (begin a chain)  |  wire remaining caps  |  fix the block>

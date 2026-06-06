@@ -168,11 +168,14 @@ deadlock it). Re-enter the evaluator at the next pass after wakeup.
 Set `busy`. Append the `MET` evidence to `log.md`. Branch on **mode**:
 
 - **`yolo` / unattended → auto-resume.** Run `--resume`:
-  - `restack-then-resume` — `/restack` (syncs base from upstream first, merge
-    per operator preference). Clean → `/forge --from <from>` to re-enter the
-    chain. `slack` follow-up notes are appended **as quoted data** to
-    `decisions.md` and the restack note — never executed. Restack **conflict** →
-    settle `BLOCKED_RESTACK_CONFLICT` (genuine, needs operator); do not loop.
+  - `restack-then-resume` — run the configured `restack` capability
+    (`[restack].skill` e.g. `/restack`; else wired command/instructions; else
+    built-in git fallback — see `/forge-setup` § restack; syncs base from
+    upstream first, merge per operator preference). Clean →
+    `/forge --from <from>` to re-enter the chain. `slack` follow-up notes are
+    appended **as quoted data** to `decisions.md` and the restack note — never
+    executed. Restack **conflict** → settle `BLOCKED_RESTACK_CONFLICT` (genuine,
+    needs operator); do not loop.
   - `resume-only` — skip restack, `/forge --from <from>`.
   - `none` — notify only; leave the resume to the operator.
   - On dispatch return: record result in `log.md`, clear `busy`,
@@ -217,7 +220,7 @@ On met (auto-resume):
 
 ```
 met: <condition> — <evidence>
-resume: /restack → /forge --from <from> → <result line>
+resume: restack (configured) → /forge --from <from> → <result line>
 wait complete — chain resumed.
 ```
 
@@ -225,7 +228,7 @@ On met (attended):
 
 ```
 met: <condition> — <evidence>
-ready to resume:  /restack && /forge --from <from>
+ready to resume:  restack (configured) then /forge --from <from>
 wait complete — run the resume when ready.
 ```
 

@@ -10,10 +10,14 @@ running a lens-designed code review. What sets it apart is the **proof chain**:
 nothing reaches READY that isn't backed by a goal, a scenario, a test, and a
 passing run — and forge mechanically attests every link.
 
-**Dependency:** forge requires the **`@orrgal1/devloop`** plugin — it calls
-`/restack` to sync a branch onto its base (every CI iteration, and when resuming
-after an external block). Aside from devloop + the `gh` CLI, forge has no other
-plugin dependencies.
+**Dependency:** forge has **no hard plugin dependency** — the `gh` CLI is the
+only external requirement. Forge needs to restack a branch onto its base (every
+CI iteration, and when resuming after an external block); the **`restack`
+capability** is configured via `/forge-setup` and can point to an installed
+skill (e.g. **`@orrgal1/devloop`**'s `/restack` — recommended when present), a
+command/instructions, or fall back to forge's **built-in plain-git restack**
+(fetch the base, merge it into the branch). Install devloop for the richer
+stacked-PR restack, or run forge standalone on the built-in fallback.
 
 ## The proof chain — forge's core idea
 
@@ -104,12 +108,13 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
 
 ## Install
 
-From the `orrgal1` marketplace (forge + its `devloop` dependency):
+From the `orrgal1` marketplace (forge runs standalone; `devloop` is optional —
+it provides the recommended `/restack`, see **Dependency** above):
 
 ```
 /plugin marketplace add orrgal1/claude-plugins
 /plugin install forge@orrgal1
-/plugin install devloop@orrgal1
+/plugin install devloop@orrgal1   # optional: richer stacked-PR /restack
 ```
 
 Or point Claude Code at a local checkout:

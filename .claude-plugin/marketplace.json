@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "forge",
-      "description": "PR forge chain: /forge-setup maps host-repo tooling into $FORGE_HOME (~/.claude/forge/<repo-key>/), then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl, continuous CI, and lens-designed review to READY — then hands off to peer review. Depends on @orrgal1/devloop for /restack.",
+      "description": "PR forge chain: /forge-setup maps host-repo tooling into $FORGE_HOME (~/.claude/forge/<repo-key>/), then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl, continuous CI, and lens-designed review to READY — then hands off to peer review. No hard plugin dependency: the restack capability is configurable (installed skill like @orrgal1/devloop's /restack, command/instructions, or built-in git fallback).",
       "source": "./forge",
       "category": "development"
     },

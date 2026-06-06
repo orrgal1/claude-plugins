@@ -48,10 +48,9 @@ local commit) — overriding the contract's never-push.
 | `stop`          | stop the running `--until-merge` monitor for this PR and exit       |
 
 No PR → settle `NO_PR`. `mergeable=CONFLICTING` or
-`mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → the per-iteration `/restack`
-clears a stale base; a genuine conflict settles `BLOCKED_RESTACK_CONFLICT`. No
-chain → pass-through mode (run the CI loop without chain bookkeeping; warn
-once).
+`mergeStateStatus ∈ {DIRTY,BEHIND,UNKNOWN}` → the per-iteration restack clears a
+stale base; a genuine conflict settles `BLOCKED_RESTACK_CONFLICT`. No chain →
+pass-through mode (run the CI loop without chain bookkeeping; warn once).
 
 ## State (file-backed loop memory)
 
@@ -125,10 +124,12 @@ settle BUDGET_EXHAUSTED
 ```
 
 **Restack (every iteration, controller-owned).** At the top of each iteration —
-before `ci-check` — run `/restack` (devloop) to fetch and bring the base into
-the branch, so CI always evaluates against the current base and base-introduced
-breakage surfaces here, not after merge. No new base commits → no-op (HEAD
-unchanged, nothing pushed). A merge **conflict** → settle
+before `ci-check` — run the **configured `restack` capability**
+(`[restack].skill`, e.g. `/restack`; else a wired command/instructions; else
+forge's built-in git fallback — see `/forge-setup` § restack) to fetch and bring
+the base into the branch, so CI always evaluates against the current base and
+base-introduced breakage surfaces here, not after merge. No new base commits →
+no-op (HEAD unchanged, nothing pushed). A merge **conflict** → settle
 `BLOCKED_RESTACK_CONFLICT` (genuine — operator resolves; do not loop). A restack
 that advances HEAD pushes once (merge per operator preference, never force to a
 shared base) and re-triggers CI; the same-iteration `ci-check` reads the
@@ -162,8 +163,8 @@ loop:
     GATED → surface the gate, keep armed (don't fix non-CI gates), loop
 ```
 
-**Re-arms on every new HEAD even after green** — a review-fix push, a
-per-iteration `/restack`, a base sync, or a manual commit each re-triggers the
+**Re-arms on every new HEAD even after green** — a review-fix push, a a
+per-iteration restack, a base sync, or a manual commit each re-triggers the
 inner fix loop; CI is driven back to green and `last_green` advances. There is
 no "final" CI check — the monitor _is_ the check, continuously.
 
@@ -262,17 +263,17 @@ once; `none` logs false-alarm.
 
 ## Settle
 
-| Verdict                    | Meaning                                                           |
-| -------------------------- | ----------------------------------------------------------------- |
-| `CI_GREEN`                 | all required checks pass; `run.json` refreshed                    |
-| `NO_PR`                    | no PR for branch                                                  |
-| `BLOCKED_RESTACK`          | PR not mergeable                                                  |
-| `BLOCKED_RESTACK_CONFLICT` | per-iteration `/restack` hit a merge conflict — operator resolves |
-| `BLOCKED_CONTRACT`         | guard refused                                                     |
-| `BUDGET_EXHAUSTED`         | hit `max=<N>` without converging                                  |
-| `FLAKY_DETECTED`           | loop settled on a flake-suspect failure                           |
-| `RED_PERSISTENT`           | loop stuck — red checks won't clear                               |
-| `MERGED`                   | `--until-merge` monitor ended — PR merged/closed                  |
+| Verdict                    | Meaning                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `CI_GREEN`                 | all required checks pass; `run.json` refreshed                     |
+| `NO_PR`                    | no PR for branch                                                   |
+| `BLOCKED_RESTACK`          | PR not mergeable                                                   |
+| `BLOCKED_RESTACK_CONFLICT` | the per-iteration restack hit a merge conflict — operator resolves |
+| `BLOCKED_CONTRACT`         | guard refused                                                      |
+| `BUDGET_EXHAUSTED`         | hit `max=<N>` without converging                                   |
+| `FLAKY_DETECTED`           | loop settled on a flake-suspect failure                            |
+| `RED_PERSISTENT`           | loop stuck — red checks won't clear                                |
+| `MERGED`                   | `--until-merge` monitor ended — PR merged/closed                   |
 
 ## External-block recognizer (waitable settles)
 

@@ -537,7 +537,7 @@ The first green is **not** the last CI check — it's where forge stops doing
 one-shot CI and starts **guaranteeing** it. On phase 7 `CI_GREEN`, forge arms
 `/forge-ci-green --until-merge` in the **background** (a persistent monitor,
 lifetime-bound to the PR — § `/forge-ci-green` "Continuous mode"). It re-arms on
-**every new HEAD** — review-fix pushes, per-iteration `/restack`, base syncs,
+**every new HEAD** — review-fix pushes, the per-iteration restack, base syncs,
 manual commits — driving CI back to green each time, until the PR **merges**.
 Log `D<n> continuous ci-green armed`. Skip when `--no-continuous-ci`, or when a
 monitor for this PR is already live. There is **no separate final CI phase**;
