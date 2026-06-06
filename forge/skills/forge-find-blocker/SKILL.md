@@ -38,7 +38,7 @@ the **watch+resume** half. This skill never watches, fixes, or edits — it
 gathers, classifies, and hands off.
 
 Prereq (refuse without): chain artifacts —
-`.pr-artifacts/<slug>/forge/{goals.md,links.json}`. No chain → exit.
+`$FORGE_ART/branches/<slug>/{goals.md,links.json}`. No chain → exit.
 
 ## Security
 
@@ -107,7 +107,7 @@ own red test, the verdict is `genuine`, not `infra-transient`.
 
 ## Emit
 
-Write `.pr-artifacts/<slug>/forge/blocker/last.json` and print:
+Write `$FORGE_ART/branches/<slug>/blocker/last.json` and print:
 
 ```json
 {

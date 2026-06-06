@@ -39,7 +39,7 @@ finding's mechanical delta + commit).
 
 ## State (file-backed loop memory)
 
-Slot `.pr-artifacts/<slug>/forge/loop/forge-proof-green-<slug>/` per `/forge` §
+Slot `$FORGE_ART/branches/<slug>/loop/forge-proof-green-<slug>/` per `/forge` §
 Loop contract. `plan.md` — one bullet per open finding. Controller threads the
 check's `## handoff` (smallest blocking set) into each `proof-fix` brief.
 
@@ -49,10 +49,10 @@ A per-iteration patch is **refused** if it touches:
 
 | Surface                                 | Reason                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
-| `.pr-artifacts/<slug>/forge/goals.md`   | Goals + scenarios are the spec.                              |
-| `.pr-artifacts/<slug>/forge/links.json` | Linkage is the chain — don't repoint to silence Layer-4.     |
+| `$FORGE_ART/branches/<slug>/goals.md`   | Goals + scenarios are the spec.                              |
+| `$FORGE_ART/branches/<slug>/links.json` | Linkage is the chain — don't repoint to silence Layer-4.     |
 | Linked test bodies (assertions)         | `assert:` is the contract. (Comments + AAA markers OK.)      |
-| `.pr-artifacts/<slug>/forge/design.md`  | Design records intent; rewriting to absorb Layer-5 is drift. |
+| `$FORGE_ART/branches/<slug>/design.md`  | Design records intent; rewriting to absorb Layer-5 is drift. |
 
 Refusal → settle `BLOCKED_CONTRACT`. Operator addresses the contract via
 `/forge-scenarios`, `/forge-tests`, `/forge-goals`, `/forge-design`.
@@ -124,7 +124,7 @@ Commit + decisions log live in `proof-fix`:
 forge-proof-green: <SG or layer> <one-line fix>
 ```
 
-`.pr-artifacts/<slug>/forge/decisions.md`:
+`$FORGE_ART/branches/<slug>/decisions.md`:
 
 ```
 ## <iso> — forge-proof-green cycle <N>

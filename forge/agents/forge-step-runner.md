@@ -49,7 +49,7 @@ accepted.
 1. **Step** — one of the legal steps above.
 2. **Worktree path** — absolute path to the active checkout. All reads / writes
    / commits happen here.
-3. **Slug** — sanitized branch slug for `.pr-artifacts/<slug>/forge/…`.
+3. **Slug** — sanitized branch slug for `$FORGE_ART/branches/<slug>/…`.
 4. **Source** (`goals` only) — Jira URL/key, PR#, doc path, `"conversation"`, or
    null for auto-detect.
 5. **Context from prior step** — one-line summary + artifact path; verify

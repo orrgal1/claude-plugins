@@ -31,7 +31,7 @@ verdict. PASS iff every `Gn` COVERED.
 | `--slug` | `--slug <name>` | sanitized branch name |
 | `--json` | flag            | off (console report)  |
 
-Prereqs: `.pr-artifacts/<slug>/forge/goals.md` exists with ≥1 `^## G\d+ —`
+Prereqs: `$FORGE_ART/branches/<slug>/goals.md` exists with ≥1 `^## G\d+ —`
 header. Missing → exit 2 with `BLOCKED_NO_GOALS`.
 
 ## The check
@@ -63,7 +63,7 @@ visible. Surface count + scenario IDs; don't fail the chain.
 ## Process
 
 1. Resolve slug (argument or branch-derived).
-2. Read `.pr-artifacts/<slug>/forge/goals.md`. Missing → exit 2.
+2. Read `$FORGE_ART/branches/<slug>/goals.md`. Missing → exit 2.
 3. Enumerate `Gn` headers. For each, read its `## Scenarios` block **and** its
    `## Validations` block (either satisfies coverage).
 4. Apply verdict table per goal.
@@ -78,7 +78,7 @@ visible. Surface count + scenario IDs; don't fail the chain.
 
 verdict: PASS | FAIL
 slug: <branch-slug>
-artifact: .pr-artifacts/<slug>/forge/goals.md
+artifact: $FORGE_ART/branches/<slug>/goals.md
 
 ## per-goal coverage
 

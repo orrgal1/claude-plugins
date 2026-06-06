@@ -92,7 +92,7 @@ ranking's whole point.
 
 ## Output
 
-Write `.pr-artifacts/<slug>/forge/reviewer/last.json` and print:
+Write `$FORGE_ART/branches/<slug>/reviewer/last.json` and print:
 
 ```json
 {

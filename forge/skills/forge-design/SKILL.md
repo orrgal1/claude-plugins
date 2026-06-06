@@ -52,7 +52,7 @@ says, drop it. Bloat is a defect — terser beats complete-but-unread.
 ```markdown
 # Design — <PR title or slug>
 
-Linked from `.pr-artifacts/<slug>/forge/goals.md`.
+Linked from `$FORGE_ART/branches/<slug>/goals.md`.
 
 ## Overview
 
@@ -177,14 +177,14 @@ autopilot.
 
    Violation → don't write; iterate or surface as a blocker.
 
-9. **Write `.pr-artifacts/<slug>/forge/design.md`.** Bootstrap artifact dir
-   - root forge gitignore per `/forge-goals` recipe. On legacy hosts:
+9. **Write `$FORGE_ART/branches/<slug>/design.md`.** Bootstrap the artifact dir
+   - tracking `.gitignore` per `/forge-goals` §5. If a tracked artifact ends up
+     ignored by a host rule, force-add:
 
    ```bash
-   gi=".pr-artifacts/.gitignore"
-   dm=".pr-artifacts/${slug}/forge/design.md"
+   dm="$FORGE_ART/branches/${slug}/design.md"
    if git check-ignore -q "$dm"; then
-     git add -f "$gi" "$dm"
+     git add -f "$FORGE_ART/.gitignore" "$dm"
      git commit -m "forge-design: publish artifact (ignored path)"
    fi
    ```
@@ -262,7 +262,7 @@ Don't soften scope to ease impl. Halt rather than paper over:
 - Always emits `## Risk` block; orchestrator reads `pause-before-impl:`.
 - Honest blockers still halt — receipt `status: blocked` with named scenario /
   conflict.
-- Decisions logged to `.pr-artifacts/<slug>/forge/decisions.md`.
+- Decisions logged to `$FORGE_ART/branches/<slug>/decisions.md`.
 
 ## Next step
 

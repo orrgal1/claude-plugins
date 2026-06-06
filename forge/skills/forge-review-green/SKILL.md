@@ -63,9 +63,9 @@ skipped + chain artifacts (`goals.md`, `links.json`) exist. Use
 
 ## State (file-backed loop memory)
 
-Slot `.pr-artifacts/<slug>/forge/loop/forge-review-green-<slug>/` per `/forge` §
+Slot `$FORGE_ART/branches/<slug>/loop/forge-review-green-<slug>/` per `/forge` §
 Loop contract. Cycle artifacts:
-`.pr-artifacts/<slug>/forge/review/cycle-<N>.md`. Controller threads each fix's
+`$FORGE_ART/branches/<slug>/review/cycle-<N>.md`. Controller threads each fix's
 `## handoff` (the `addressed` citation) into the next cycle's status pass.
 
 ## Pre-flight (controller)
@@ -269,7 +269,7 @@ remaining (if not SUCCESS):
 ### next move
 <one suggestion>
 
-state: .pr-artifacts/<slug>/forge/loop/forge-review-green-<slug>/ — edit plan.md or re-invoke max=<N>.
+state: $FORGE_ART/branches/<slug>/loop/forge-review-green-<slug>/ — edit plan.md or re-invoke max=<N>.
 
 ## decision-log entries
 

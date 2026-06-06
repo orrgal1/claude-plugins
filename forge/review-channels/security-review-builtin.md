@@ -53,7 +53,7 @@ Optional `--scope <path>` per-run flag passes through to restrict the scan.
    owns the fix-loop via `/forge-review-green`.
 
 3. Capture output verbatim into
-   `.pr-artifacts/<slug>/forge/review/security-review-builtin/raw.md`.
+   `$FORGE_ART/branches/<slug>/review/security-review-builtin/raw.md`.
 4. Parse + normalize per **Finding shape** + **Severity mapping** below.
 5. Emit findings to the dispatcher.
 
@@ -143,7 +143,7 @@ severity_cap = ""                 # empty = no cap
 ## Artifact directory
 
 ```
-.pr-artifacts/<slug>/forge/review/security-review-builtin/
+$FORGE_ART/branches/<slug>/review/security-review-builtin/
   raw.md          # wrapped skill's verbatim output
   parsed.json     # normalized findings handed to the aggregator
 ```
@@ -160,4 +160,4 @@ severity_cap = ""                 # empty = no cap
   handling, dep bumps, crypto — this channel owns security review for every PR.
   Forge ships no hand-rolled security lens behind it.
 - **No host-repo edits.** Channel writes confined to
-  `.pr-artifacts/<slug>/forge/review/security-review-builtin/`.
+  `$FORGE_ART/branches/<slug>/review/security-review-builtin/`.

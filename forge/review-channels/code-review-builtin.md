@@ -50,7 +50,7 @@ never extends scope beyond what `/code-review` surfaced.
    owns the fix-loop via `/forge-review-green`.
 
 3. Capture output verbatim into
-   `.pr-artifacts/<slug>/forge/review/code-review-builtin/raw.md`.
+   `$FORGE_ART/branches/<slug>/review/code-review-builtin/raw.md`.
 4. Parse + normalize per **Finding shape** + **Severity mapping** below.
 5. Emit findings to the dispatcher.
 
@@ -149,7 +149,7 @@ severity_cap = ""                 # empty = no cap; lower to "minor" to advisory
 ## Artifact directory
 
 ```
-.pr-artifacts/<slug>/forge/review/code-review-builtin/
+$FORGE_ART/branches/<slug>/review/code-review-builtin/
   raw.md          # wrapped skill's verbatim output
   parsed.json     # normalized findings handed to the aggregator
 ```
@@ -164,4 +164,4 @@ severity_cap = ""                 # empty = no cap; lower to "minor" to advisory
 - **Severity mapping is the operator-facing contract.** A repo that wants
   different mapping edits the file, not the dispatcher.
 - **No host-repo edits.** Channel writes confined to
-  `.pr-artifacts/<slug>/forge/review/code-review-builtin/`.
+  `$FORGE_ART/branches/<slug>/review/code-review-builtin/`.

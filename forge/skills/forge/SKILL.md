@@ -227,13 +227,14 @@ fix and every check a **clean context** (iter 12 isn't buried under 11 iters of
 scrollback) while keeping the loop's authority — when to stop, when it's green —
 in one place.
 
-- **State dir** — `.pr-artifacts/<slug>/forge/loop/<slot>/` holds `plan.md` (a
-  checklist) + `scratchpad.md` (append-only iteration log). Gitignored via the
-  forge `.pr-artifacts/.gitignore`. One slot per loop (`<skill>-<slug>`) so
-  concurrent loops never share files. **This is the cross-iteration memory** —
-  every offloaded subagent reads it on entry and appends on exit, so a
-  fresh-context `*-fix` knows what prior iters tried without the controller
-  re-narrating it.
+- **State dir** — `$FORGE_ART/branches/<slug>/loop/<slot>/` holds `plan.md` (a
+  checklist) + `scratchpad.md` (append-only iteration log). Tracked per
+  `[artifacts].track` (default `all` → committed; ignored only when the operator
+  excludes the `loop` category) via `$FORGE_ART/.gitignore`. One slot per loop
+  (`<skill>-<slug>`) so concurrent loops never share files. **This is the
+  cross-iteration memory** — every offloaded subagent reads it on entry and
+  appends on exit, so a fresh-context `*-fix` knows what prior iters tried
+  without the controller re-narrating it.
 - **Iteration** (controller view) — spawn `*-check` → green? settle `SUCCESS` :
   fold its `## signals` + run stuck check → spawn `*-fix` (threading the check's
   `## handoff`: the failing set) → loop. `check`-count = `fix`-count + 1.
@@ -629,7 +630,7 @@ armed watch (9.5) covers feedback regardless of who marks it ready.
 
 ## Approvals book-keeping
 
-`.pr-artifacts/<slug>/forge/approvals.json` — append-style, keyed by phase:
+`$FORGE_ART/branches/<slug>/approvals.json` — append-style, keyed by phase:
 
 ```json
 { "goals": "abc1234…", "design": "def5678…" }
@@ -639,8 +640,9 @@ Each value = HEAD sha at `/forge approve` time. Phase advancement reads at entry
 to AWAIT-bearing phases. Subsequent `iterate` invalidates the matching entry
 (re-spawn lands a new commit; next `approve` writes fresh sha). If sha no longer
 matches the artifact's last-touching commit, phase is **unapproved** and the
-next `/forge` run re-settles its AWAIT. Local-only per root
-`.pr-artifacts/.gitignore`.
+next `/forge` run re-settles its AWAIT. Tracked with the `chain` category by
+default (`[artifacts].track`); exclude it via `$FORGE_ART/.gitignore` to keep
+approvals local.
 
 ## No-waste gates (per phase boundary)
 
@@ -773,7 +775,7 @@ waitable ones to `/forge-wait-for` first).
 
 ## Decision log shape
 
-`.pr-artifacts/<slug>/forge/decisions.md` — append-only:
+`$FORGE_ART/branches/<slug>/decisions.md` — append-only:
 
 ```markdown
 # Decisions — autopilot run <slug>
@@ -810,7 +812,7 @@ slug:    <slug>
 phases:  <list ran this invocation>
 
 ### artifacts
-- .pr-artifacts/<slug>/forge/goals.md
+- $FORGE_ART/branches/<slug>/goals.md
 - …/design.md  …/links.json  …/run.json
 - …/approvals.json   …/decisions.md
 - …/review/cycle-N.md

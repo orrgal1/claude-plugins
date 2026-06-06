@@ -54,7 +54,7 @@ pass-through mode (run the CI loop without chain bookkeeping; warn once).
 
 ## State (file-backed loop memory)
 
-Slot `.pr-artifacts/<slug>/forge/loop/forge-ci-green-<slug>/` per `/forge` §
+Slot `$FORGE_ART/branches/<slug>/loop/forge-ci-green-<slug>/` per `/forge` §
 Loop contract. Controller threads each `ci-check` `## handoff` (failing runs)
 into the `ci-fix` brief and each `ci-fix` `## handoff` (pushed HEAD sha) into
 the next `ci-check`.
@@ -65,10 +65,10 @@ A per-iteration patch is **refused** if it touches:
 
 | Surface                                 | Reason                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
-| `.pr-artifacts/<slug>/forge/goals.md`   | Goals + scenarios are the spec.                              |
-| `.pr-artifacts/<slug>/forge/links.json` | Linkage is the chain.                                        |
+| `$FORGE_ART/branches/<slug>/goals.md`   | Goals + scenarios are the spec.                              |
+| `$FORGE_ART/branches/<slug>/links.json` | Linkage is the chain.                                        |
 | Test files named in `links.json`        | Linked tests are contract — failing CI means impl regressed. |
-| `.pr-artifacts/<slug>/forge/design.md`  | Design records intent.                                       |
+| `$FORGE_ART/branches/<slug>/design.md`  | Design records intent.                                       |
 
 Refusal → `BLOCKED_CONTRACT`. Operator revises via `/forge-tests` /
 `/forge-scenarios`. Non-contract surfaces (impl, deps, CI config, docs) are fair
@@ -175,7 +175,7 @@ no "final" CI check — the monitor _is_ the check, continuously.
   defer one pass so one settled HEAD is fixed, not a half-pushed one. Single
   fix-to-green episode at a time.
 - **Status file** for the orchestrator + `/forge-status`:
-  `.pr-artifacts/<slug>/forge/loop/ci-green-continuous/status.json`
+  `$FORGE_ART/branches/<slug>/loop/ci-green-continuous/status.json`
   `{ "head": "<sha>", "verdict": "GREEN|RED|RUNNING|GATED", "since": "<iso>", "armed": true }`.
   READY reads this instead of running a separate phase-9 loop.
 - A genuine `BLOCKED_RESTACK_CONFLICT` / `BLOCKED_CONTRACT` inside an episode

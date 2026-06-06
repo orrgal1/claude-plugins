@@ -31,7 +31,7 @@ Layer 3 of the attestation chain. For each `SG<n>.<m>`, confirm a real test file
 | `--slug` | `--slug <name>` | sanitized branch name |
 | `--json` | flag            | off (console report)  |
 
-Prereqs: `.pr-artifacts/<slug>/forge/goals.md` with ≥1 scenario. Missing → exit
+Prereqs: `$FORGE_ART/branches/<slug>/goals.md` with ≥1 scenario. Missing → exit
 2 with `BLOCKED_NO_SCENARIOS`.
 
 ## The check
@@ -79,9 +79,9 @@ component is the default; operator owes a one-liner when deviating up.
 ## Process
 
 1. Resolve slug (argument or branch-derived).
-2. Read `.pr-artifacts/<slug>/forge/goals.md`. Enumerate scenarios + their
+2. Read `$FORGE_ART/branches/<slug>/goals.md`. Enumerate scenarios + their
    `- test:` / `- tier:` sub-bullets.
-3. Read `.pr-artifacts/<slug>/forge/links.json` if present.
+3. Read `$FORGE_ART/branches/<slug>/links.json` if present.
 4. For each scenario, apply link verdict table. Resolve `<path>::<func>` —
    confirm path exists, function is defined.
 5. Cross-check against `links.json` — emit DESYNC / DANGLING as applicable.
@@ -95,7 +95,7 @@ component is the default; operator owes a one-liner when deviating up.
 
 verdict: PASS | FAIL
 slug: <branch-slug>
-artifact: .pr-artifacts/<slug>/forge/goals.md
+artifact: $FORGE_ART/branches/<slug>/goals.md
 
 ## scenario linkage
 

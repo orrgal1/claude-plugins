@@ -101,29 +101,23 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
    `--drop G<n>` `--promote G<n>` `--out-of-scope` `--remove-from-scope`. Loop
    until `y`. Re-present current state each loop.
 
-5. **Write `.pr-artifacts/<slug>/forge/goals.md`** per Output shape. Bootstrap
-   artifact dir + root forge gitignore:
+5. **Write `$FORGE_ART/branches/<slug>/goals.md`** per Output shape. Bootstrap
+   the artifact dir + the tracking `.gitignore` (generated from
+   `[artifacts].track`, per `/forge-setup` § `$FORGE_ART/.gitignore`):
 
    ```bash
-   mkdir -p ".pr-artifacts/${slug}/forge"
-   gi=".pr-artifacts/.gitignore"
-   if [ ! -f "$gi" ]; then
-     cat > "$gi" <<'EOF'
-   # Forge: ignore everything under <slug>/forge/ except shared review surfaces.
-   */forge/*
-   !*/forge/goals.md
-   !*/forge/design.md
-   EOF
-   fi
+   mkdir -p "$FORGE_ART/branches/${slug}"
+   [ -f "$FORGE_ART/.gitignore" ] || forge_write_artifact_gitignore   # from [artifacts].track; default "all"
    ```
 
-   On legacy hosts whose root `.gitignore` blanket-ignores `.pr-artifacts/`,
-   force-add:
+   `track="all"` (default) tracks everything — `goals.md` is committed for
+   inline review. If the operator set a host `.gitignore` that blanket-ignores
+   `$FORGE_ART`'s parent and a tracked artifact ends up ignored, force-add it:
 
    ```bash
-   gm=".pr-artifacts/${slug}/forge/goals.md"
+   gm="$FORGE_ART/branches/${slug}/goals.md"
    if git check-ignore -q "$gm"; then
-     git add -f "$gi" "$gm"
+     git add -f "$FORGE_ART/.gitignore" "$gm"
      git commit -m "forge-goals: publish artifact (ignored path)"
    fi
    ```
@@ -135,7 +129,7 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
 7. **Recap:**
 
    ```
-   ✓ goals.md written: .pr-artifacts/<slug>/forge/goals.md
+   ✓ goals.md written: $FORGE_ART/branches/<slug>/goals.md
      G1 (main): <short name>     G2 (secondary): <short name>   …
      out of scope: <count>
    → /forge-scenarios next.
@@ -181,14 +175,14 @@ Don't write until cap respected. No `--force`.
 
 ## Output shape
 
-`.pr-artifacts/<slug>/forge/goals.md`:
+`$FORGE_ART/branches/<slug>/goals.md`:
 
 ```markdown
 # Goals — <PR title or feature name>
 
-> ⚠️ **Scheduled for cleanup.** Forge artifact — checked in temporarily for
-> inline review. Removal / re-gitignore timing TBD. Don't depend on it from
-> runtime code.
+> 🔨 **Forge artifact** — the PR's goal contract, tracked per
+> `[artifacts].track` (default: tracked, for inline review). Not runtime code;
+> don't import it.
 
 - Source: <Jira key | PR# | doc path | "conversation">
 - Branch: <branch>

@@ -92,7 +92,7 @@ skill establishes on first authoring.
 ## Process
 
 1. Resolve slug (argument, branch, or the only
-   `.pr-artifacts/*/forge/goals.md`).
+   `$FORGE_ART/branches/*/goals.md`).
 2. Read `goals.md`. Enumerate `Gn` via `^## G\d+ —`. Missing file → exit "run
    /forge-goals first".
 3. **Harvest** existing `when:` / `then:` from the PR diff (§ "Harvest").
@@ -110,8 +110,8 @@ skill establishes on first authoring.
    (`SG<n>.<m>` or ranges `SG1.1–SG1.5`) to the goal's end-state.
    Reviewer-facing only, not parsed downstream. Phrases over prose; no restating
    each scenario — the SG list already says it. Rewrite when scenarios change.
-8. **Publish goals.md** (only-goals-tracked policy) — gitignore bootstrap +
-   legacy-host force-add per `/forge-goals` §5, commit msg
+8. **Publish goals.md** (tracked per `[artifacts].track`) — gitignore
+   bootstrap + force-add-if-ignored per `/forge-goals` §5, commit msg
    `forge-scenarios: update review artifact`.
 9. **`--push`** (orchestrator entry, before `AWAIT_SCENARIOS_REVIEW`) — push
    gate per `/forge-goals` §6.
@@ -174,7 +174,7 @@ hatch.
 
 - Allocate next `SG<n>.<m>` under matched goal.
 - Promote `when:` / `then:` verbatim.
-- Cache back-link in `.pr-artifacts/<slug>/forge/.harvest.json`:
+- Cache back-link in `$FORGE_ART/branches/<slug>/.harvest.json`:
 
   ```json
   {

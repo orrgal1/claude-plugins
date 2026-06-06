@@ -21,7 +21,7 @@ user-invocable: true
 # /forge-verify-runs — linked tests pass
 
 Final layer of the attestation chain. Static read of
-`.pr-artifacts/<slug>/forge/run.json` (written by `/forge-impl-green`). Confirms
+`$FORGE_ART/branches/<slug>/run.json` (written by `/forge-impl-green`). Confirms
 every linked test was `pass` (or `skipped`) on the last run. Never executes the
 suite — for a live run, call `/forge-impl-green --watch` first.
 
@@ -32,7 +32,7 @@ suite — for a live run, call `/forge-impl-green --watch` first.
 | `--slug` | `--slug <name>` | sanitized branch name |
 | `--json` | flag            | off (console report)  |
 
-Prereqs: `.pr-artifacts/<slug>/forge/run.json` exists. Missing → exit 2 with
+Prereqs: `$FORGE_ART/branches/<slug>/run.json` exists. Missing → exit 2 with
 `BLOCKED_NO_RUN`.
 
 ## The check
@@ -54,7 +54,7 @@ out at runtime (e.g. environment-gated). Surface the count.
 ## Process
 
 1. Resolve slug (argument or branch-derived).
-2. Read `.pr-artifacts/<slug>/forge/run.json`. Missing → exit 2.
+2. Read `$FORGE_ART/branches/<slug>/run.json`. Missing → exit 2.
 3. Enumerate LINKED scenarios from `goals.md`.
 4. For each, look up in `run.json` and apply verdict table.
 5. Compare `run.json` mtime to each linked test file's mtime — emit STALE if any
@@ -69,7 +69,7 @@ out at runtime (e.g. environment-gated). Surface the count.
 
 verdict: PASS | FAIL
 slug: <branch-slug>
-artifact: .pr-artifacts/<slug>/forge/run.json
+artifact: $FORGE_ART/branches/<slug>/run.json
 run timestamp: <iso>
 
 ## per-scenario result

@@ -25,13 +25,14 @@ user-invocable: true
 # /forge-tests — test per scenario
 
 Third link. **The only skill that writes code into the project.** Goals +
-scenarios live under `.pr-artifacts/`; tests live in the test tree.
+scenarios live under `$FORGE_ART/branches/<slug>/`; tests live in the test tree.
 
 The scenario → test back-link lives in `goals.md` as nested `- test:` /
 `- tier:` sub-bullets. Test code carries only the two annotations below (`when:`
 / `then:` header + arrange/act/assert body markers). No `prov:` tag, no forge
-metadata — `.pr-artifacts/` isn't committed, so a `prov: SG1.1` in test code
-would be a dead reference.
+metadata — the back-link is **single-sourced** in `goals.md`; a `prov: SG1.1` in
+test code would be a second, drift-prone copy (and `$FORGE_ART` tracking is
+configurable — it can't be assumed present beside the code).
 
 ### Test annotations (self-contained)
 
@@ -52,7 +53,7 @@ Two conventions, per language's comment syntax:
 
 For each `SG<n>.<m>`:
 
-1. **Harvest shortcut.** If `.pr-artifacts/<slug>/forge/.harvest.json` has an
+1. **Harvest shortcut.** If `$FORGE_ART/branches/<slug>/.harvest.json` has an
    entry for this scenario, `/forge-scenarios` already matched a pre-existing
    `when:` / `then:` annotation. Skip search, jump to Sub-flow A. Verify the
    test still exists; deleted/renamed → fall to step 2.
@@ -189,8 +190,8 @@ No CONFIDENT or LIKELY match:
     Do NOT commit `links.json`, `decisions.md`, `.harvest.json`, `run.json` —
     runtime state, not source. **Exception:** `goals.md` per step 7.
 
-7.  **Publish `goals.md`** (only-goals-tracked policy) — gitignore bootstrap +
-    legacy-host force-add per `/forge-goals` §5, commit msg
+7.  **Publish `goals.md`** (tracked per `[artifacts].track`) — gitignore
+    bootstrap + force-add-if-ignored per `/forge-goals` §5, commit msg
     `forge-tests: update review artifact (test: links)`.
 
 8.  **Record** in `links.json` with `state: new`, `source: "new"`, `test_path`,

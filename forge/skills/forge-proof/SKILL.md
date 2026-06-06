@@ -49,7 +49,7 @@ L6 and L7 each `SKIPPED` cleanly when their proof type is unused.
 
 ## Layer 5 — design coverage (inline)
 
-Runs only when `.pr-artifacts/<slug>/forge/design.md` exists; absent →
+Runs only when `$FORGE_ART/branches/<slug>/design.md` exists; absent →
 `SKIPPED-NO-DESIGN`, no fail. Parse the `## Coverage map` table and each
 `### <Component>` block's `- proves: SG<n>.<m>, …` line.
 

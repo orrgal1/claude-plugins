@@ -209,14 +209,18 @@ auto-posted.
 
 Two locations, by purpose:
 
-- **Per-PR chain artifacts** live in-repo under
-  `.pr-artifacts/<branch-slug>/forge/` — `goals.md`, `links.json`, `run.json`,
-  `validations.json`, `design.md`, decisions, review cycles (forge
-  self-bootstraps a `.pr-artifacts/.gitignore`). Loop scratchpads and the
-  continuous-CI monitor's status live under `.pr-artifacts/<slug>/forge/loop/`.
+- **Per-PR chain artifacts** live in-repo under `$FORGE_ART/branches/<slug>/` —
+  `goals.md`, `links.json`, `run.json`, `validations.json`, `design.md`,
+  decisions, review cycles, loop scratchpads, the continuous-CI monitor's
+  status. `$FORGE_ART` is `.forge` by default, or `<prefix>/.forge` when
+  `[artifacts].prefix` is set. **What of this metadata git tracks is
+  configurable** via `[artifacts].track` (default: everything), enforced by a
+  generated `$FORGE_ART/.gitignore` scoped to `branches/…`. Categories: `chain`,
+  `loop`, `review`, `monitor`.
 - **The tooling map + repo-scoped state** live at `$FORGE_HOME`
   (`~/.claude/forge/<repo-key>/`) — a user-layer path, never committed, shared
-  by every worktree of the repo.
+  by every worktree of the repo. Maps, tools, and commands live here,
+  **outside** the `[artifacts].track` policy.
 
 ## License
 

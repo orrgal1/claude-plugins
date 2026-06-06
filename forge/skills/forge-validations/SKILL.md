@@ -125,7 +125,7 @@ A goal needs **≥1 proof total** (scenario or validation), not ≥1 of each.
 ## Process
 
 1. Resolve slug (argument, branch, or the only
-   `.pr-artifacts/*/forge/goals.md`).
+   `$FORGE_ART/branches/*/goals.md`).
 2. Read `goals.md`. Enumerate `Gn` via `^## G\d+ —`. Missing file → exit "run
    /forge-goals first".
 3. **For each goal** (or `--goal G<n>` only) that is validation-shaped (or
@@ -144,8 +144,8 @@ A goal needs **≥1 proof total** (scenario or validation), not ≥1 of each.
 5. **Forge narration** — add or extend a `### How the proofs prove this` section
    (shared with scenarios when both exist) tying VGs (and SGs) to the goal's
    end-state. Reviewer-facing; not parsed downstream.
-6. **Publish goals.md** (only-goals-tracked policy) — gitignore bootstrap +
-   legacy-host force-add per `/forge-goals` §5, commit msg
+6. **Publish goals.md** (tracked per `[artifacts].track`) — gitignore
+   bootstrap + force-add-if-ignored per `/forge-goals` §5, commit msg
    `forge-validations: update review artifact`.
 7. **`--push`** (orchestrator entry) — push gate per `/forge-goals` §6.
 8. Recap — per-goal validation counts (command vs attest), then

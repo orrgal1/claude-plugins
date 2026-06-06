@@ -52,7 +52,7 @@ Broken chain → run `/forge` first (or `/forge-goals`, `/forge-scenarios`,
 ## Pipeline
 
 1. Resolve slug + worktree + PR (per `/forge` rules).
-2. Load `.pr-artifacts/<slug>/forge/{goals.md,links.json}`. Missing either →
+2. Load `$FORGE_ART/branches/<slug>/{goals.md,links.json}`. Missing either →
    **no-chain mode**: channels needing `forge-chain` dropped with a one-line
    note.
 3. Run `/forge-proof` (cached if recent). FAIL → refuse, point at report.
@@ -210,7 +210,7 @@ trigger.
 ## Artifact directory
 
 ```
-.pr-artifacts/<slug>/forge/review/
+$FORGE_ART/branches/<slug>/review/
   proposal.md                       # channel + per-channel design echoed at the gate
   synthesis.md                      # final aggregated synthesis (local; not tracked)
   <channel-id>/                     # one per active channel

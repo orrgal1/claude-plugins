@@ -39,7 +39,7 @@ findings submitted on the PR) and `forge-review-green` (loops on forge's **own**
 lens findings; this works **external** reviewer feedback).
 
 Prereq (refuse without): chain artifacts exist —
-`.pr-artifacts/<slug>/forge/{goals.md,links.json}`. No chain → exit; this skill
+`$FORGE_ART/branches/<slug>/{goals.md,links.json}`. No chain → exit; this skill
 is chain-specific (its guard protects the chain artifacts).
 
 ## Security
@@ -146,7 +146,7 @@ After the walk: one self-review pass over the cumulative diff; validate linked
 tests via the `test` capability (`$FORGE_HOME/commands/test`, per `/forge` §
 "Repo tooling") and refresh `run.json`.
 
-Write per-item status to `.pr-artifacts/<slug>/forge/review/external-<cycle>.md`
+Write per-item status to `$FORGE_ART/branches/<slug>/review/external-<cycle>.md`
 using `forge-review-green`'s finding-status discipline (`new` / `addressed` /
 `regressed` / `reopened` / `persistent`). End with an append-ready
 `decisions.md` slice.

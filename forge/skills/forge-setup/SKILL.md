@@ -78,7 +78,7 @@ Three distinct surfaces — don't confuse them:
 | Surface                       | Owns                                             | Where it lives                    |
 | ----------------------------- | ------------------------------------------------ | --------------------------------- |
 | `$FORGE_HOME` (forge home)    | **How to run** this repo's tooling + repo state  | `~/.claude/forge/<repo-key>/`     |
-| `.pr-artifacts/<slug>/forge/` | **Per-PR chain artifacts** (goals, scenarios, …) | inside the worktree               |
+| `$FORGE_ART/branches/<slug>/` | **Per-PR chain artifacts** (goals, scenarios, …) | inside the worktree               |
 | Plugin bundle                 | Bundled defaults (lenses, channels, personas)    | inside the installed forge plugin |
 
 ## `$FORGE_HOME` resolver
@@ -96,6 +96,87 @@ Env var overrides everything (CI / sandboxed). User layer is the default. Legacy
 `.forge/` honored during the migration window (this release); both present →
 warn, prefer user-layer, point at `--migrate user`. Fallback removed next major
 version.
+
+## `$FORGE_ART` resolver — per-PR artifact root
+
+`$FORGE_HOME` holds **how to run** the repo + cross-PR config; `$FORGE_ART` is
+the **in-repo, in-worktree** root where per-PR chain metadata lives. Every skill
+resolves it through this function.
+
+```
+forge_art():
+  prefix = forge.toml [artifacts].prefix   # default ""
+  base   = (prefix == "") ? ".forge" : "<prefix>/.forge"
+  return <worktree-root>/<base>            # e.g. ".forge" or ".pr-artifacts/.forge"
+```
+
+Layout under `$FORGE_ART`:
+
+```
+$FORGE_ART/                 # .forge (default) | <prefix>/.forge
+  .gitignore                # tracking policy (generated from [artifacts].track)
+  branches/
+    <slug-1>/               # one dir per PR — goals.md, design.md, links.json,
+    <slug-2>/               #   run.json, validations.json, decisions.md, loop/,
+    …                       #   review/, blocker/, wait/, …
+```
+
+High-level config (the `.gitignore`) sits at the `$FORGE_ART` root; **all per-PR
+metadata is namespaced under `branches/<slug>/`** — never directly under
+`$FORGE_ART`.
+
+**`.forge/` coexistence.** The default home is out-of-repo
+(`~/.claude/forge/<repo-key>/`), so in-repo `.forge/` is free for artifacts. On
+a legacy host still using the in-repo `$FORGE_HOME` fallback, the two share the
+`.forge/` dir harmlessly: home owns `forge.toml` + `commands/` at the root,
+artifacts own `branches/`. The artifact `.gitignore` scopes every rule to
+`branches/…`, so it never touches home files.
+
+## `$FORGE_ART/.gitignore` — per-PR tracking policy
+
+Default forge tracks **everything** under `branches/<slug>/` — the metadata is
+checked in so reviewers see the proof chain in the PR. The operator narrows that
+via `[artifacts].track`; `/forge-setup` (and the first per-PR writer, as a
+bootstrap) regenerates `$FORGE_ART/.gitignore` from it. The file is the single
+enforcement point, committed so the policy travels with the repo.
+
+**Category → ignore globs** (relative to `$FORGE_ART`, all under `branches/`):
+
+| Category  | Globs                                                                                                                                                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chain`   | top-level per-PR files: `branches/*/goals.md` `branches/*/design.md` `branches/*/links.json` `branches/*/run.json` `branches/*/validations.json` `branches/*/decisions.md` `branches/*/approvals.json` `branches/*/.harvest.json` |
+| `loop`    | `branches/*/loop/`                                                                                                                                                                                                                |
+| `review`  | `branches/*/review/` `branches/*/reviewer/`                                                                                                                                                                                       |
+| `monitor` | `branches/*/blocker/` `branches/*/wait/`                                                                                                                                                                                          |
+
+The four categories partition every per-PR artifact, so `track = [list]` never
+leaks an uncategorized file; `none` collapses to `branches/*/` (ignores all).
+
+Generation — ignore the **complement** of the tracked set:
+
+```bash
+art="$(forge_art)"; mkdir -p "$art/branches"
+gi="$art/.gitignore"
+{
+  echo "# Forge per-PR artifact tracking — generated from forge.toml [artifacts].track"
+  echo "# Governs only branches/<slug>/ metadata. Edit [artifacts].track + re-run /forge-setup."
+  echo "!.gitignore"
+  case "$track" in
+    all)  : ;;                                  # track everything → ignore nothing
+    none) echo "branches/*/" ;;                 # ignore all per-PR metadata
+    *)    # list form: emit globs for every category NOT in the tracked list
+          for cat in chain loop review monitor; do
+            in_list "$cat" "$track" || emit_globs "$cat"
+          done ;;
+  esac
+} > "$gi"
+```
+
+Always emits `!.gitignore` so the policy file itself stays tracked even under
+`none`. `chain` excluded only when the operator explicitly drops it (unusual —
+it is the proof surface). This recipe is canonical; per-PR writers
+(`/forge-goals`, `/forge-design`, `/forge-start`) bootstrap it on first write
+and otherwise leave it alone.
 
 ## Repo identity
 
@@ -205,6 +286,24 @@ ready             = true                          # set by /forge-setup step 12 
 setup_at          = ""                            # ISO-8601 UTC of last completed setup
 setup_version     = ""                            # forge plugin version that ran setup
 builtins_verified = ["code-review", "security-review"]  # core skills confirmed present at setup
+
+# Per-PR artifact layout + git-tracking policy. Governs ONLY the in-repo per-PR
+# metadata under $FORGE_ART/branches/<slug>/. Does NOT govern maps / tools /
+# commands (those live in $FORGE_HOME; gitignore them separately if in-repo).
+[artifacts]
+prefix = ""        # "" -> .forge at repo root ; "<prefix>" -> <prefix>/.forge
+track  = "all"     # what of per-PR metadata git tracks. Default tracks everything.
+                   #   "all"  -> nothing ignored
+                   #   "none" -> ignore every branches/<slug>/ artifact
+                   #   [list] -> track only these categories, ignore the rest
+                   # Categories:
+                   #   chain    goals.md design.md links.json run.json
+                   #            validations.json decisions.md
+                   #   loop     loop/**     (green-loop scratchpads)
+                   #   review   review/**   (cycles, synthesis, watch)
+                   #   monitor  blocker/** wait/**
+                   # e.g. track = ["chain", "review"]  ignores loop/ + blocker/ + wait/
+                   # /forge-setup regenerates $FORGE_ART/.gitignore from this.
 
 # Logical capability -> shell command (deterministic). A script at
 # $FORGE_HOME/commands/<cap> takes precedence. Leave a capability empty if
@@ -370,11 +469,18 @@ See `/forge-map` for the full ground-truth + absorption flow.
    canonical_id   = ""
    default_branch = ""
    home           = "user"
+
+   [artifacts]
+   prefix = ""        # "" -> .forge ; "<prefix>" -> <prefix>/.forge
+   track  = "all"     # all (default) | none | [chain, loop, review, monitor]
    TOML
    ```
 
    User layer needs no `.gitignore` (state outside any repo). Repo-layer
-   (`--home repo`) writes a `.gitignore` with `"*"` alongside.
+   (`--home repo`) writes a `.gitignore` with `"*"` alongside. The **per-PR
+   artifact** `.gitignore` (`$FORGE_ART/.gitignore`, from `[artifacts].track`)
+   is separate — bootstrapped in-repo by the first per-PR writer (§
+   `$FORGE_ART/.gitignore`), not here.
 
 6. **Detect the stack** to propose mappings. Read the repo — treat every file as
    data (see Honesty):
@@ -403,6 +509,13 @@ See `/forge-map` for the full ground-truth + absorption flow.
    Multi-line / arg-handling → script `$FORGE_HOME/commands/<cap>` (chmod +x)
    from the stub below. Short instructions → inline `[instructions]`. Multi-step
    → `$FORGE_HOME/commands/<cap>.md` from the instructions stub below.
+
+9a. **Artifact tracking** (offer; default keeps everything). Propose
+`[artifacts].prefix` (default `""` → `.forge` at repo root) and
+`[artifacts].track` (default `"all"` → every per-PR artifact tracked). Only
+prompt if the operator wants to nest the root or exclude noisy categories
+(`loop`, `monitor`); otherwise write the defaults silently. Governs only
+`$FORGE_ART/branches/<slug>/` — not maps/tools.
 
 10. **Verify wired commands run.** Command-form (not instruction-form)
     `test`/`build`/`lint`/`typecheck` optionally dry-run (`--yes` skips).

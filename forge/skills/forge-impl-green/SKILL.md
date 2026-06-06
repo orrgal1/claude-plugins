@@ -40,12 +40,12 @@ never polls CI; hand off to `/forge-ci-green` for CI.
 | `--scenario` | all failing scenarios (narrow with `SG<n>.<m>`) |
 | `max`        | `10`                                            |
 
-Prereqs: `.pr-artifacts/<slug>/forge/goals.md` exists with `- test:` sub-bullets
+Prereqs: `$FORGE_ART/branches/<slug>/goals.md` exists with `- test:` sub-bullets
 on every scenario. Missing → exit, point at `/forge` or `/forge-tests`.
 
 ## State (file-backed loop memory)
 
-Slot `.pr-artifacts/<slug>/forge/loop/forge-impl-green-<slug>/` per `/forge` §
+Slot `$FORGE_ART/branches/<slug>/loop/forge-impl-green-<slug>/` per `/forge` §
 Loop contract. `plan.md` — one bullet per failing `REAL_BUG` scenario.
 
 ## Pre-flight (controller)
@@ -95,7 +95,7 @@ Read-only w.r.t. source; the only write is `run.json`. Dispatched as
   backticks). Run them via the `test` capability
   (`$FORGE_HOME/commands/test <selector>`, per `/forge` § "Repo tooling").
 - Always run the **full** linked set per tick — sibling regressions must
-  surface. Aggregate to `.pr-artifacts/<slug>/forge/run.json` (overwrite).
+  surface. Aggregate to `$FORGE_ART/branches/<slug>/run.json` (overwrite).
 - Append a `## iter <N>` check line to `scratchpad.md`.
 
 Exit codes → verdict returned to the controller:
@@ -168,7 +168,7 @@ remaining failures (if not SUCCESS):
 ### next move
 <one line>
 
-state: .pr-artifacts/<slug>/forge/loop/forge-impl-green-<slug>/ — edit plan.md or re-invoke max=<N>.
+state: $FORGE_ART/branches/<slug>/loop/forge-impl-green-<slug>/ — edit plan.md or re-invoke max=<N>.
 ```
 
 ## Next step

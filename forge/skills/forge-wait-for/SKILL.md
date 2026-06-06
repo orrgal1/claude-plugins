@@ -47,7 +47,7 @@ It self-ends on **met**, on **`--max-wait` timeout**, or on **`stop`** — never
 runs open-ended.
 
 Prereq (refuse without): chain artifacts exist —
-`.pr-artifacts/<slug>/forge/{goals.md,links.json}`. No chain → exit (there is
+`$FORGE_ART/branches/<slug>/{goals.md,links.json}`. No chain → exit (there is
 nothing to resume).
 
 **Not a halt launderer.** Wait-for is for blockers an external actor resolves on
@@ -90,7 +90,7 @@ the resume to the operator).
 
 ## State
 
-`.pr-artifacts/<slug>/forge/wait/`:
+`$FORGE_ART/branches/<slug>/wait/`:
 
 - `spec.json` — condition type + params, resume action, `from` phase, mode,
   `deadline` (ISO; armtime + `--max-wait`). Survives a session bounce so a

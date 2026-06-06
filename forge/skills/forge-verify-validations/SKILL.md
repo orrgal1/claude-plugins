@@ -29,7 +29,7 @@ Attestation layer for the **validation** proof type (peer to
 read of a `run.json` written elsewhere), this skill **executes** each
 validation's `check:` itself — a cheap read-only predicate (`git grep`, `build`)
 safe to run inline — records result + evidence into
-`.pr-artifacts/<slug>/forge/validations.json`, then verdicts each.
+`$FORGE_ART/branches/<slug>/validations.json`, then verdicts each.
 
 Validations prove removal/negative/structural goals. Written by
 `/forge-validations`; impl makes them true (`/forge-impl-green` lands the
@@ -93,7 +93,7 @@ single self-graded read.
    - `kind: command` → resolve + run `check:`; record exit + evidence.
    - `kind: attest` → attest pass, then spawn the adversarial refuter; record
      both.
-4. Write `.pr-artifacts/<slug>/forge/validations.json` (shape below).
+4. Write `$FORGE_ART/branches/<slug>/validations.json` (shape below).
    Cross-check for DANGLING entries.
 5. Compare `validations.json` mtime to HEAD commit time — emit STALE if code
    changed since.
@@ -140,7 +140,7 @@ working artifact, like `run.json`).
 
 verdict: PASS | FAIL | SKIPPED-NO-VALIDATIONS
 slug: <branch-slug>
-artifact: .pr-artifacts/<slug>/forge/validations.json
+artifact: $FORGE_ART/branches/<slug>/validations.json
 
 ## per-validation result
 

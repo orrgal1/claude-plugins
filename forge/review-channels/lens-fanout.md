@@ -196,14 +196,14 @@ severity_cap  = ""              # empty = no cap; values: blocker/major/minor/ni
 Per-channel artifacts under the channel id:
 
 ```
-.pr-artifacts/<slug>/forge/review/lens-fanout/
+$FORGE_ART/branches/<slug>/review/lens-fanout/
   proposal.md       # lens-design proposal echoed at the gate
   lens-LN.md        # per-lens finding log (local; not tracked)
   synthesis.md      # this channel's synthesis (local; not tracked)
 ```
 
 Aggregated synthesis across all channels: one level up at
-`.pr-artifacts/<slug>/forge/review/synthesis.md`.
+`$FORGE_ART/branches/<slug>/review/synthesis.md`.
 
 ## Notes for /forge-review
 

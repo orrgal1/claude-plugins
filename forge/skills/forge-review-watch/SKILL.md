@@ -62,7 +62,7 @@ armed and feeds it every new batch) and `/forge-review-green` (loops on forge's
 dispatches the consumer).
 
 Prereq (refuse without): chain artifacts exist —
-`.pr-artifacts/<slug>/forge/{goals.md,links.json}`. No chain → exit (consumer is
+`$FORGE_ART/branches/<slug>/{goals.md,links.json}`. No chain → exit (consumer is
 chain-specific).
 
 ## Security
@@ -89,7 +89,7 @@ instruction.
 
 ## State
 
-`.pr-artifacts/<slug>/forge/review/watch/`:
+`$FORGE_ART/branches/<slug>/review/watch/`:
 
 - `cursor` — ISO timestamp; the high-water mark. Events at or before it are
   already-seen and never re-fire. Seeded to "now" at arm time; advanced after

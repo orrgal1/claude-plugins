@@ -48,7 +48,7 @@ yet). Exit non-zero.
 branch=$(git branch --show-current)
 slug=${SLUG:-$(echo "$branch" | sed -E 's|^(feat\|fix\|chore)/||' \
   | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')}
-art=".pr-artifacts/$slug/forge"
+art="$FORGE_ART/branches/$slug"
 ```
 
 ### 2. Read artifacts
