@@ -107,6 +107,14 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
   the peripheral blocker and `/forge-wait-for` watches that one condition (base
   PR CI, a Slack thread, any predicate), then restacks and resumes the chain.
   Genuine halts still stop.
+- **Self-healing on known failures** — repo-scoped **recovery playbooks**
+  (`[playbooks.<name>]`) let forge recover a known capability failure itself
+  instead of blocking to ask. A failure matching a playbook's signature triggers
+  its recovery, then retries — e.g. an ECR pull failing on an expired SSO token
+  runs `aws sso login` and re-runs. Forge also offers to capture a new playbook
+  on the fly when a recurring failure is cleared manually; interactive
+  recoveries (browser auth) stay a genuine block under `yolo`/unattended. See
+  **The `$FORGE_HOME` tooling map** below.
 - **Peer-review handoff** — on READY, forge arms the review watch and proposes a
   reviewer; **the PR is already open as a draft, so moving it to
   ready-for-review and requesting the reviewer is a gated author gesture** that
