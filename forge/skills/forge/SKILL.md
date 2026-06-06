@@ -668,10 +668,11 @@ cycle synthesis and the fix-loop inside phase 8.
 **Keep metadata current — never offer it as a choice.** A non-destructive,
 metadata-updating action — refreshing `run.json` (re-running linked tests,
 **including bringing up local test infra to do so**), re-embedding the proof
-block, refreshing a loop/monitor `status.json`, advancing a drift marker — is
-**done automatically**, not surfaced as an optional "want me to…?" question.
-Bringing up local infra to refresh state is in-scope (it mutates no repo
-content). The bar to _ask_ is the same as to _halt_: a genuinely destructive or
+block, refreshing the top brief when intent evolves (`/forge-brief`), refreshing
+a loop/monitor `status.json`, advancing a drift marker — is **done
+automatically**, not surfaced as an optional "want me to…?" question. Bringing
+up local infra to refresh state is in-scope (it mutates no repo content). The
+bar to _ask_ is the same as to _halt_: a genuinely destructive or
 externally-visible act, or a real ambiguity — not housekeeping. Stale metadata
 forge could have refreshed is a defect, not a courtesy left to the operator.
 
@@ -690,6 +691,7 @@ forge could have refreshed is a defect, not a courtesy left to the operator.
 | `goals.uncovered` drift                         | `/forge-scenarios --goal G<n>` once. Halt only if scenario draft blocks.                            |
 | `run.stale` drift                               | Re-run linked tests via `/forge-impl-green` once before phase decision.                             |
 | `pr.no_forge_block` drift                       | `/forge-proof --embed`. No halt.                                                                    |
+| `pr.brief_stale` drift (intent evolved)         | `/forge-brief`. No halt. Refresh the top brief; never offer as a choice.                            |
 | `pr.dirty_worktree` (unrelated)                 | Commit as `wip: pre-forge snapshot`, log, proceed.                                                  |
 | `pr.ahead_unpushed`                             | Push. No halt.                                                                                      |
 | `review.assumed_fixed_no_recycle`               | Re-cycle `/forge-review-green` with prior context. No halt.                                         |

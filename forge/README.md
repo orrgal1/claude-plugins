@@ -61,9 +61,15 @@ a PR has no validations. `/forge-proof` is a **reader, not a fixer** — it emit
 the smallest blocking set of findings; `/forge-proof-green` is the loop that
 clears them.
 
-Because the chain is mechanical, "done" means _proven_, not _asserted_ — and
-the attestation can be embedded straight into the PR description (`--embed`) so
+Because the chain is mechanical, "done" means _proven_, not _asserted_ — and the
+attestation can be embedded straight into the PR description (`--embed`) so
 reviewers see the proof, not a promise.
+
+The PR body stays disciplined: a tight, non-collapsible **brief** on top (owned
+by `/forge-brief`, kept current as intent evolves — never left to stale), and
+every embedded chain artifact below it as its own **idempotent collapsible
+block** (`/forge-proof`, `/forge-review`, …). Each writer touches only its own
+region, so the description never drifts into a wall of stale machine output.
 
 ## The chain
 
@@ -186,6 +192,7 @@ auto-posted.
 | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `/forge-setup`                                                                                | Map host-repo tooling into `$FORGE_HOME`                                          |
 | `/forge-start`                                                                                | Bootstrap a chain: source brief → scaffold worktree → draft PR → hand off         |
+| `/forge-brief`                                                                                | Own the tight, non-collapsible PR brief; refresh it as intent evolves             |
 | `/forge`                                                                                      | Orchestrate the whole chain to READY                                              |
 | `/forge-goals` · `/forge-scenarios` · `/forge-validations` · `/forge-design` · `/forge-tests` | Chain atoms                                                                       |
 | `/forge-proof` + `/forge-verify-*`                                                            | Full + per-layer attestation (the proof chain)                                    |

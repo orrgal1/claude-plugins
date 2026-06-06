@@ -182,17 +182,30 @@ Extends `/forge`'s wrap-verdict ladder:
 
 ## Embed
 
-`--embed` appends a `## Review` section **inside** the existing `<details>`
-wrapper of the `<!-- forge-proof:begin -->` / `<!-- forge-proof:end -->` block,
-then rewrites `<summary>`:
+`--embed` writes the synthesis into its **own** collapsible block between
+`<!-- forge-review:begin -->` / `<!-- forge-review:end -->`, wrapped in a
+collapsed `<details>` (no `open` attribute) with a findings-bearing summary:
 
 ```
-<summary>🔨 forge — proof: <verdict> · review: <findings> · <slug></summary>
+<!-- forge-review:begin -->
+<details>
+<summary>🔨 forge — review: <findings> · <slug></summary>
+
+# /forge-review synthesis
+…aggregated findings…
+
+</details>
+<!-- forge-review:end -->
 ```
 
-`<findings>` is short count (`1 blocker · 2 majors` or `clean`), aggregated
-across channels. Idempotent overwrite — preserves the proof block. No `open`
-attribute. No embed-block yet → refuse: "run `/forge-proof --embed` first".
+`<findings>` is a short count (`1 blocker · 2 majors`, or `clean`), aggregated
+across channels. This is a **sibling** of the proof block, never nested inside
+it — see /forge-brief § Body-layout contract. Idempotent overwrite between the
+review markers via `gh api`; preserves the brief and the proof block verbatim.
+Appends after the proof block when present, else directly under the brief. No
+proof block is **not** an error — review embeds independently. No PR → no-op,
+hint "no PR yet — open one then re-run with --embed." No commit, no push, no CI
+trigger.
 
 ## Artifact directory
 

@@ -100,7 +100,7 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
    ```
    <!-- forge-proof:begin -->
    <details>
-   <summary>🔨 forge — &lt;verdict&gt; · &lt;slug&gt;</summary>
+   <summary>🔨 forge — proof: &lt;verdict&gt; · &lt;slug&gt;</summary>
 
    # /forge-proof result
    …report body…
@@ -109,7 +109,11 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
    <!-- forge-proof:end -->
    ```
 
-   No PR → no-op, hint "no PR yet — open one then re-run with --embed."
+   This is **one** collapsible block among siblings — review embeds in its own
+   `<!-- forge-review -->` block, never inside this one (see /forge-brief §
+   Body-layout contract). Touch only between the proof markers; preserve the
+   brief and every other block verbatim. No PR → no-op, hint "no PR yet — open
+   one then re-run with --embed."
 
 ## Report shape
 

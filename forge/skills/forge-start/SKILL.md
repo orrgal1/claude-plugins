@@ -132,7 +132,11 @@ keyed by origin, shared across worktrees, so a fresh worktree inherits it.
        --body "<full brief>" )
    ```
 
-   Body = brief ONLY — chain artifacts land later via `/forge-proof --embed`.
+   Body = brief ONLY — the non-collapsible top region, owned by `/forge-brief`
+   (the brief shape + body-layout contract live there). Chain artifacts land
+   later as separate collapsible blocks (`/forge-proof --embed`,
+   `/forge-review --embed`). Refresh the brief via `/forge-brief` whenever the
+   PR's intent evolves — keep it tight and current, never stale.
 
 8. **Recap + handoff** (§ "Output", § "Handoff").
 
