@@ -58,3 +58,7 @@ repo into queryable domains.
 
 Requires `uv` (for `uv tool install graphifyy`), `git`, `jq`. No dependency on
 other plugins.
+
+## License
+
+[MIT](../LICENSE).
