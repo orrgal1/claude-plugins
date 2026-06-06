@@ -86,7 +86,7 @@ Only-honest-`then:`-is-internal → promote the closest endpoint-visible
 consequence into the `then:`, or drop the scenario.
 
 Consequence: every scenario gets a **component-or-higher tier test**.
-`/forge-tests` rejects unit-tier attachment; `/forge-audit` re-checks; this
+`/forge-tests` rejects unit-tier attachment; `/forge-proof` re-checks; this
 skill establishes on first authoring.
 
 ## Process
@@ -164,7 +164,7 @@ For each:
   [a] add a new goal (routes back to /forge-goals)
   [b] map to an existing goal (specify which)
   [c] drop (stale / out of scope)
-  [d] keep as orphan — TODO under ## Orphan scenarios (WARN at audit, no block)
+  [d] keep as orphan — TODO under ## Orphan scenarios (WARN at proof, no block)
 ```
 
 Choice `[a]` halts, re-run `/forge-goals` first. Choice `[d]` is the escape
@@ -259,7 +259,7 @@ When this PR ships, the system will support <capability>.
 ```
 
 The `## Scenarios` header under each goal is **load-bearing** — parsed by
-`/forge-tests` and `/forge-audit`. Don't rename, don't merge into goal body.
+`/forge-tests` and `/forge-proof`. Don't rename, don't merge into goal body.
 
 ## Next step
 

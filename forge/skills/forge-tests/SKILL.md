@@ -95,7 +95,7 @@ existing test:
 ## Test count — one per scenario
 
 **1:1 mapping is the contract.** Splitting a scenario across multiple tests
-dilutes the chain — Layer 4 inspects one, the rest go unaudited. Merging two
+dilutes the chain — Layer 4 inspects one, the rest go unproven. Merging two
 scenarios into one mega-test is the same problem inverted.
 
 Table-driven tests fine if each named row maps cleanly to one scenario. Extra
@@ -198,11 +198,11 @@ No CONFIDENT or LIKELY match:
 
 Wrong-reason failure → test is wrong before the code is. Fix the test first.
 
-## `links.json` shape (audit cache)
+## `links.json` shape (proof cache)
 
-`goals.md` is canonical. `links.json` is the audit cache — commit shas,
-timestamps, tier-deviation rationales. `/forge-audit` reads `goals.md` first;
-`links.json` only for audit metadata.
+`goals.md` is canonical. `links.json` is the proof cache — commit shas,
+timestamps, tier-deviation rationales. `/forge-proof` reads `goals.md` first;
+`links.json` only for proof metadata.
 
 ```json
 {
@@ -246,7 +246,7 @@ timestamps, tier-deviation rationales. `/forge-audit` reads `goals.md` first;
    `tier: qa` / `tier: integration` / `tier: blackbox` without `tier_reason`. No
    `state: new` without `commit`.
 6. **Recap** — per-scenario source split (harvest / search / new), tier
-   histogram, `→ /forge-audit next`.
+   histogram, `→ /forge-proof next`.
 
 ## Guardrails
 

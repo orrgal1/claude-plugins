@@ -47,7 +47,7 @@ loop iteration N → Layer 1 hard signal → /forge-stuck-check
 | `--iter`   | infer from receipt / ralph scratchpad |
 | `--json`   | off                                   |
 
-Phase values: `impl` | `ci-green` | `audit` | `temper` | `review`.
+Phase values: `impl` | `ci-green` | `proof` | `temper` | `review`.
 
 ## Layer 1 signal table (caller owns counters)
 

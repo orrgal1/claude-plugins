@@ -191,8 +191,8 @@ PR #<N> forge-address-review — <slug>
   CI: <green | pending | failing>
 ```
 
-- All blocking external feedback resolved + audit still PASS → suggest
-  `/forge-audit --embed`, `/forge-review --embed`, `/forge-status`.
+- All blocking external feedback resolved + proof still PASS → suggest
+  `/forge-proof --embed`, `/forge-review --embed`, `/forge-status`.
 - CHAIN-IMPACTING still open → chain change pending: route to `/forge` to edit
   the artifact + re-verify, then re-run this skill.
 
@@ -219,7 +219,7 @@ PR #<N> forge-address-review — <slug>
 
 ## Next step
 
-- Converged + audit PASS → `/forge-audit --embed` → `/forge-review --embed`.
+- Converged + proof PASS → `/forge-proof --embed` → `/forge-review --embed`.
 - CHAIN-IMPACTING open → `/forge` (edit artifact + re-verify), then re-run.
 - `/forge-review-watch` — keep this armed: auto-dispatch on every new review
   until stopped, instead of re-running by hand.

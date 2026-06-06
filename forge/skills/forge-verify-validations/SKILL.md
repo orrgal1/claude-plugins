@@ -8,7 +8,7 @@ triggers:
   - "forge verify validations"
   - "do the validations hold"
   - "check removal goal proofs"
-  - "audit validations.json"
+  - "prove validations.json"
 allowed-tools:
   - Bash
   - Read
@@ -200,7 +200,7 @@ passed: <N>   failed: <N>   errored: <N>   missing: <N>   stale: <N>   dangling:
 
 PASS → layer attested:
 
-- `/forge-audit` — re-aggregate (validations are Layer L7)
+- `/forge-proof` — re-aggregate (validations are Layer L7)
 - `/forge-status` — chain state + drift
 
 FAIL → the removal/structural change is incomplete:

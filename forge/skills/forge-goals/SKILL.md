@@ -208,7 +208,7 @@ After this PR, <one-sentence end-state>.
 ```
 
 The `## Gn — <name>` header shape is **load-bearing**: `/forge-scenarios` and
-`/forge-audit` grep `^## G\d+`. The `(main)` / `(secondary)` tag is
+`/forge-proof` grep `^## G\d+`. The `(main)` / `(secondary)` tag is
 informational — both downstream skills ignore it. Omit absent goal blocks
 entirely.
 

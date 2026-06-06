@@ -1,14 +1,14 @@
 ---
-name: forge-audit-green
+name: forge-proof-green
 description:
-  "Drive the forge audit to PASS — main-thread loop controller; each fix + each
-  re-audit offloaded to a subagent."
+  "Drive the forge proof to PASS — main-thread loop controller; each fix + each
+  re-prove offloaded to a subagent."
 argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
-  - "forge audit green"
-  - "drive forge audit to green"
-  - "fix audit findings"
-  - "make audit pass"
+  - "forge proof green"
+  - "drive forge proof to green"
+  - "fix proof findings"
+  - "make proof pass"
 allowed-tools:
   - Skill
   - Bash
@@ -24,10 +24,10 @@ practices:
 user-invocable: true
 ---
 
-# /forge-audit-green — drive structural audit to PASS
+# /forge-proof-green — drive structural proof to PASS
 
-Loop per `/forge` § Loop contract. Target: `/forge-audit` PASS. Check = the
-`verify` aggregator step (`/forge-audit` itself); fix = `audit-fix` (one
+Loop per `/forge` § Loop contract. Target: `/forge-proof` PASS. Check = the
+`verify` aggregator step (`/forge-proof` itself); fix = `proof-fix` (one
 finding's mechanical delta + commit).
 
 ## Inputs
@@ -39,11 +39,11 @@ finding's mechanical delta + commit).
 
 ## State (file-backed loop memory)
 
-Slot `.pr-artifacts/<slug>/forge/loop/forge-audit-green-<slug>/` per `/forge` §
+Slot `.pr-artifacts/<slug>/forge/loop/forge-proof-green-<slug>/` per `/forge` §
 Loop contract. `plan.md` — one bullet per open finding. Controller threads the
-check's `## handoff` (smallest blocking set) into each `audit-fix` brief.
+check's `## handoff` (smallest blocking set) into each `proof-fix` brief.
 
-## Chain-contract guard (enforced in `audit-fix`, re-checked by controller)
+## Chain-contract guard (enforced in `proof-fix`, re-checked by controller)
 
 A per-iteration patch is **refused** if it touches:
 
@@ -63,9 +63,9 @@ game.
 
 ## Findings → routing (controller reads the check's smallest blocking set)
 
-`/forge-audit` emits `## smallest blocking set` (preserved verbatim in the
+`/forge-proof` emits `## smallest blocking set` (preserved verbatim in the
 check's `## handoff`). The controller routes each row — **mechanical fixes go to
-`audit-fix`; everything else is spawned as its own step-runner or halts**:
+`proof-fix`; everything else is spawned as its own step-runner or halts**:
 
 | Layer + verdict                             | Route                                                                                            |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -75,16 +75,16 @@ check's `## handoff`). The controller routes each row — **mechanical fixes go 
 | Layer 3 — UNLINKED                          | Spawn `forge-step-runner step: tests` (SG<n>.<m>) once. Halt `BLOCKED_CONTRACT` on miss.         |
 | Layer 3 — STALE                             | Spawn `forge-step-runner step: tests` (`--refresh SG<n>.<m>`) once. Halt on miss.                |
 | Layer 3 — TIER-UNIT / TIER-UNKNOWN          | Halt `BLOCKED_CONTRACT` — re-tiering implies behavior change, operator.                          |
-| Layer 4 — NO-COMMENT / NO-AAA / DRIFT       | `audit-fix` — mechanical annotation (add `when:`/`then:`, AAA markers, fix stale entity name).   |
+| Layer 4 — NO-COMMENT / NO-AAA / DRIFT       | `proof-fix` — mechanical annotation (add `when:`/`then:`, AAA markers, fix stale entity name).   |
 | Layer 4 — MISMATCH                          | Halt `BLOCKED_CONTRACT` — `assert:` doesn't realize the scenario; operator picks side.           |
 | Layer 5 — ORPHAN-SG                         | Spawn `forge-step-runner step: design` once. Halt `BLOCKED_CONTRACT` if it doesn't cover.        |
-| Layer 5 — ORPHAN-ELEMENT / EMPTY-PROVES     | `audit-fix` — edit the component's `proves:` line to cite the right SG(s).                       |
+| Layer 5 — ORPHAN-ELEMENT / EMPTY-PROVES     | `proof-fix` — edit the component's `proves:` line to cite the right SG(s).                       |
 | Layer 5 — DANGLING-SG                       | Halt `BLOCKED_CONTRACT` — map cites a scenario no longer in `goals.md`.                          |
 | Layer 6 — STALE / MISSING                   | Spawn one `impl-check` to refresh `run.json`. Tests still red → `BLOCKED_CONTRACT` (behavior).   |
 | Layer 6 — DANGLING                          | Spawn `forge-step-runner step: tests` (`--refresh SG<n>.<m>`) once to realign cache.             |
 | Layer 6 — FAIL / ERROR                      | Halt `BLOCKED_CONTRACT` — behavior fix is `/forge-impl-green` (its own loop), not annotation.    |
 | Tier sanity WARN                            | Skip (not a blocker).                                                                            |
-| `tier_reason` missing on non-component      | `audit-fix` — add the reason to the scenario's `- tier:` sub-bullet.                             |
+| `tier_reason` missing on non-component      | `proof-fix` — add the reason to the scenario's `- tier:` sub-bullet.                             |
 
 **Same defect 3 iters in a row** → halt `BLOCKED_RECURRENT`.
 
@@ -95,10 +95,10 @@ resolve slug + worktree; read goals.md (+ links.json) for the allowlist.
 missing goals → NO_CHAIN.
 iter = 0
 while iter < max:
-    a = spawn verify step (forge-step-runner)         # the re-audit → smallest blocking set
-    a.PASS → invoke /forge-audit --embed once → settle AUDIT_GREEN
+    a = spawn verify step (forge-step-runner)         # the re-prove → smallest blocking set
+    a.PASS → invoke /forge-proof --embed once → settle PROOF_GREEN
     route each finding in a.handoff (table above):
-        mechanical → spawn audit-fix(finding)
+        mechanical → spawn proof-fix(finding)
         routed     → spawn the named step-runner once
         contract   → settle BLOCKED_CONTRACT
     fold subagent ## signals → stuck check (below)
@@ -106,28 +106,28 @@ while iter < max:
 settle BUDGET_EXHAUSTED
 ```
 
-Embed (`/forge-audit --embed`) is a one-shot on PASS — no fix-loop, no push.
-`/forge-audit` is the aggregator over verify-\* skills + inline L5 design; it
+Embed (`/forge-proof --embed`) is a one-shot on PASS — no fix-loop, no push.
+`/forge-proof` is the aggregator over verify-\* skills + inline L5 design; it
 doubles as the loop's **check** — controller never calls per-layer skills
 directly.
 
 ## Offloaded units
 
-- **check** = `forge-step-runner step: verify` → runs `/forge-audit`, returns
+- **check** = `forge-step-runner step: verify` → runs `/forge-proof`, returns
   per-layer verdicts + `## handoff` = the smallest blocking set. Read-only.
-- **fix** = `forge-step-runner step: audit-fix` → one finding's mechanical delta
+- **fix** = `forge-step-runner step: proof-fix` → one finding's mechanical delta
   - commit, contract-guarded. Returns commit + signals.
 
-Commit + decisions log live in `audit-fix`:
+Commit + decisions log live in `proof-fix`:
 
 ```
-forge-audit-green: <SG or layer> <one-line fix>
+forge-proof-green: <SG or layer> <one-line fix>
 ```
 
 `.pr-artifacts/<slug>/forge/decisions.md`:
 
 ```
-## <iso> — forge-audit-green cycle <N>
+## <iso> — forge-proof-green cycle <N>
 - finding: <layer> <verdict> <SG or path>
 - fix:     <one-line>
 - commit:  <sha>
@@ -138,7 +138,7 @@ forge-audit-green: <SG or layer> <one-line fix>
 Signals folded: `same-finding-recurs`, `same-file-edited`,
 `diff-grew-pass-flat`, `contract-guard-refused` (hard at 1),
 `subagent-same-blocker`. On hard trip →
-`/forge-stuck-check --slug <slug> --phase audit --signal <name> --iter <N> --json`
+`/forge-stuck-check --slug <slug> --phase proof --signal <name> --iter <N> --json`
 → `confirmed` settles `STUCK` (named reason); `suspected` bumps threshold once;
 `none` logs false-alarm.
 
@@ -146,7 +146,7 @@ Signals folded: `same-finding-recurs`, `same-file-edited`,
 
 | Verdict             | Meaning                                      |
 | ------------------- | -------------------------------------------- |
-| `AUDIT_GREEN`       | `verify` PASS                                |
+| `PROOF_GREEN`       | `verify` PASS                                |
 | `NO_CHAIN`          | no `goals.md` for slug                       |
 | `BLOCKED_CONTRACT`  | guard refused OR finding on contract surface |
 | `BLOCKED_RECURRENT` | same finding survived 3 iters                |
@@ -155,16 +155,16 @@ Signals folded: `same-finding-recurs`, `same-file-edited`,
 
 ## Hooks
 
-- `/forge` phase 6 — drives audit to PASS before embed. Skip phase when
-  `/forge-status` says `audit.last_verdict=PASS` and no commits since.
+- `/forge` phase 6 — drives proof to PASS before embed. Skip phase when
+  `/forge-status` says `proof.last_verdict=PASS` and no commits since.
 - `/forge-status` drift (`pr.no_forge_block`, `goals.uncovered`,
   `links.test_id_missing`) recommends this skill as the fix command.
 
 ## Next step
 
-`AUDIT_GREEN` → resume chain.
+`PROOF_GREEN` → resume chain.
 
-- `/forge-audit --embed` — write report to PR body
+- `/forge-proof --embed` — write report to PR body
 - `/forge-ci-green` — confirm CI stays green after any landed commits
 - `/forge-review-green` — semantic review
 - `/forge` — close the chain
@@ -173,7 +173,7 @@ Signals folded: `same-finding-recurs`, `same-file-edited`,
 ## Usage
 
 ```
-/forge-audit-green                       # current branch
-/forge-audit-green --slug auth-refactor  # explicit slug
-/forge-audit-green max=20                # raise budget
+/forge-proof-green                       # current branch
+/forge-proof-green --slug auth-refactor  # explicit slug
+/forge-proof-green max=20                # raise budget
 ```

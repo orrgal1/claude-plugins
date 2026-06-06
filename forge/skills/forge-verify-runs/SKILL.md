@@ -6,7 +6,7 @@ triggers:
   - "forge verify runs"
   - "do linked tests pass"
   - "verify linked tests green"
-  - "audit run.json"
+  - "prove run.json"
 allowed-tools:
   - Bash
   - Read
@@ -123,7 +123,7 @@ passed: <N>   failed: <N>   errored: <N>   skipped: <N>   missing: <N>   stale: 
 
 PASS → chain attested:
 
-- `/forge-audit` — re-aggregate, with `--embed` write the report into the PR
+- `/forge-proof` — re-aggregate, with `--embed` write the report into the PR
   body
 - `/forge-status` — confirm chain state, check drift
 - `/forge` — close the chain if PR is ready (CI-green + review-green still

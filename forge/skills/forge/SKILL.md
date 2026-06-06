@@ -2,7 +2,7 @@
 name: forge
 description:
   "End-to-end PR forge chain runner — drives a PR from scratch through goals,
-  design, scenarios, tests, impl, audit, CI, and lens-designed review to READY."
+  design, scenarios, tests, impl, proof, CI, and lens-designed review to READY."
 argument-hint:
   "[<source>] [--slug <name>] [--mode auto|manual|yolo] [--max-review-cycles
   <N>] [--persona <id>] [--from <phase>] [--until <phase>]"
@@ -67,7 +67,7 @@ status → entry phase → phases in order:
   5d verify-match
   5e verify-runs
   5f verify-validations
-  6  audit-green        (+ --embed on PASS)
+  6  proof-green        (+ --embed on PASS)
   7  ci-green (first green → arm continuous /forge-ci-green --until-merge, runs until merge)
   8  review-green        (continuous ci-green keeps HEAD green as fixes land)
   9  ci-ready            (read continuous monitor — GREEN on current HEAD; no separate final loop)
@@ -80,7 +80,7 @@ status → entry phase → phases in order:
 Phases 0/3/4/5a-5f delegate one-shot to `forge-step-runner` subagents. **Green
 phases (5/6/7/8) run their loop _in the main thread_ as a controller** (§ "Loop
 contract"). Per-phase fix/check steps: phase 5 `impl-fix` / `impl-check`; phase
-6 `audit-fix` + the `verify` aggregator as check; phase 7 `ci-fix` / `ci-check`
+6 `proof-fix` + the `verify` aggregator as check; phase 7 `ci-fix` / `ci-check`
 (controller owns the inter-tick wait); phase 8 fans out `/forge-review` in the
 main thread for its check (a runner can't nest fan-out) and offloads each
 finding to `review-fix`.
@@ -135,7 +135,7 @@ the loop `plan.md` / `scratchpad.md` (durable cross-iteration memory).
 | `--no-continuous-ci`  | off — at first `CI_GREEN`, arm continuous ci-green (§ 7.5)         |
 
 `--from` / `--until` phase set:
-`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | audit | ci | review | ci-ready`.
+`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | proof | ci | review | ci-ready`.
 
 `--from` resumes after a halt; prereqs checked, missing inputs route to earliest
 unsatisfied phase regardless. `--until` truncates; exits with the named phase's
@@ -145,10 +145,10 @@ Common `--until`:
 
 - `tests` — pre-impl TDD lock (start → goals → design → scenarios → tests + red
   bar). Hand off to operator for impl.
-- `impl` — stop after impl loop, before audit.
+- `impl` — stop after impl loop, before proof.
 - `verify-tests` — through L3 link/tier attestation; stop before body-match.
-- `verify-runs` — full per-layer attestation; stop before audit-green.
-- `audit` — through audit-green + embed; stop before CI.
+- `verify-runs` — full per-layer attestation; stop before proof-green.
+- `proof` — through proof-green + embed; stop before CI.
 
 ## Resume sub-commands
 
@@ -213,7 +213,7 @@ external tool.
 ## Loop contract
 
 The fix-loop skills (`/forge-impl-green`, `/forge-review-green`,
-`/forge-ci-green`, `/forge-audit-green`) all grind a bounded, verifiable target
+`/forge-ci-green`, `/forge-proof-green`) all grind a bounded, verifiable target
 to green using the same loop. Defined once here; each skill binds it to its
 target + adds its own overrides.
 
@@ -222,7 +222,7 @@ that owns the cheap state — iteration count, budget, accumulated signals, and
 the green verdict — and offloads the two heavy halves of each iteration to
 `forge-step-runner` subagents: a **`*-fix`** (apply one narrow delta + commit)
 and a **`*-check`** (re-verify the target, return a verdict). The controller
-never runs tests, parses audit output, or edits source itself. This gives every
+never runs tests, parses proof output, or edits source itself. This gives every
 fix and every check a **clean context** (iter 12 isn't buried under 11 iters of
 scrollback) while keeping the loop's authority — when to stop, when it's green —
 in one place.
@@ -448,7 +448,7 @@ SKIPPED-NO-RUN and 5f SKIPPED-NO-VALIDATIONS are clean passes for an unused
 proof type.
 
 FAIL → halt with named verdict (operator fixes at the right layer instead of
-letting audit-green attempt mechanical recovery on a contract gap):
+letting proof-green attempt mechanical recovery on a contract gap):
 
 - 5a → `BLOCKED_VERIFY_GOALS` → `/forge-goals --iterate` → `--from goals`.
 - 5b → `BLOCKED_VERIFY_SCENARIOS` → `/forge-scenarios --goal G<n>` or
@@ -465,41 +465,41 @@ letting audit-green attempt mechanical recovery on a contract gap):
 Mode (PASS path): auto / yolo → next sub-phase (or 6 after 5f); manual settles
 `AWAIT_VERIFY_<LAYER>_REVIEW`, exit (no push — verify skills don't commit).
 
-After 5f PASS → phase 6. Audit-green's pre-flight typically short-circuits
+After 5f PASS → phase 6. Proof-green's pre-flight typically short-circuits
 `ALREADY_PASS` when every layer was clean.
 
-### 6. audit-green
+### 6. proof-green
 
-**Main-thread controller loop** per § "Loop contract" (`--max-audit-iters`):
+**Main-thread controller loop** per § "Loop contract" (`--max-proof-iters`):
 
 ```
 loop until PASS | max:
-    a = spawn verify step (forge-step-runner)   # the re-audit → smallest blocking set
-    a.PASS → /forge-audit --embed once → advance
-    route each finding in a.handoff (per /forge-audit-green § Findings → routing):
-        mechanical → spawn audit-fix(finding)
+    a = spawn verify step (forge-step-runner)   # the re-prove → smallest blocking set
+    a.PASS → /forge-proof --embed once → advance
+    route each finding in a.handoff (per /forge-proof-green § Findings → routing):
+        mechanical → spawn proof-fix(finding)
         routed     → spawn the named step-runner once (scenarios/tests/design/impl-fix)
         contract   → BLOCKED_CONTRACT
     fold subagent signals → stuck check
 ```
 
-`/forge-audit` (the `verify` step) is the aggregator over verify-\* skills +
+`/forge-proof` (the `verify` step) is the aggregator over verify-\* skills +
 inline L5 design — it doubles as this loop's **check**. Orchestrator never calls
 per-layer skills directly; operators run them ad-hoc, step-runner exposes them
 as `verify-<layer>`.
 
-On `AUDIT_GREEN`: invoke `/forge-audit --embed` once (no fix-loop). Embed via
+On `PROOF_GREEN`: invoke `/forge-proof --embed` once (no fix-loop). Embed via
 `gh api` — no commit, no push, no CI.
 
-Mode: auto / yolo → phase 7. Manual → `AWAIT_AUDIT_REVIEW`, exit.
+Mode: auto / yolo → phase 7. Manual → `AWAIT_PROOF_REVIEW`, exit.
 
 Halts:
 
 - `BLOCKED_CONTRACT` → operator revises via `/forge-tests`, `/forge-scenarios`,
   `/forge-goals`, `/forge-design`.
-- `BLOCKED_RECURRENT` → `NEEDS_OPERATOR reason audit-recurrent`.
-- `BUDGET_EXHAUSTED` → bump once (`--max-audit-iters += 5`), retry. Second
-  exhaust → `BLOCKED_AUDIT`.
+- `BLOCKED_RECURRENT` → `NEEDS_OPERATOR reason proof-recurrent`.
+- `BUDGET_EXHAUSTED` → bump once (`--max-proof-iters += 5`), retry. Second
+  exhaust → `BLOCKED_PROOF`.
 - `STUCK` → halt with stuck-check's reason.
 
 ### 7. ci-green
@@ -648,13 +648,13 @@ next `/forge` run re-settles its AWAIT. Local-only per root
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Phase already done  | `/forge-status` shows chain past this phase                                                                       |
 | No code change      | `@{u}..HEAD == 0` AND no new local commits since prior phase → skip push + CI-trigger                             |
-| Artifacts unchanged | Audit re-runs only when `goals.md` / `links.json` / `design.md` mtime changed since last `run.json` / audit embed |
+| Artifacts unchanged | Proof re-runs only when `goals.md` / `links.json` / `design.md` mtime changed since last `run.json` / proof embed |
 | `run.json` fresh    | Skip impl-green when all linked tests pass + mtime newer than linked tests                                        |
 | CI already green    | Skip ci-green when `gh pr checks` last-known-good covers HEAD                                                     |
 | Review covered      | Skip review-green when last cycle clean + no commits since                                                        |
 | Triage unchanged    | Don't re-run `/forge-triage` for the same failing set in the same phase                                           |
 
-Push discipline: never without local commits. Audit `--embed` does NOT push. One
+Push discipline: never without local commits. Proof `--embed` does NOT push. One
 push per logical batch. `/forge-ci-green --watch` when CI=pass and nothing
 changed. Subagent discipline: never spawn a runner for a phase the chain already
 passed; never pass a stale brief; one step per subagent.
@@ -667,7 +667,7 @@ cycle synthesis and the fix-loop inside phase 8.
 
 **Keep metadata current — never offer it as a choice.** A non-destructive,
 metadata-updating action — refreshing `run.json` (re-running linked tests,
-**including bringing up local test infra to do so**), re-embedding the audit
+**including bringing up local test infra to do so**), re-embedding the proof
 block, refreshing a loop/monitor `status.json`, advancing a drift marker — is
 **done automatically**, not surfaced as an optional "want me to…?" question.
 Bringing up local infra to refresh state is in-scope (it mutates no repo
@@ -689,13 +689,13 @@ forge could have refreshed is a defect, not a courtesy left to the operator.
 | `links.test_id_missing` drift                   | `/forge-tests --refresh <SG>` once. Halt only on no match.                                          |
 | `goals.uncovered` drift                         | `/forge-scenarios --goal G<n>` once. Halt only if scenario draft blocks.                            |
 | `run.stale` drift                               | Re-run linked tests via `/forge-impl-green` once before phase decision.                             |
-| `pr.no_forge_block` drift                       | `/forge-audit --embed`. No halt.                                                                    |
+| `pr.no_forge_block` drift                       | `/forge-proof --embed`. No halt.                                                                    |
 | `pr.dirty_worktree` (unrelated)                 | Commit as `wip: pre-forge snapshot`, log, proceed.                                                  |
 | `pr.ahead_unpushed`                             | Push. No halt.                                                                                      |
 | `review.assumed_fixed_no_recycle`               | Re-cycle `/forge-review-green` with prior context. No halt.                                         |
 | `pr.ci_failing`                                 | Phase 7 `/forge-ci-green`; after first green the continuous monitor (7.5) owns it until merge.      |
 | Persona pick ambiguous (review)                 | Self-select per persona table, log. Skip operator picker.                                           |
-| Audit FAIL on recoverable layer defect          | One auto-fix targeting only annotation, re-audit. Halt only if defect recurs or is deeper.          |
+| Proof FAIL on recoverable layer defect          | One auto-fix targeting only annotation, re-prove. Halt only if defect recurs or is deeper.          |
 
 Each → one decision-log entry `D<n> <iso> <phase> <rule>`.
 
@@ -710,9 +710,9 @@ halt the operator must act on.
   cause is infra or a red base — **not** this PR's own code.
 - **Genuine (never waitable)**: `BLOCKED_SPEC`, `BLOCKED_DESIGN`,
   `BLOCKED_SCENARIOS`, `BLOCKED_TESTS`, `BLOCKED_IMPL`, `BLOCKED_VERIFY_*`,
-  `BLOCKED_AUDIT`, `BLOCKED_REVIEW`, `BLOCKED_FLAKY` (diagnosis, not waiting),
+  `BLOCKED_PROOF`, `BLOCKED_REVIEW`, `BLOCKED_FLAKY` (diagnosis, not waiting),
   every
-  `NEEDS_OPERATOR reason {loop,architectural,drift,destructive-required,audit-recurrent}`,
+  `NEEDS_OPERATOR reason {loop,architectural,drift,destructive-required,proof-recurrent}`,
   `STUCK`. These float to the operator unchanged.
 
 On a waitable halt:
@@ -745,10 +745,10 @@ waitable ones to `/forge-wait-for` first).
 - Empty source → `BLOCKED_SPEC reason empty-source`.
 - Wrong-reason impl failure surviving one recovery attempt →
   `BLOCKED_IMPL reason wrong-reason`.
-- Audit structural defect surviving one recovery → `BLOCKED_AUDIT` per audit
+- Proof structural defect surviving one recovery → `BLOCKED_PROOF` per proof
   report reason.
 - CI budget exhausted post-bump → `BLOCKED_CI`.
-- Audit recurrent → `NEEDS_OPERATOR reason audit-recurrent`.
+- Proof recurrent → `NEEDS_OPERATOR reason proof-recurrent`.
 - Drift-blocked review cycle → `NEEDS_OPERATOR reason drift`.
 - Architectural blocker refused by review →
   `NEEDS_OPERATOR reason architectural`.
@@ -788,7 +788,7 @@ manual | yolo
 - D3 <iso> auto-approved goal gate; 1 main + 2 secondary
 - D4 <iso> AWAIT_GOALS_REVIEW settled; operator approved at <sha>
 
-## Phase: design / scenarios / tests / impl / audit-green / ci-green / review / ci-ready
+## Phase: design / scenarios / tests / impl / proof-green / ci-green / review / ci-ready
 
 - …
 ```
@@ -800,7 +800,7 @@ manual | yolo
 
 verdict: READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | HANDOFF_WORKTREE | BLOCKED_SPEC | BLOCKED_DESIGN | BLOCKED_IMPL
        | BLOCKED_VERIFY_{GOALS,SCENARIOS,TESTS,MATCH,RUNS,VALIDATIONS}
-       | BLOCKED_AUDIT | BLOCKED_CI | BLOCKED_REVIEW
+       | BLOCKED_PROOF | BLOCKED_CI | BLOCKED_REVIEW
        | NEEDS_OPERATOR | STUCK
 mode:    auto | manual | yolo
 PR:      #<num> — <title>    (or: "no PR yet")
@@ -814,7 +814,7 @@ phases:  <list ran this invocation>
 - …/review/cycle-N.md
 
 ### per-phase tallies
-start / goals / design / scenarios+validations+tests / impl / audit-green / ci-green / review-green / ci-ready (+ continuous ci until merge)
+start / goals / design / scenarios+validations+tests / impl / proof-green / ci-green / review-green / ci-ready (+ continuous ci until merge)
 
 ### terminal state
 open blockers: <N>   open majors: <N>
@@ -836,7 +836,7 @@ BLOCKED_VERIFY_TESTS     → /forge-tests / --refresh / --retier; --from tests
 BLOCKED_VERIFY_MATCH     → re-annotate test or reword scenario; --from verify-match
 BLOCKED_VERIFY_RUNS      → /forge-impl-green; --from impl
 BLOCKED_VERIFY_VALIDATIONS → /forge-impl-green (finish removal) or /forge-validations --iterate; --from impl
-BLOCKED_AUDIT            → see audit report; --from audit
+BLOCKED_PROOF            → see proof report; --from proof
 BLOCKED_CI               → see ci-green log; --from ci
                            (base/infra cause → /forge-find-blocker → /forge-wait-for)
 BLOCKED_REVIEW           → address open findings (any severity); --from review
@@ -907,7 +907,7 @@ re-assesses any time.
 /forge --from impl                    # resume after operator unblocked
 /forge --until tests                  # pre-impl TDD lock; stop at red bar
 /forge --until verify-tests           # stop after L3 attestation
-/forge --until verify-runs            # full per-layer; stop before audit-green
+/forge --until verify-runs            # full per-layer; stop before proof-green
 /forge --from verify-match            # resume mid-attestation
 /forge --dry-run                      # plan only
 /forge --no-review-watch              # don't arm the peer-review watch at READY

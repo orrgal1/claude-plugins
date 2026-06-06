@@ -47,7 +47,7 @@ see `forge/review-channels/README.md`).
 
 No forge chain → still runs, channels declaring `needs: forge-chain` skipped.
 Broken chain → run `/forge` first (or `/forge-goals`, `/forge-scenarios`,
-`/forge-tests`, `/forge-audit`) to restore chain-semantic coverage.
+`/forge-tests`, `/forge-proof`) to restore chain-semantic coverage.
 
 ## Pipeline
 
@@ -55,7 +55,7 @@ Broken chain → run `/forge` first (or `/forge-goals`, `/forge-scenarios`,
 2. Load `.pr-artifacts/<slug>/forge/{goals.md,links.json}`. Missing either →
    **no-chain mode**: channels needing `forge-chain` dropped with a one-line
    note.
-3. Run `/forge-audit` (cached if recent). FAIL → refuse, point at report.
+3. Run `/forge-proof` (cached if recent). FAIL → refuse, point at report.
 4. Scope intake: PR metadata, file list, +A/-D, base ref, stack position.
 5. Risk hot-spots — 3-5 anchored to concrete diff paths. Available to channels
    that ask.
@@ -119,7 +119,7 @@ hard error. No effect when `lens-fanout` is dropped.
 PR #<num> — "<title>"
 Diff: N files · +A/-D · base <ref> · stack pos: <pos>
 Forge: <slug> · G<n> goals · SG<n> scenarios · L<n> tests linked
-Audit: PASS (<timestamp>)
+Proof: PASS (<timestamp>)
 Mode: chain | no-chain
 
 Risk hot-spots:
@@ -173,26 +173,26 @@ Extends `/forge`'s wrap-verdict ladder:
 
 | Verdict            | Meaning                                                                           |
 | ------------------ | --------------------------------------------------------------------------------- |
-| `READY`            | audit PASS, linked tests pass/skip, every channel clean (no blockers, no majors). |
-| `RED_BAR`          | audit PASS but ≥1 linked test `fail` / `error`, or review-clean pending.          |
-| `INCOMPLETE`       | audit FAIL — wrap skipped, review not run.                                        |
-| `REVIEWED_BLOCKED` | audit PASS, tests pass, but aggregated review found ≥1 blocker (any channel).     |
+| `READY`            | proof PASS, linked tests pass/skip, every channel clean (no blockers, no majors). |
+| `RED_BAR`          | proof PASS but ≥1 linked test `fail` / `error`, or review-clean pending.          |
+| `INCOMPLETE`       | proof FAIL — wrap skipped, review not run.                                        |
+| `REVIEWED_BLOCKED` | proof PASS, tests pass, but aggregated review found ≥1 blocker (any channel).     |
 
 `REVIEWED_BLOCKED` → fix blockers, re-run `/forge-review`, re-wrap.
 
 ## Embed
 
 `--embed` appends a `## Review` section **inside** the existing `<details>`
-wrapper of the `<!-- forge-audit:begin -->` / `<!-- forge-audit:end -->` block,
+wrapper of the `<!-- forge-proof:begin -->` / `<!-- forge-proof:end -->` block,
 then rewrites `<summary>`:
 
 ```
-<summary>🔨 forge — audit: <verdict> · review: <findings> · <slug></summary>
+<summary>🔨 forge — proof: <verdict> · review: <findings> · <slug></summary>
 ```
 
 `<findings>` is short count (`1 blocker · 2 majors` or `clean`), aggregated
-across channels. Idempotent overwrite — preserves the audit block. No `open`
-attribute. No embed-block yet → refuse: "run `/forge-audit --embed` first".
+across channels. Idempotent overwrite — preserves the proof block. No `open`
+attribute. No embed-block yet → refuse: "run `/forge-proof --embed` first".
 
 ## Artifact directory
 

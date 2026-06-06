@@ -6,7 +6,7 @@ argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify scenarios"
   - "do scenarios cover goals"
-  - "audit goal coverage"
+  - "prove goal coverage"
   - "verify goal coverage"
 allowed-tools:
   - Bash
@@ -127,7 +127,7 @@ orphans: <N>   parked: <N>
 
 ## Next step
 
-PASS → `/forge-verify-tests`, `/forge-audit`, `/forge-status`.
+PASS → `/forge-verify-tests`, `/forge-proof`, `/forge-status`.
 
 FAIL → fix per finding, re-run:
 

@@ -122,7 +122,7 @@ this repo has.
 
 | Capability        | What it runs                                                                                      | Used by                                                      |
 | ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, audit runs              |
+| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, proof runs              |
 | `build`           | Compile / build                                                                                   | `/forge-ci-green`, impl loop                                 |
 | `lint`            | Lint                                                                                              | `/forge-ci-green`                                            |
 | `typecheck`       | Static type check                                                                                 | `/forge-ci-green`, impl loop                                 |

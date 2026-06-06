@@ -48,7 +48,7 @@ finding for trace. Nothing is "noted and skipped." The only way a finding leaves
 the open set without a fix is an honest refusal (out-of-scope, architectural,
 false-positive) — severity never qualifies for that exit.
 
-Prereqs (refuse without): `/forge-audit` PASS + linked tests all pass /
+Prereqs (refuse without): `/forge-proof` PASS + linked tests all pass /
 skipped + chain artifacts (`goals.md`, `links.json`) exist. Use
 `/forge-impl-green` first if tests are red.
 
@@ -71,7 +71,7 @@ Loop contract. Cycle artifacts:
 ## Pre-flight (controller)
 
 1. Resolve slug + worktree. Confirm `goals.md` + `links.json` exist.
-2. Confirm `/forge-audit` PASS + linked tests green (cached results OK).
+2. Confirm `/forge-proof` PASS + linked tests green (cached results OK).
 3. Read prior `cycle-*.md`. Capture open finding set + statuses as the starting
    `plan.md`.
 4. **Triage gate** when open finding set ≥2 (any severity):
@@ -229,7 +229,7 @@ delta:
 | `BLOCKED`          | `loop` (≥2 address↔regress), `drift` (bare reversal), or `architectural` open. |
 | `STUCK`            | `/forge-stuck-check` confirmed.                                                |
 
-On `SUCCESS` → suggest `/forge-audit --embed` then `/forge-review --embed`.
+On `SUCCESS` → suggest `/forge-proof --embed` then `/forge-review --embed`.
 
 ## Decision-log tail
 
@@ -280,7 +280,7 @@ state: .pr-artifacts/<slug>/forge/loop/forge-review-green-<slug>/ — edit plan.
 
 Converges → re-verify, then close.
 
-- `/forge-audit --embed` — re-aggregate post-review state
+- `/forge-proof --embed` — re-aggregate post-review state
 - `/forge-review --embed` — embed review block
 - `/forge` — close chain
 - `/forge-status` — chain state + drift

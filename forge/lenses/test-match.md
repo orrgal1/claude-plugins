@@ -16,7 +16,7 @@ actually exercise its scenario, beyond carrying matching `when:` / `then:` tags.
 - For each linked test:
   - Read the full test body, not just the `when:` / `then:` comments.
   - Walk the AAA section. AAA markers absent → flag **major** (already a
-    `/forge-audit` NO-AAA condition; re-confirmed here in case of post-verify
+    `/forge-proof` NO-AAA condition; re-confirmed here in case of post-verify
     drift).
   - Do the asserts observably check the `then:` clause, or assert implementation
     detail orthogonal to the scenario?

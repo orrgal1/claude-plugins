@@ -1,5 +1,5 @@
 ---
-name: forge-audit
+name: forge-proof
 description:
   "Aggregate the full forge attestation chain: goals → scenarios/validations →
   tests → match → runs → validations-hold."
@@ -7,8 +7,8 @@ argument-hint: "[--slug <name>] [--embed]"
 triggers:
   - "forge verify"
   - "verify forge chain"
-  - "audit forge chain"
-  - "audit goals to tests"
+  - "prove forge chain"
+  - "prove goals to tests"
 allowed-tools:
   - Bash
   - Read
@@ -22,7 +22,7 @@ practices:
 user-invocable: true
 ---
 
-# /forge-audit — full-chain attestation
+# /forge-proof — full-chain attestation
 
 Calls each verify skill in order, adds the design layer when `design.md` exists,
 emits a single PASS / FAIL + optionally embeds in the PR body.
@@ -92,21 +92,21 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
 6. Invoke `/forge-verify-validations --json` → L7 verdict; no `## Validations`
    anywhere → `SKIPPED-NO-VALIDATIONS`, no fail (scenario-only PRs are normal).
 7. Aggregate (see "Verdict logic"). Emit report.
-8. If `--embed` AND PR exists: write report between `<!-- forge-audit:begin -->`
-   / `<!-- forge-audit:end -->` in PR body, wrapped in collapsed `<details>`
+8. If `--embed` AND PR exists: write report between `<!-- forge-proof:begin -->`
+   / `<!-- forge-proof:end -->` in PR body, wrapped in collapsed `<details>`
    with a verdict-bearing `<summary>`. Idempotent overwrite via `gh api`. No
    commit, no push, no CI trigger.
 
    ```
-   <!-- forge-audit:begin -->
+   <!-- forge-proof:begin -->
    <details>
    <summary>🔨 forge — &lt;verdict&gt; · &lt;slug&gt;</summary>
 
-   # /forge-audit result
+   # /forge-proof result
    …report body…
 
    </details>
-   <!-- forge-audit:end -->
+   <!-- forge-proof:end -->
    ```
 
    No PR → no-op, hint "no PR yet — open one then re-run with --embed."
@@ -114,7 +114,7 @@ NO-COVERAGE-MAP / NO-COMPONENTS.
 ## Report shape
 
 ```
-# /forge-audit result
+# /forge-proof result
 
 verdict: PASS | FAIL
 PR: #<num> — <title>
@@ -151,7 +151,7 @@ missing from goals: <list>
 <one concrete suggestion>
 ```
 
-`## smallest blocking set` is parsed by `/forge-audit-green`; preserve the
+`## smallest blocking set` is parsed by `/forge-proof-green`; preserve the
 section name and Layer + verdict pair per row.
 
 ## Verdict logic
@@ -167,7 +167,7 @@ section name and Layer + verdict pair per row.
 ## Non-goals
 
 - **Not a fixer.** Surfaces findings + the smallest blocking set; never edits
-  artifacts. Fix-loop is `/forge-audit-green`.
+  artifacts. Fix-loop is `/forge-proof-green`.
 - **Not a runtime check.** L6 reads `run.json` statically.
 
 ## Next step
@@ -176,12 +176,12 @@ PASS → `/forge-ci-green`, `/forge-review` (opt-in), `/forge-status`.
 
 FAIL → re-run the failing layer (`/forge-verify-goals` | `-scenarios` | `-tests`
 | `-match` | `-runs` | `-validations`) for tighter signal, or
-`/forge-audit-green` to auto-fix mechanical findings via fix-loop.
+`/forge-proof-green` to auto-fix mechanical findings via fix-loop.
 
 ## Usage
 
 ```
-/forge-audit                              # current branch, console report
-/forge-audit --embed                      # also embed report in PR description
-/forge-audit --slug auth-refactor         # explicit slug
+/forge-proof                              # current branch, console report
+/forge-proof --embed                      # also embed report in PR description
+/forge-proof --slug auth-refactor         # explicit slug
 ```

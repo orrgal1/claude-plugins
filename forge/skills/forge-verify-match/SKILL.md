@@ -5,7 +5,7 @@ argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify match"
   - "do tests match scenarios"
-  - "audit when then match"
+  - "prove when then match"
   - "verify test bodies loyal to when then"
 allowed-tools:
   - Bash
@@ -44,7 +44,7 @@ For each LINKED scenario:
 | **DRIFT**      | Comments match in spirit but a named entity is stale (refactor leftover).                                                                                                                                                              |
 | **MISMATCH**   | Comments differ materially from the scenario, OR the AAA body clearly doesn't realize the comments — e.g. `assert:` checks an unrelated surface, `arrange:` sets up a different scenario than `when:` names.                           |
 | **NO-COMMENT** | Referenced test exists but carries no `when:` / `then:` comments — re-run `/forge-tests` to annotate.                                                                                                                                  |
-| **NO-AAA**     | Referenced test has `when:` / `then:` but lacks AAA markers in the body — body structure can't be audited against the scenario. Re-run `/forge-tests` to annotate.                                                                     |
+| **NO-AAA**     | Referenced test has `when:` / `then:` but lacks AAA markers in the body — body structure can't be proven against the scenario. Re-run `/forge-tests` to annotate.                                                                     |
 
 Test code does **not** carry a `prov: SG<n>.<m>` tag — the back-link lives only
 in `goals.md`, keeping committed test code free of references to uncommitted
@@ -118,7 +118,7 @@ artifact: .pr-artifacts/<slug>/forge/goals.md
 
 ## Next step
 
-PASS → `/forge-verify-runs`, `/forge-audit`, `/forge-status`.
+PASS → `/forge-verify-runs`, `/forge-proof`, `/forge-status`.
 
 FAIL → fix per finding, re-run:
 

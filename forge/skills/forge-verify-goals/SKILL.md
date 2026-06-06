@@ -160,7 +160,7 @@ verdict: PASS | FAIL | SKIPPED-NO-PR
 
 ## Next step
 
-PASS → `/forge-verify-scenarios`, `/forge-audit`, `/forge-status`.
+PASS → `/forge-verify-scenarios`, `/forge-proof`, `/forge-status`.
 
 FAIL → fix per finding, re-run:
 

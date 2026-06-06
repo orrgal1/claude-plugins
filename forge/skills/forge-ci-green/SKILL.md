@@ -291,8 +291,8 @@ restack) are genuine — **never** waitable.
 
 ## Hooks
 
-- `/forge` phase 5.5 — post-impl CI before audit-green (one-shot).
-- `/forge` phase 6.5 — post-audit-embed CI re-confirm (one-shot).
+- `/forge` phase 5.5 — post-impl CI before proof-green (one-shot).
+- `/forge` phase 6.5 — post-proof-embed CI re-confirm (one-shot).
 - `/forge` phase 7.5 — on the first `CI_GREEN`, forge arms this skill
   `--until-merge` in the background; it keeps CI green through review and
   beyond, re-arming on every new HEAD until the PR merges. **There is no
@@ -307,8 +307,8 @@ since last green.
 
 CI green → resume the chain.
 
-- `/forge-audit --embed` — post-impl path
-- `/forge-review` — post-audit path
+- `/forge-proof --embed` — post-impl path
+- `/forge-review` — post-proof path
 - `/forge` — close chain
 - `/forge-status` — chain state + drift
 

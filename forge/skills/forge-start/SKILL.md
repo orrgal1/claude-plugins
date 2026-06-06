@@ -132,7 +132,7 @@ keyed by origin, shared across worktrees, so a fresh worktree inherits it.
        --body "<full brief>" )
    ```
 
-   Body = brief ONLY — chain artifacts land later via `/forge-audit --embed`.
+   Body = brief ONLY — chain artifacts land later via `/forge-proof --embed`.
 
 8. **Recap + handoff** (§ "Output", § "Handoff").
 

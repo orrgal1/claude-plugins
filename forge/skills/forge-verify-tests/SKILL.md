@@ -5,7 +5,7 @@ argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify tests"
   - "do tests cover scenarios"
-  - "audit scenario linkage"
+  - "prove scenario linkage"
   - "verify test linkage"
 allowed-tools:
   - Bash
@@ -46,14 +46,14 @@ backticks; strip them when resolving:
 | **STALE**    | `- test:` sub-bullet present but `<path>` or `<func>` no longer exists (refactor drift).     |
 | **UNLINKED** | Scenario in `goals.md` has no `- test:` sub-bullet — `/forge-tests` hasn't attached it yet.  |
 
-Plus audit-cache side (cross-check vs `links.json` when present):
+Plus proof-cache side (cross-check vs `links.json` when present):
 
 | Verdict      | Meaning                                                                                           |
 | ------------ | ------------------------------------------------------------------------------------------------- |
 | **DANGLING** | `links.json` entry for a scenario that's no longer in `goals.md`.                                 |
 | **DESYNC**   | `links.json` and the `- test:` sub-bullet in `goals.md` disagree about `test_path` or `function`. |
 
-`links.json` is the audit cache, not the canonical link. On disagreement
+`links.json` is the proof cache, not the canonical link. On disagreement
 `goals.md` wins; surface as `DESYNC` and offer to re-run `/forge-tests` to
 rebuild the cache.
 
@@ -154,7 +154,7 @@ dangling: <N>   desync: <N>
 
 ## Next step
 
-PASS → `/forge-verify-match`, `/forge-audit`, `/forge-status`.
+PASS → `/forge-verify-match`, `/forge-proof`, `/forge-status`.
 
 FAIL → fix per finding, re-run:
 
@@ -164,7 +164,7 @@ FAIL → fix per finding, re-run:
 - `/forge-tests --retier SG<n>.<m> component` — re-tier any TIER-UNIT scenario
   to component (or higher)
 - `/forge-scenarios --goal G<n>` — drop / replace any DANGLING scenario from the
-  audit cache
+  proof cache
 
 ## Usage
 

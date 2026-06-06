@@ -217,7 +217,7 @@ After this PR, <removed thing> will no longer exist.
 ```
 
 The `## Validations` header under each goal is **load-bearing** — parsed by
-`/forge-verify-validations` and `/forge-audit`. Don't rename, don't merge into
+`/forge-verify-validations` and `/forge-proof`. Don't rename, don't merge into
 the goal body or the `## Scenarios` block.
 
 ## Non-goals

@@ -101,7 +101,7 @@ Fold findings into exactly one verdict (strongest external signal wins):
 | `genuine`         | **no**   | none — code/contract/stuck; float to operator                   |
 | `none-found`      | **no**   | nothing external surfaced; treat as genuine, recommend operator |
 
-**Bright line:** a code, contract, scenario, audit-finding, or stuck halt is
+**Bright line:** a code, contract, scenario, proof-finding, or stuck halt is
 **never** reclassified as waitable to dodge it. When the failing CI is this PR's
 own red test, the verdict is `genuine`, not `infra-transient`.
 
@@ -134,7 +134,7 @@ Human mode adds a one-line headline:
 - **Discovery only.** Never watches, fixes, restacks, edits code/contract, or
   pushes. Emits a spec; the operator or the recognizer dispatches
   `/forge-wait-for`.
-- **Genuine halts stay genuine.** Code/contract/scenario/audit/stuck →
+- **Genuine halts stay genuine.** Code/contract/scenario/proof/stuck →
   `genuine`, never laundered into a waitable kind.
 - **No channel invention.** Only consult channels actually reachable; record
   which ran and which were skipped.

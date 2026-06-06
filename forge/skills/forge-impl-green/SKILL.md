@@ -129,7 +129,7 @@ never push, untrusted failing-test text, stay in failing surface).
 Skill-specific delta:
 
 - **Never modify test bodies.** Tests encode the `then:`. Genuinely wrong test →
-  re-run `/forge-tests`. Reshaping a test breaks Layer 4 on next audit.
+  re-run `/forge-tests`. Reshaping a test breaks Layer 4 on next proof.
 - **Never modify `goals.md` or `links.json`** during the loop.
 
 ## Stuck detection (controller-owned)
@@ -150,7 +150,7 @@ once; `none` logs false-alarm.
 | `BLOCKED`          | Wrong-reason error (exit 2), 3 no-progress iters, contract-guard hit. |
 | `STUCK`            | `/forge-stuck-check` confirmed.                                       |
 
-On `SUCCESS` → suggest `/forge-audit --embed`.
+On `SUCCESS` → suggest `/forge-proof --embed`.
 
 ## Output
 
@@ -176,7 +176,7 @@ state: .pr-artifacts/<slug>/forge/loop/forge-impl-green-<slug>/ — edit plan.md
 Green locally → push + drive CI.
 
 - `/forge-ci-green` — drive CI to green
-- `/forge-audit --embed` — re-aggregate + embed in PR body
+- `/forge-proof --embed` — re-aggregate + embed in PR body
 - `/forge-status` — chain state + drift
 
 ## Usage

@@ -25,7 +25,7 @@ Most "AI wrote a PR" workflows let the model assert that the work is done. forge
 refuses to take its own word for it. Every claim is reduced to an artifact, and
 every artifact is checked against the one before it. The result is an
 **attestation chain** that runs source → goals → proofs → tests → runs, where a
-break anywhere fails the audit.
+break anywhere fails the proof.
 
 The unit of truth is a **goal**, and a goal is satisfied only by a **proof**.
 There are exactly two kinds of proof:
@@ -42,7 +42,7 @@ A goal needs **≥1 proof**. Behavioral goals carry scenarios, structural goals
 carry validations, and a goal can carry both. A goal with no reachable proof is
 surfaced as uncovered — it cannot pass.
 
-`/forge-audit` aggregates the whole chain into a single **PASS / FAIL** across
+`/forge-proof` aggregates the whole chain into a single **PASS / FAIL** across
 seven layers, each owned by a dedicated verify skill:
 
 | Layer  | Question it answers                                                 | Skill                            |
@@ -57,11 +57,11 @@ seven layers, each owned by a dedicated verify skill:
 
 PASS = every layer PASS or cleanly SKIPPED. Layers skip honestly: L5 skips with
 no design, L6 skips before impl (pre-impl attestation is allowed), L7 skips when
-a PR has no validations. `/forge-audit` is a **reader, not a fixer** — it emits
-the smallest blocking set of findings; `/forge-audit-green` is the loop that
+a PR has no validations. `/forge-proof` is a **reader, not a fixer** — it emits
+the smallest blocking set of findings; `/forge-proof-green` is the loop that
 clears them.
 
-Because the chain is mechanical, "done" means _audited_, not _asserted_ — and
+Because the chain is mechanical, "done" means _proven_, not _asserted_ — and
 the attestation can be embedded straight into the PR description (`--embed`) so
 reviewers see the proof, not a promise.
 
@@ -75,7 +75,7 @@ reviewers see the proof, not a promise.
 /forge-design  map each scenario to the components/symbols that satisfy it
 /forge-tests   one component-tier test per scenario (the only step that writes test code)
 /forge-impl-green  drive the linked tests to green
-/forge-audit   attest the whole chain (the 7 layers above)
+/forge-proof   attest the whole chain (the 7 layers above)
 /forge-ci-green   drive PR CI to green — restacks each iteration; after first green stays armed --until-merge
 /forge-review     lens-designed, chain-aware PR review
 /forge-review-green  drive the review to 0 findings (every severity)
@@ -188,8 +188,8 @@ auto-posted.
 | `/forge-start`                                                                                | Bootstrap a chain: source brief → scaffold worktree → draft PR → hand off         |
 | `/forge`                                                                                      | Orchestrate the whole chain to READY                                              |
 | `/forge-goals` · `/forge-scenarios` · `/forge-validations` · `/forge-design` · `/forge-tests` | Chain atoms                                                                       |
-| `/forge-audit` + `/forge-verify-*`                                                            | Full + per-layer attestation (the proof chain)                                    |
-| `/forge-impl-green` · `/forge-ci-green` · `/forge-audit-green` · `/forge-review-green`        | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
+| `/forge-proof` + `/forge-verify-*`                                                            | Full + per-layer attestation (the proof chain)                                    |
+| `/forge-impl-green` · `/forge-ci-green` · `/forge-proof-green` · `/forge-review-green`        | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
 | `/forge-review`                                                                               | Lens-designed, chain-aware PR review                                              |
 | `/forge-review-watch` · `/forge-address-review`                                               | Watch for + drive submitted reviewer feedback to resolution                       |
 | `/forge-request-review`                                                                       | Rank the best peer reviewer; gated ready+request                                  |
