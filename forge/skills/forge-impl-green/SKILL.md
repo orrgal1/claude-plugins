@@ -63,7 +63,11 @@ Loop contract. `plan.md` — one bullet per failing `REAL_BUG` scenario.
        sibling PR ref. Commit:
        `forge-impl-green: defer <SG> per /forge-triage (<verdict>)`.
    - `HALT_TRIAGE` → halt verdict-named (`BLOCKED_FLAKY`, `BLOCKED_INFRA`,
-     `NEEDS_OPERATOR` reason `triage-ambiguous`).
+     `NEEDS_OPERATOR` reason `triage-ambiguous`). Exception: an
+     `INFRA_FAILURE recovery=<name>` (triage matched a playbook) → run that
+     playbook (recover + retry per `/forge-setup` § "Failure recovery —
+     playbooks"); only halt `BLOCKED_INFRA` if recovery fails or is an
+     interactive playbook under yolo/unattended.
    - Single-test failures skip this gate.
 5. Seed `plan.md` (one bullet per failing `REAL_BUG` scenario, isolated first).
 

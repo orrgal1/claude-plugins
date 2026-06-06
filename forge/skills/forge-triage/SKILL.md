@@ -110,11 +110,19 @@ silently (`mem_available: false`).
 | `OUT_OF_PR_SCOPE`     | propose language-appropriate skip (`t.Skip`, `@pytest.mark.skip`, `.skip()`, `xfail`); cite reason |
 | `STACK_DEFERRED_<PR>` | same; cite the named sibling PR as the restorer in the skip comment                                |
 | `FLAKE_SUSPECT`       | halt loop; flag as flaky for separate diagnosis (not a fix-loop target)                            |
-| `INFRA_FAILURE`       | halt loop; surface to operator                                                                     |
+| `INFRA_FAILURE`       | check playbooks first (below); else halt loop + surface to operator                                |
 | `AMBIGUOUS`           | float to operator with the full triage table; do not guess                                         |
 
 **Triage proposes; caller applies.** Contract guard wins — a skip on a contract
 test (`contract: true`) is refused.
+
+**`INFRA_FAILURE` → playbook check.** Before halting, match the failure output
+against `$FORGE_HOME/forge.toml` `[playbooks.<name>]` (`when_output` regex; see
+`/forge-setup` § "Failure recovery — playbooks"). A match makes the verdict
+recoverable — emit it as `INFRA_FAILURE recovery=<playbook-name>` so the caller
+runs the playbook (recover + retry) instead of dead-ending at `BLOCKED_INFRA`.
+No match → halt as before, and if the operator clears it manually, offer to
+capture an emergent playbook (same § ).
 
 ## Report shape
 

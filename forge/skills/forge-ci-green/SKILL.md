@@ -102,7 +102,11 @@ game.
    - `HALT_TRIAGE` → verdict-named halt:
      - `FLAKE_SUSPECT` → `BLOCKED_FLAKY` (flakes are diagnosis-only — not a
        fix-loop target).
-     - `INFRA_FAILURE` → `BLOCKED_INFRA`.
+     - `INFRA_FAILURE` → `BLOCKED_INFRA`, **unless** triage returned
+       `recovery=<name>` (a matched playbook): run that playbook (recover +
+       retry per `/forge-setup` § "Failure recovery — playbooks"); halt
+       `BLOCKED_INFRA` only if recovery fails or it is an interactive playbook
+       under yolo/unattended.
      - `AMBIGUOUS` → `NEEDS_OPERATOR` reason `triage-ambiguous`.
 
 ## Control loop (main thread — never offloaded)

@@ -38,12 +38,17 @@ wired into a capability.
 
 Tools are distinct from the other `$FORGE_HOME/` surfaces:
 
-| Surface                        | What lives there                            | Who names it            |
-| ------------------------------ | ------------------------------------------- | ----------------------- |
-| `$FORGE_HOME/commands/`        | canonical capabilities (`test`, `build`, …) | forge (finite set)      |
-| `$FORGE_HOME/review-channels/` | `/forge-review` channels                    | forge (per channel)     |
-| `$FORGE_HOME/maps/`            | read-only domain snapshots                  | `/forge-map` (per area) |
-| `$FORGE_HOME/tools/`           | **open-ended, operator-named runbooks**     | **the operator**        |
+| Surface                        | What lives there                            | Who names it              |
+| ------------------------------ | ------------------------------------------- | ------------------------- |
+| `$FORGE_HOME/commands/`        | canonical capabilities (`test`, `build`, …) | forge (finite set)        |
+| `$FORGE_HOME/review-channels/` | `/forge-review` channels                    | forge (per channel)       |
+| `$FORGE_HOME/maps/`            | read-only domain snapshots                  | `/forge-map` (per area)   |
+| `[playbooks.<name>]`           | failure→recovery rules (`/forge-setup`)     | forge/operator (per rule) |
+| `$FORGE_HOME/tools/`           | **open-ended, operator-named runbooks**     | **the operator**          |
+
+A tool and a playbook are duals: a tool is **pulled** (you invoke it by name); a
+playbook is **triggered** (forge fires it on a matching capability failure). See
+`/forge-setup` § "Failure recovery — playbooks".
 
 ## Subcommands
 

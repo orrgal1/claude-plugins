@@ -170,6 +170,18 @@ fixed command can't capture). A capability that isn't mapped surfaces a
 default path; an in-repo `.forge/` is honored only as a one-release legacy
 fallback.)
 
+**Recovery playbooks.** A repo also has known recoveries for known failures —
+expired cloud creds, a daemon to start, stale codegen. `[playbooks.<name>]`
+rules (`when_output` regex → `then` recovery command, with `interactive` +
+`retry`) let forge recover **itself** when a capability fails, instead of
+blocking to ask you to "go auth." E.g. an ECR pull failing on an expired SSO
+token matches a playbook whose recovery is `aws sso login`, then retries the
+run. `/forge-setup` proposes playbooks from repo signals and wires them; when
+forge hits an unmapped failure that a manual step then clears, it recognizes the
+pattern and **offers to capture a new playbook on the fly**. Interactive
+playbooks (e.g. a browser SSO login) are a genuine block under yolo/unattended —
+forge never drives a human auth flow unattended.
+
 ## Review
 
 `/forge-review` fans out review channels in parallel to one ranked verdict:
