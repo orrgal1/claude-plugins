@@ -112,9 +112,10 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
   instead of blocking to ask. A failure matching a playbook's signature triggers
   its recovery, then retries — e.g. an ECR pull failing on an expired SSO token
   runs `aws sso login` and re-runs. Forge also offers to capture a new playbook
-  on the fly when a recurring failure is cleared manually; interactive
-  recoveries (browser auth) stay a genuine block under `yolo`/unattended. See
-  **The `$FORGE_HOME` tooling map** below.
+  on the fly when a recurring failure is cleared manually. Recoveries run
+  best-effort in every mode — an interactive one (browser auth) is attempted
+  even in `yolo`/unattended; if no one completes it, it falls through to a
+  genuine block then. See **The `$FORGE_HOME` tooling map** below.
 - **Peer-review handoff** — on READY, forge arms the review watch and proposes a
   reviewer; **the PR is already open as a draft, so moving it to
   ready-for-review and requesting the reviewer is a gated author gesture** that
@@ -186,9 +187,11 @@ blocking to ask you to "go auth." E.g. an ECR pull failing on an expired SSO
 token matches a playbook whose recovery is `aws sso login`, then retries the
 run. `/forge-setup` proposes playbooks from repo signals and wires them; when
 forge hits an unmapped failure that a manual step then clears, it recognizes the
-pattern and **offers to capture a new playbook on the fly**. Interactive
-playbooks (e.g. a browser SSO login) are a genuine block under yolo/unattended —
-forge never drives a human auth flow unattended.
+pattern and **offers to capture a new playbook on the fly**. Recoveries run
+best-effort in every mode — an interactive one (e.g. a browser SSO login) is
+attempted even under `yolo`/unattended (an operator may be watching and catch
+the approval); only if no one completes it does it fall through to a genuine
+block.
 
 ## Review
 

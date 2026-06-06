@@ -299,22 +299,27 @@ failure / blocking / asking the operator:
      behavior (block / `NEEDS_SETUP` / ask). **Unchanged** — playbooks only ever
      _add_ a recovery path, never suppress a genuine block.
 3. Match **and** attempts remain (this `(rule, op)` has fired
-   `< [playbooks].max_attempts` times):
-   - `interactive = false` → run the recovery: `then` command, or `skill` if set
-     (resolved like a `restack` skill).
-   - `interactive = true` → surface the **exact** action and have the operator
-     run it — suggest `! <then>` so it runs in-session — then continue. In
-     **yolo / unattended** an `interactive = true` playbook is a **genuine
-     block**: stop, name the rule and the action the operator must run. Forge
-     never drives a human-interactive auth flow unattended.
+   `< [playbooks].max_attempts` times): **attempt the recovery** — `then`
+   command, or `skill` if set (resolved like a `restack` skill). Forge attempts
+   it in **every** mode (best-effort); it is never a pre-emptive block.
+   - `interactive = true` flags that the recovery may need a human to **complete
+     it** (e.g. `aws sso login` opens a browser). In an attended session (manual
+     / default), surface it as `! <then>` so the operator's own terminal owns
+     the prompt. In **yolo / auto / unattended**, run it directly anyway —
+     best-effort: those modes are best-effort by design, and an operator may
+     well be watching a `yolo` run and catch the browser approval. If no human
+     completes it, the command simply fails → step 4 turns it into a genuine
+     block _then_, organically. Forge never refuses to try.
+   - `interactive = false` → forge just runs it; no human needed.
 
    After the recovery, if `retry = true`, re-run `<cap>` once and re-evaluate
    from the top (counting against `max_attempts`).
 
-4. Recovery command itself fails, **or** retry still fails after `max_attempts`
-   → block with the **original** failure, noting the playbook was attempted
-   (rule name + action taken). Never loop a playbook past `max_attempts`; a
-   playbook never re-matches on its own recovery output.
+4. Recovery command itself fails (including an `interactive` recovery that no
+   human completed), **or** retry still fails after `max_attempts` → block with
+   the **original** failure, noting the playbook was attempted (rule name +
+   action taken). Never loop a playbook past `max_attempts`; a playbook never
+   re-matches on its own recovery output.
 
 `/forge-triage` consults the same table: an `INFRA_FAILURE` whose output matches
 a playbook routes to that recovery instead of dead-ending at `BLOCKED_INFRA`.
@@ -438,7 +443,7 @@ when_capability = ["localenv", "build"]   # capabilities this applies to; omit o
 when_output     = "no basic auth credentials|denied: .*ecr|ExpiredToken|ecr.*not authorized"  # regex over captured stdout+stderr
 then            = "aws sso login"          # THIS repo's recovery (another repo: gcloud auth login / docker login / …)
 skill           = ""                       # alternative to `then`: an installed slash-command skill to invoke
-interactive     = true                     # true → operator runs it (suggest `! aws sso login`), then retry; false → forge runs it
+interactive     = true                     # hint that completing it may need a human (browser). Attended → suggest `! aws sso login`; yolo/auto/unattended → forge runs it best-effort (fails → genuine block then). Never a pre-emptive block.
 retry           = true                     # re-run the failed op after recovery succeeds
 purpose         = "ECR image pull fails on expired SSO creds — re-auth, then retry the run"
 
