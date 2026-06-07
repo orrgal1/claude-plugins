@@ -126,6 +126,16 @@ forge_art():
   return <worktree-root>/<base>            # e.g. ".forge" or ".pr-artifacts/.forge"
 ```
 
+**Invariant — the chain always lives under the PR.** `$FORGE_ART` is rooted at
+the **worktree** (`<worktree-root>/…`), never at `$FORGE_HOME`. A prefix only
+moves it to another path _inside that same worktree_
+(`<worktree-root>/<prefix>/.forge`) — it never relocates it to the home. So
+`forge.toml` living at `~/.claude/forge/<repo-key>/` says **nothing** about
+where the chain is: the home holds how-to-run config; the chain (goals, design,
+links, runs, review, …) is always under the PR's own worktree. When hunting for
+a chain, resolve `forge_art()` against the worktree — do **not** look under
+`~/.claude/forge/`.
+
 Layout under `$FORGE_ART`:
 
 ```
