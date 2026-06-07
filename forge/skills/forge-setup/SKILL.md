@@ -322,6 +322,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)          |
 | `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)            |
 | `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)      |
+| `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)    |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -388,6 +389,11 @@ required = true
 
 [capabilities.review_watch]
 skill    = "/review-watch"     # forge-review-watch wraps it; --on-trigger dispatches /forge-address-review or the contract router
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.address_review]
+skill    = "/address-review"   # forge-address-review wraps it with the chain-contract --protect set + CHAIN-IMPACTING routing
 provider = "@orrgal1/devloop"
 required = true
 ```
