@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/devloop",
   "version": "1.0.0",
-  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop, /request-review, /find-blocker, /ci-green, /review (multi-channel PR review engine + lens-reviewer agent + lens pool), /review-watch (persistent PR monitor dispatching a configurable --on-trigger handler), /address-review (drive reviewer feedback to resolution — triage, fix-walk under --protect, reply/resolve, re-request).",
+  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop, /request-review, /find-blocker, /ci-green, /review (multi-channel PR review engine + lens-reviewer agent + lens pool), /review-watch (persistent PR monitor dispatching a configurable --on-trigger handler), /address-review (drive reviewer feedback to resolution — triage, fix-walk under --protect, reply/resolve, re-request), /pr-brief (write/refresh a tight PR description, idempotent into a marker-bounded body region), /stuck-check (in-loop rabbit-hole detector).",
   "author": "orrgal1",
   "license": "MIT",
   "repository": {

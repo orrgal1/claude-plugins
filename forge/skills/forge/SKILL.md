@@ -456,7 +456,7 @@ Halts:
 - `BLOCKED_RECURRENT` → `NEEDS_OPERATOR reason proof-recurrent`.
 - `BUDGET_EXHAUSTED` → bump once (`--max-proof-iters += 5`), retry. Second
   exhaust → `BLOCKED_PROOF`.
-- `STUCK` → halt with stuck-check's reason.
+- `STUCK` → halt with the loop's stuck reason (grind's stuck detection).
 
 ### 7. ci-green
 
@@ -793,7 +793,7 @@ BLOCKED_CI               → see ci-green log; --from ci
                            (base/infra cause → find_blocker → /forge-wait-for)
 BLOCKED_REVIEW           → address open findings (any severity); --from review
 NEEDS_OPERATOR           → see decisions.md; --from <phase>
-STUCK                    → see /forge-stuck-check report; --from <phase>
+STUCK                    → loop made no progress (grind stuck); --from <phase>
 ```
 
 ## Guardrails

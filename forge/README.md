@@ -238,7 +238,7 @@ tools are drafted, never auto-posted.
 | `find_blocker` capability (`@orrgal1/devloop`) · `/forge-wait-for`                            | Identify an external blocker; wait it out, then restack + resume                  |
 | `/forge-map` (+ `-db` · `-api` · `-events` · `-config`)                                       | Build JSON domain snapshots under `$FORGE_HOME/maps/`                             |
 | `/forge-tool`                                                                                 | Package an ad-hoc flow as a reusable tool                                         |
-| `/forge-status` · `/forge-stuck-check`                                                        | Status, loop-health                                                               |
+| `/forge-status`                                                                               | Read chain state + drift, recommend next step                                     |
 
 ## State & artifacts
 

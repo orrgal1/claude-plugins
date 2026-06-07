@@ -324,6 +324,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)            |
 | `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)      |
 | `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)    |
+| `pr_brief`       | Write/refresh a tight PR description        | `/pr-brief` (`@orrgal1/devloop`)          |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -397,6 +398,11 @@ required = true
 
 [capabilities.address_review]
 skill    = "/address-review"   # forge-address-review wraps it with the chain-contract --protect set + CHAIN-IMPACTING routing
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.pr_brief]
+skill    = "/pr-brief"         # forge-brief wraps it with the body-layout contract
 provider = "@orrgal1/devloop"
 required = true
 ```
