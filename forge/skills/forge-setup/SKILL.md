@@ -378,7 +378,7 @@ provider = "@orrgal1/devloop"
 required = true
 
 [capabilities.ci_green]
-skill    = "/ci-green"         # forge-ci-green wraps it with triage + --protect + chain state
+skill    = "/ci-green"         # forge-ci-green wraps it with --protect + chain state + recognizer
 provider = "@orrgal1/devloop"
 required = true
 
@@ -453,8 +453,9 @@ failure / blocking / asking the operator:
    action taken). Never loop a playbook past `max_attempts`; a playbook never
    re-matches on its own recovery output.
 
-`/forge-triage` consults the same table: an `INFRA_FAILURE` whose output matches
-a playbook routes to that recovery instead of dead-ending at `BLOCKED_INFRA`.
+The fix-loops consult this table on a failing capability run: an infra-shaped
+failure whose output matches a playbook routes to that recovery instead of
+dead-ending at `BLOCKED_INFRA`.
 
 ### Emergent playbooks — capture on the fly
 

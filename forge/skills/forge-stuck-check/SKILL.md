@@ -22,10 +22,7 @@ user-invocable: true
 
 # /forge-stuck-check — in-loop rabbit-hole detector
 
-Read-only companion to `/forge-triage`:
-
-- `/forge-triage` = pre-flight ("what kind of failure is this?").
-- `/forge-stuck-check` = in-loop ("am I making progress, or stuck?").
+Read-only, in-loop: "am I making progress, or stuck?"
 
 Called when a Layer 1 signal trips inside a patch loop. Classifies the stuck
 state, recommends halt vs continue. Verdict flow:
@@ -92,15 +89,15 @@ Soft trip → continue + log. Hard trip → call this skill.
 
 5. Action map:
 
-   | Verdict + reason                 | Caller action                                                |
-   | -------------------------------- | ------------------------------------------------------------ |
-   | `confirmed` + `missing-context`  | halt `STUCK` — surface the named unknown                     |
-   | `confirmed` + `wrong-assumption` | halt `STUCK` — name assumption + cheap verification          |
-   | `confirmed` + `unclear-goal`     | halt `STUCK` — route to `/forge-goals` or `/forge-scenarios` |
-   | `confirmed` + `un-solveworthy`   | halt `STUCK` — propose scenario drop / defer                 |
-   | `confirmed` + `out-of-scope`     | halt `STUCK` — propose `/forge-triage`-style skip            |
-   | `suspected` + any                | continue + raise tripped signal's threshold by +1 + log      |
-   | `none`                           | continue at current threshold                                |
+   | Verdict + reason                 | Caller action                                                   |
+   | -------------------------------- | --------------------------------------------------------------- |
+   | `confirmed` + `missing-context`  | halt `STUCK` — surface the named unknown                        |
+   | `confirmed` + `wrong-assumption` | halt `STUCK` — name assumption + cheap verification             |
+   | `confirmed` + `unclear-goal`     | halt `STUCK` — route to `/forge-goals` or `/forge-scenarios`    |
+   | `confirmed` + `un-solveworthy`   | halt `STUCK` — propose scenario drop / defer                    |
+   | `confirmed` + `out-of-scope`     | halt `STUCK` — propose skipping/deferring the out-of-scope item |
+   | `suspected` + any                | continue + raise tripped signal's threshold by +1 + log         |
+   | `none`                           | continue at current threshold                                   |
 
 6. Emit report.
 

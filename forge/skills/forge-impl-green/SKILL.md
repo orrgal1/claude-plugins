@@ -52,22 +52,10 @@ Loop contract. `plan.md` — one bullet per failing `REAL_BUG` scenario.
 2. **Baseline `impl-check`** (first subagent) → fresh failing set.
 3. **Flake-shaped baseline** (intermittent, no code change plausibly caused it)
    → exit `BLOCKED_FLAKY`; flakes are diagnosis-only, not a fix-loop target.
-4. **Triage gate** when failing set ≥2: `/forge-triage --failing <list> --json`
-   (controller-owned — main thread).
-   - `PROCEED` → continue.
-   - `PROCEED_WITH_SKIPS` → for each `OUT_OF_PR_SCOPE` / `STACK_DEFERRED_<ref>`:
-     - In `links.json` → halt `BLOCKED_CONTRACT` (chain guard wins).
-     - Else dispatch one `impl-fix` to apply skip/defer with verdict comment +
-       sibling PR ref. Commit:
-       `forge-impl-green: defer <SG> per /forge-triage (<verdict>)`.
-   - `HALT_TRIAGE` → halt verdict-named (`BLOCKED_FLAKY`, `BLOCKED_INFRA`,
-     `NEEDS_OPERATOR` reason `triage-ambiguous`). Exception: an
-     `INFRA_FAILURE recovery=<name>` (triage matched a playbook) → run that
-     playbook best-effort (recover + retry per `/forge-setup` § "Failure
-     recovery — playbooks"); halt `BLOCKED_INFRA` only if the recovery itself
-     fails (e.g. an interactive auth no one completed).
-   - Single-test failures skip this gate.
-5. Seed `plan.md` (one bullet per failing `REAL_BUG` scenario, isolated first).
+4. On a failing run that looks like infra (not a code defect), consult repo
+   playbooks (`/forge-setup` § "Failure recovery — playbooks"): a match recovers
+   - retries; an interactive recovery no one completes → `BLOCKED_INFRA`.
+5. Seed `plan.md` (one bullet per failing scenario, isolated first).
 
 ## Control loop (main thread — never offloaded)
 

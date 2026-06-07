@@ -26,8 +26,8 @@ A **thin** chain layer over the chain-blind `ci_green` capability (default
 `/ci-green`, `@orrgal1/devloop`). The capability owns the entire fix-to-green
 loop, the three-probe `ci-check`, `ci-fix`, continuous `--until-merge` mode, and
 stuck detection. This wrapper adds only what touches the **forge chain**: the
-triage gate, the contract-protect set, chain-located loop state, the
-external-block recognizer, and `decisions.md` / `run.json` bookkeeping.
+contract-protect set, chain-located loop state, the external-block recognizer,
+and `decisions.md` / `run.json` bookkeeping.
 
 `stop`, `--watch`, `--until-merge`, `max=<N>`, and a positional `<check>` pass
 straight through to the capability.
@@ -39,27 +39,14 @@ straight through to the capability.
    unconfigured → `NEEDS_SETUP cap=ci_green`, point at `/forge-setup`). No
    built-in substitute.
 
-## Triage gate (chain — skip if `--watch` or a single trivial check)
+## Failure handling (settle mapping)
 
-```
-gh pr checks <num> --json name,conclusion | failing list
-/forge-triage --failing <list> --json
-```
-
-Branch on `recommendation`:
-
-- `PROCEED` → continue.
-- `PROCEED_WITH_SKIPS` → for each `OUT_OF_PR_SCOPE` / `STACK_DEFERRED_<ref>`:
-  refuse if the test path is in `links.json` → halt `BLOCKED_CONTRACT`; else
-  apply the language-appropriate skip (Go `t.Skip`, py `@pytest.mark.skip` /
-  `xfail`, TS `.skip(...)`) with verdict comment + sibling PR ref, commit
-  `forge-ci-green: defer <test> per /forge-triage (<verdict>)`, and narrow the
-  loop to the `REAL_BUG` subset.
-- `HALT_TRIAGE` → verdict-named halt: `FLAKE_SUSPECT` → `BLOCKED_FLAKY`;
-  `INFRA_FAILURE` → `BLOCKED_INFRA` unless triage returned a matched
-  `recovery=<name>` playbook (run it best-effort per `/forge-setup` § playbooks;
-  halt only if the recovery itself fails); `AMBIGUOUS` → `NEEDS_OPERATOR` reason
-  `triage-ambiguous`.
+A clearly-flaky failure → `BLOCKED_FLAKY` (diagnosis-only, not a fix target). An
+infra-shaped failure → consult repo playbooks (`/forge-setup` § "Failure
+recovery — playbooks"): a match recovers + retries; else `BLOCKED_INFRA` (also
+see the external-block recognizer below). Genuinely out-of-PR-scope failures are
+deferred with a cited skip — but a `--protect` (linked/contract) test is never
+skipped to go green; that's `BLOCKED_CONTRACT`.
 
 ## Invoke the capability
 
@@ -98,7 +85,7 @@ verdict).
 
 ### External-block recognizer (waitable settles)
 
-`BLOCKED_REBASE` (base behind / red) and a triage `INFRA_FAILURE` are external —
+`BLOCKED_REBASE` (base behind / red) and an infra-shaped failure are external —
 resolved by a base PR going green or an incident clearing, not by a fix here.
 Per `/forge` § "External-block recognizer": run the `find_blocker` capability
 (`/find-blocker --hint <verdict> --json --out $FORGE_ART/branches/<slug>/blocker/last.json`);

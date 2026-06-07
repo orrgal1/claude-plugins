@@ -71,16 +71,12 @@ Loop contract. Cycle artifacts:
 2. Confirm `/forge-proof` PASS + linked tests green (cached results OK).
 3. Read prior `cycle-*.md`. Capture open finding set + statuses as the starting
    `plan.md`.
-4. **Triage gate** when open finding set ≥2 (any severity):
-   `/forge-triage --failing <finding-ids> --json`:
-   - `PROCEED` → drill all.
-   - `PROCEED_WITH_SKIPS` → for each `OUT_OF_PR_SCOPE` / `STACK_DEFERRED_<ref>`:
-     - Refuse if finding targets contract surface (linked test, `goals.md`,
-       `links.json`, `design.md`) → float to operator.
-     - Else append to next `cycle-N.md` under `## Deferred (out-of-PR-scope)`
-       with finding id + verdict + cited PR. Log in `decisions.md`. **No code
-       skip** — review handles findings, not tests.
-   - `HALT_TRIAGE` → halt with verdict reason (rare here).
+4. Drill the open findings. A finding that is genuinely out-of-PR-scope or owned
+   by a sibling PR is deferred (not fixed): append it to the next `cycle-N.md`
+   under `## Deferred (out-of-PR-scope)` with finding id + reason + cited PR,
+   log in `decisions.md`. A finding targeting a contract surface (linked test,
+   `goals.md`, `links.json`, `design.md`) is **floated to the operator**, never
+   silently dropped.
    - Single-finding set skips gate.
 5. Persona handling per § "Persona self-select".
 

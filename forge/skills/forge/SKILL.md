@@ -398,7 +398,6 @@ default):
 ```
 spawn impl-check (baseline)        # write run.json, return failing set + signals
 flake-shaped → BLOCKED_IMPL reason flaky
-≥2 failing → /forge-triage gate (main-thread)
 loop until SUCCESS | max:
     v = impl-check (after iter 0)
     v.SUCCESS → 5a
@@ -655,7 +654,6 @@ local.
 | `run.json` fresh    | Skip impl-green when all linked tests pass + mtime newer than linked tests                                        |
 | CI already green    | Skip ci-green when `gh pr checks` last-known-good covers HEAD                                                     |
 | Review covered      | Skip review-green when last cycle clean + no commits since                                                        |
-| Triage unchanged    | Don't re-run `/forge-triage` for the same failing set in the same phase                                           |
 
 Push discipline: never without local commits. Proof `--embed` does NOT push. One
 push per logical batch. `/forge-ci-green --watch` when CI=pass and nothing
