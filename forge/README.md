@@ -87,7 +87,7 @@ region, so the description never drifts into a wall of stale machine output.
 /forge-review-green  drive the review to 0 findings (every severity)
    ── on READY ──
 /forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
-/forge-request-review   rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
+request_review cap     rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
 
@@ -231,7 +231,7 @@ auto-posted.
 | `/forge-impl-green` · `/forge-ci-green` · `/forge-proof-green` · `/forge-review-green`        | Fix-loops to green (ci-green restacks each iteration; `--until-merge` continuous) |
 | `/forge-review`                                                                               | Lens-designed, chain-aware PR review                                              |
 | `/forge-review-watch` · `/forge-address-review`                                               | Watch for + drive submitted reviewer feedback to resolution                       |
-| `/forge-request-review`                                                                       | Rank the best peer reviewer; gated ready+request                                  |
+| `request_review` capability (`/request-review`, `@orrgal1/devloop`)                           | Rank the best peer reviewer; gated ready+request (consumed via capability map)    |
 | `/forge-find-blocker` · `/forge-wait-for`                                                     | Identify an external blocker; wait it out, then restack + resume                  |
 | `/forge-map` (+ `-db` · `-api` · `-events` · `-config`)                                       | Build JSON domain snapshots under `$FORGE_HOME/maps/`                             |
 | `/forge-tool`                                                                                 | Package an ad-hoc flow as a reusable tool                                         |

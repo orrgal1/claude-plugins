@@ -70,7 +70,7 @@ status → entry phase → phases in order:
   8  review-green        (continuous ci-green keeps HEAD green as fixes land)
   9  ci-ready            (read continuous monitor — GREEN on current HEAD; no separate final loop)
   9.5 arm /forge-review-watch for peer review
-  9.6 propose reviewer (/forge-request-review) → gated ready+request (AWAIT_REVIEW_REQUEST, even yolo)
+  9.6 propose reviewer (request_review cap → /request-review) → gated ready+request (AWAIT_REVIEW_REQUEST, even yolo)
                 ↓
   READY | AWAIT_*_REVIEW | AWAIT_REVIEW_REQUEST | HANDOFF_WORKTREE | BLOCKED_* | NEEDS_OPERATOR | STUCK
 ```
@@ -150,14 +150,14 @@ Common `--until`:
 
 ## Resume sub-commands
 
-| Form                                                 | Behavior                                                                                                                                                              |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/forge approve`                                     | Detect AWAIT phase via `/forge-status`. Write `{phase: <sha>}` to `approvals.json`. Advance.                                                                          |
-| `/forge iterate "<feedback>"`                        | Same detection. Re-spawn awaiting phase's skill with `--iterate "<feedback>" --push`. After push, re-settle same AWAIT.                                               |
-| `/forge approve --phase <phase>`                     | Force-target a specific phase.                                                                                                                                        |
-| `/forge iterate --phase <phase> "<feedback>"`        | Same.                                                                                                                                                                 |
-| `/forge approve` at `AWAIT_REVIEW_REQUEST`           | Action gate (§ 9.6), not a sha gate: run `/forge-request-review --ready` (ready + request the proposed reviewer), record `{review_request: <login>}`, settle `READY`. |
-| `/forge iterate "<steer>"` at `AWAIT_REVIEW_REQUEST` | Re-run `/forge-request-review` with the steer to re-rank before marking ready; re-settle the gate.                                                                    |
+| Form                                                 | Behavior                                                                                                                                                        |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/forge approve`                                     | Detect AWAIT phase via `/forge-status`. Write `{phase: <sha>}` to `approvals.json`. Advance.                                                                    |
+| `/forge iterate "<feedback>"`                        | Same detection. Re-spawn awaiting phase's skill with `--iterate "<feedback>" --push`. After push, re-settle same AWAIT.                                         |
+| `/forge approve --phase <phase>`                     | Force-target a specific phase.                                                                                                                                  |
+| `/forge iterate --phase <phase> "<feedback>"`        | Same.                                                                                                                                                           |
+| `/forge approve` at `AWAIT_REVIEW_REQUEST`           | Action gate (§ 9.6), not a sha gate: run `/request-review --ready` (ready + request the proposed reviewer), record `{review_request: <login>}`, settle `READY`. |
+| `/forge iterate "<steer>"` at `AWAIT_REVIEW_REQUEST` | Re-run `/request-review` with the steer to re-rank before marking ready; re-settle the gate.                                                                    |
 
 Both refuse if `/forge-status` reports no awaiting phase.
 
@@ -605,17 +605,20 @@ own no-double-arm guard).
 After arming the watch, forge **proposes** moving the PR out of draft for peer
 review:
 
-1. `/forge-request-review --slug <slug> --json` → ranked candidate(s) + evidence
-   (same-stack reviewers > reviewers of the author's work > people the author
-   reviews > code-area / CODEOWNERS).
+1. Resolve the `request_review` capability (default `/request-review`,
+   `@orrgal1/devloop`; unconfigured → `NEEDS_SETUP cap=request_review`). Run it
+   for this branch's PR, persisting the verdict to the chain via `--out`:
+   `/request-review --json --out $FORGE_ART/branches/<slug>/reviewer/last.json`
+   → ranked candidate(s) + evidence (same-stack reviewers > reviewers of the
+   author's work > people the author reviews > code-area / CODEOWNERS).
 2. **Approval gate (hard, all modes including `yolo`).** Marking the PR
    ready-for-review and requesting a reviewer is the **author's gesture** —
    forge never performs it autonomously. It surfaces the proposal + the
-   one-command ready (`/forge-request-review --ready [--reviewer <login>]`) and
+   one-command ready (`/request-review --ready [--reviewer <login>]`) and
    settles `AWAIT_REVIEW_REQUEST`. An interactive operator may approve inline;
    otherwise the operator runs the ready command (or `/forge approve` at this
    gate) when ready.
-3. **On approval** → `/forge-request-review --ready` lazily converts the draft
+3. **On approval** → `/request-review --ready` lazily converts the draft
    (`gh pr ready` only if still draft) + `gh pr edit --add-reviewer <login>`;
    log `D<n> marked ready for review, requested <login>`; settle `READY`
    (ready).
@@ -825,7 +828,7 @@ open blockers: <N>   open majors: <N>
 READY                    → peer-review watch armed; merge per workflow
 HANDOFF_WORKTREE         → switch to a session in the new worktree, then /forge | /forge-yolo
 AWAIT_REVIEW_REQUEST     → reviewer proposed; approve to ready+request
-                           (/forge-request-review --ready [--reviewer <login>] | /forge approve)
+                           (/request-review --ready [--reviewer <login>] | /forge approve)
                            or leave draft (watch fires when you mark it ready)
 AWAIT_*_REVIEW           → watch armed: submit a GitHub review (feedback, or a
                            comment review = approval) | or /forge approve | iterate
@@ -884,8 +887,8 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
 - **Stack discipline** — cross-PR refactors surfaced during review → focused
   follow-up PRs, not pulled into this PR.
 - **Peer-review watch on READY** — forge arms `/forge-review-watch` at `READY`
-  (unless `--no-review-watch`), then proposes a reviewer via
-  `/forge-request-review` (§ 9.6).
+  (unless `--no-review-watch`), then proposes a reviewer via the
+  `request_review` capability (§ 9.6).
 - **Open-for-review is gated** — marking the PR ready + requesting a reviewer is
   the author's gesture; forge performs it **only** through the
   `AWAIT_REVIEW_REQUEST` approval gate, never autonomously, **never in `yolo`

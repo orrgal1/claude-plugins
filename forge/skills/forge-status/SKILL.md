@@ -114,7 +114,7 @@ Earliest unsatisfied phase wins:
 | `REVIEW_OPEN`            | last `cycle-N.md` B+M>0 AND no commits since                                                                                                                                                  | `/forge-review-green`                                                                                 |
 | `REVIEW_STALE`           | last cycle B+M>0 AND commits since, no new cycle                                                                                                                                              | `/forge-review-green` (re-cycle)                                                                      |
 | `REVIEW_GREEN`           | last cycle B+M=0, commits since last `ci.green`                                                                                                                                               | phase 9 ci-ready: read continuous monitor `loop/ci-green-continuous/status.json`; GREEN → READY-phase |
-| `AWAIT_REVIEW_REQUEST`   | would-be READY, PR still `isDraft`, no `approvals.json.review_request`, not `--no-review-request`                                                                                             | operator: `/forge approve` (mark-ready+request) or `/forge-request-review --ready`                    |
+| `AWAIT_REVIEW_REQUEST`   | would-be READY, PR still `isDraft`, no `approvals.json.review_request`, not `--no-review-request`                                                                                             | operator: `/forge approve` (mark-ready+request) or `/request-review --ready`                          |
 | `READY`                  | CI green post-review + proof-embed present + last B+M=0 (or `--no-review` recorded), AND ready-for-review resolved (`approvals.json.review_request` OR PR not draft OR `--no-review-request`) | mark ready / merge                                                                                    |
 
 Manual-mode AWAIT verdicts (phases 4-9): `AWAIT_TESTS_REVIEW`,
@@ -204,10 +204,10 @@ JSON (`--json`):
   `iterate "<feedback>"` re-spawns the phase skill with `--iterate --push`;
   prior sha goes stale on commit.
 - **`AWAIT_REVIEW_REQUEST` is an action gate, not a sha gate.** `approve` at it
-  runs `/forge-request-review --ready` (mark ready + request the proposed
-  reviewer) and records `{"review_request": "<reviewer-login>"}` in
-  `approvals.json`; `iterate "<steer>"` re-runs `/forge-request-review` with the
-  steer to re-rank before marking ready. No sha pinning.
+  runs `/request-review --ready` (mark ready + request the proposed reviewer)
+  and records `{"review_request": "<reviewer-login>"}` in `approvals.json`;
+  `iterate "<steer>"` re-runs `/request-review` with the steer to re-rank before
+  marking ready. No sha pinning.
 
 ## Symbol presence check
 

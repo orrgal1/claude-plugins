@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/devloop",
   "version": "1.0.0",
-  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop.",
+  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop, /request-review.",
   "author": "orrgal1",
   "license": "MIT",
   "repository": {

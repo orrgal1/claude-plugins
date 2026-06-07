@@ -1,6 +1,8 @@
 ---
 name: forge-setup
-description: "Adopt forge into a repo: map its build/test/lint/codegen tooling + capability registry."
+description:
+  "Adopt forge into a repo: map its build/test/lint/codegen tooling + capability
+  registry."
 argument-hint:
   "[--cap <name>=<command>]... [--instr <name>=<prose>]... [--playbook
   <name>=<when_output>::<then>]... [--list] [--yes] [--migrate user|repo]
@@ -315,13 +317,32 @@ external suite (e.g. `@fordefi/*`) read it.
 | `root_cause`     | Hypothesis-driven RCA, parallel fan-out     | `/root-cause` (`@orrgal1/diagnose`)       |
 | `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/diagnose`)      |
 | `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/diagnose`) |
+| `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)    |
+
+Two classes of capability live here, distinguished by `required`:
+
+- **Optional enhancements** (`iteration_loop`, `root_cause`, `hypothesize`,
+  `trace_logging`) — nice to have; unconfigured → **degrade gracefully** (do the
+  work inline or skip the optional step).
+- **Required PR ops** (`request_review`, and its siblings extracted alongside) —
+  **chain-blind** operations on a GitHub PR that forge does **not** implement
+  itself. Forge **hardwires nothing**: it has no built-in fallback for these and
+  depends on full configuration. Unconfigured required capability →
+  `NEEDS_SETUP cap=<name>`, halt, point at `/forge-setup`. forge-setup defaults
+  every required capability to its `@orrgal1/devloop` provider and **strongly
+  recommends installing `@orrgal1/devloop`** to satisfy them all in one move.
+
+Forge supplies any chain context the chain-blind skill needs itself (e.g.
+persists the reviewer verdict to `$FORGE_ART/branches/<slug>/reviewer/last.json`
+via the skill's `--out`).
 
 ```toml
 # ~/.claude/forge/capabilities.toml — machine-global agent-capability registry.
 # Generic capability -> concrete installed-plugin slash command. Written by
-# /forge-setup. Consumed by forge + external suites (@fordefi/*) to resolve
-# generic agent functions without a hard plugin dependency. One map serves every
-# repo + worktree. Edit freely; re-run /forge-setup to refresh.
+# /forge-setup. Consumed by forge + external suites (@fordefi/*). Forge hardwires
+# no capability: optional ones degrade gracefully when unconfigured, required
+# ones surface NEEDS_SETUP. One map serves every repo + worktree. Edit freely;
+# re-run /forge-setup to refresh.
 version = 1
 
 [capabilities.iteration_loop]
@@ -340,16 +361,23 @@ provider = "@orrgal1/diagnose"
 skill    = "/trace"
 fallback = "/pepper"
 provider = "@orrgal1/diagnose"
+
+[capabilities.request_review]
+skill    = "/request-review"   # chain-blind; forge passes --out for the verdict
+provider = "@orrgal1/devloop"
+required = true                # no built-in fallback; unconfigured -> NEEDS_SETUP
 ```
 
 **Resolution contract (for any consumer skill):**
 
 1. Read `~/.claude/forge/capabilities.toml`.
 2. `capabilities.<name>.skill` non-empty → invoke that slash command.
-3. empty / missing key / missing file → capability unavailable; **degrade
-   gracefully** (do the work inline or skip the optional step). Never hard-fail
-   on a missing companion plugin, never guess a slash command. Suggest
-   `/forge-setup` to (re)build the map.
+3. empty / missing key / missing file → capability unavailable:
+   - `required = true` → forge hardwires no substitute. Surface
+     `NEEDS_SETUP cap=<name>`, halt, point at `/forge-setup` (which provisions
+     the `@orrgal1/devloop` provider). Never guess a slash command.
+   - otherwise (optional) → **degrade gracefully**: do the work inline or skip
+     the optional step. Never hard-fail on a missing companion plugin.
 
 ## Failure recovery — playbooks (consulted on capability failure)
 
