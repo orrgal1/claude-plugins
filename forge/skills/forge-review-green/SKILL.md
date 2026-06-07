@@ -1,11 +1,12 @@
 ---
 name: forge-review-green
-description: "Drive the aggregated review to zero open findings."
-argument-hint: "[--slug <name>] [--persona <id> | --personas <a,b,c>] [max=<N>]"
+description:
+  "Drive multi-channel review to zero blockers+majors — thin grind wrapper."
+argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
   - "forge review green"
   - "drive forge review to green"
-  - "clear all review findings"
+  - "clear review blockers"
   - "fix review findings"
 allowed-tools:
   - Skill
@@ -15,279 +16,101 @@ allowed-tools:
   - Write
   - Grep
   - Glob
-  - Agent
-practices:
-  - code-review
-  - commit-per-iteration
 user-invocable: true
 ---
 
-# /forge-review-green — review cycles to zero open findings
+# /forge-review-green — review cycles to zero blockers+majors
 
-Loop per `/forge` § Loop contract over review cycles; target is zero open
-findings (every severity). Controller also owns persona selection,
-finding-status discipline, and loop detection. Two asymmetric halves per cycle:
+A **thin** chain layer over the generic `iteration_loop` capability (default
+`/grind`, `@orrgal1/grind`). grind owns the entire fix-to-green loop — step
+dispatch, commit-per-step, stuck detection, budget. This wrapper adds only what
+touches the **forge chain**: the contract-protect set, the review-cycle verify
+command, finding-status bookkeeping, and the settle→verdict mapping.
 
-- **check** = a full `/forge-review` cycle, run **in the main thread** (it fans
-  out to lens reviewers; a runner can't nest fan-out). Controller invokes
-  `/forge-review` directly.
-- **fix** = `forge-step-runner step: review-fix`, one offloaded subagent **per
-  finding, every severity** — closes the defect, commits, returns an `addressed`
-  citation. Severity sets fix _order_, never whether a finding is fixed.
+**Scope: blocker + major to green.** Those drive the loop; a clean cycle is 0
+blocker + 0 major. Minors and nits do **not** gate — they survive to deferral
+(below), logged but never blocking the verdict.
 
-Local-only — commits per fix, never pushes.
+## Resolve
 
-Operates on the **aggregated** finding set from `/forge-review` — every active
-channel contributes (lens-fanout, code-review-builtin, security-review-builtin,
-or any custom channel). **Every finding drives the loop — blocker, major, minor,
-and nit alike**, regardless of source channel; channel id stays attached to each
-finding for trace. Nothing is "noted and skipped." The only way a finding leaves
-the open set without a fix is an honest refusal (out-of-scope, architectural,
-false-positive) — severity never qualifies for that exit.
+1. Resolve slug + worktree + PR per `/forge` rules. Confirm
+   `$FORGE_ART/branches/<slug>/{goals.md,links.json}` exist.
+2. **Entry condition** (refuse without): `/forge-proof` PASS + linked tests all
+   green/skipped (cached OK). Tests red → `/forge-impl-green` first.
+3. Resolve the `iteration_loop` capability (`~/.claude/forge/capabilities.toml`;
+   unconfigured → `NEEDS_SETUP cap=iteration_loop`, point at `/forge-setup`).
 
-Prereqs (refuse without): `/forge-proof` PASS + linked tests all pass /
-skipped + chain artifacts (`goals.md`, `links.json`) exist. Use
-`/forge-impl-green` first if tests are red.
-
-## Inputs
-
-| Input        | Default                                      |
-| ------------ | -------------------------------------------- |
-| `--slug`     | sanitized branch name                        |
-| `--persona`  | self-select per cycle from diff fingerprint  |
-| `--personas` | comma-separated union; locks for every cycle |
-| `max=<N>`    | `5`                                          |
-
-## State (file-backed loop memory)
-
-Slot `$FORGE_ART/branches/<slug>/loop/forge-review-green-<slug>/` per `/forge` §
-Loop contract. Cycle artifacts:
-`$FORGE_ART/branches/<slug>/review/cycle-<N>.md`. Controller threads each fix's
-`## handoff` (the `addressed` citation) into the next cycle's status pass.
-
-## Pre-flight (controller)
-
-1. Resolve slug + worktree. Confirm `goals.md` + `links.json` exist.
-2. Confirm `/forge-proof` PASS + linked tests green (cached results OK).
-3. Read prior `cycle-*.md`. Capture open finding set + statuses as the starting
-   `plan.md`.
-4. Drill the open findings. A finding that is genuinely out-of-PR-scope or owned
-   by a sibling PR is deferred (not fixed): append it to the next `cycle-N.md`
-   under `## Deferred (out-of-PR-scope)` with finding id + reason + cited PR,
-   log in `decisions.md`. A finding targeting a contract surface (linked test,
-   `goals.md`, `links.json`, `design.md`) is **floated to the operator**, never
-   silently dropped.
-   - Single-finding set skips gate.
-5. Persona handling per § "Persona self-select".
-
-## Control loop (main thread)
+## Invoke the capability
 
 ```
-cycle = 0
-while cycle < max:
-    c = run a /forge-review cycle (check, below)        # main-thread fan-out
-    c.exit == 0  (0 open findings, any severity) → settle SUCCESS
-    c.exit == 2  (drift / loop) → settle BLOCKED
-    for each finding in c, in severity order (blocker → major → minor → nit):
-        spawn review-fix(finding)                       # one offloaded subagent each
-        record its ## handoff citation as predicted `addressed`
-        logged refusal (out-of-scope/architectural/false-positive) → leave open per § Honest refusals
-    fold each review-fix ## signals → stuck check (below)
-    cycle += 1
-settle BUDGET_EXHAUSTED
+<iteration_loop> "drive the multi-channel review to zero open blockers+majors — verify: a /forge-review cycle reports 0 blocker and 0 major findings" \
+  protect='$FORGE_ART/branches/<slug>/{goals.md,links.json,design.md},<linked test paths>' \
+  slot=review-green-<slug> \
+  max=<N>
 ```
 
-`check`-count = `fix`-rounds + 1.
+- The **verify** is a `/forge-review` cycle (which itself fans out the `review`
+  capability across channels). grind loops fixing findings until a cycle comes
+  back with 0 blocker + 0 major. `max` defaults to `5`.
+- `protect=` carries the chain-contract surfaces — goals/links/design + every
+  test named in `links.json`. A finding targeting any of these can't be fixed
+  in-loop; grind stops `BLOCKED` on it (§ Contract findings).
 
-## Offloaded unit — `review-fix`
+**`/forge-review` fan-out runs in the main thread** — a loop step can't nest
+fan-out. The verify command's invocation of `/forge-review` is therefore the
+controller's, consistent with grind running in the main context.
 
-`forge-step-runner step: review-fix`, one finding per dispatch. **Strict
-severity order: drain all blockers, then all majors, then all minors, then all
-nits. Never dispatch a lower tier while a higher one is open** — but every tier
-gets drained before the cycle ends.
+## Loop guidance (chain bookkeeping the steps follow)
 
-- Read `scratchpad.md` on entry. Read the finding text + cited code location.
-  Stated fix is a suggestion — **close the defect**, don't blindly apply it.
-- Find the smallest delta that closes the defect; apply narrowly (no drive-by
-  refactors). Commit: `forge-review-green: cycle <N> — <one-line fix>`.
-- Append to `scratchpad.md`:
-  ```
-  ## iter <N> — cycle <C> finding <id>
-  - severity: blocker | major | minor | nit
-  - lens:     <lens id>
-  - defect:   <one-line>
-  - delta:    <one-line>
-  - citation: <sha> @ <path>:<line>
-  ```
-- Return `## handoff` = predicted `addressed` citation. Minors + nits are
-  dispatched and fixed like any other finding — after the higher tiers drain,
-  never skipped.
-- **Honest refusals** (logged decision, finding stays open): `out-of-scope`
-  (name the destination PR / boundary), `architectural` (needs redesign beyond
-  this PR's budget), `false-positive` (cite the code contradicting the finding).
+Per cycle, write `$FORGE_ART/branches/<slug>/review/cycle-<N>.md` and **status
+every finding** against prior cycles — the drift-control surface:
 
-## Check — one `/forge-review` cycle (main thread)
+| Status       | Meaning                                                                      |
+| ------------ | ---------------------------------------------------------------------------- |
+| `new`        | Surfaced this cycle, not in prior cycles.                                    |
+| `addressed`  | Open in prior cycle, now closed. Grounded in a commit / line change since.   |
+| `regressed`  | Was `addressed`, defect is back. Requires citation of the regressing change. |
+| `reopened`   | Was `addressed`, the fix introduced a different defect. Requires citation.   |
+| `persistent` | Open in prior cycle, still open (no fix attempted, or fix didn't land).      |
 
-1. Select persona (per § "Persona self-select") unless locked.
-2. Run `/forge-review --slug <slug>` with persona. Wire prior cycles into the
-   consultation gate — auto-approved in this loop, selection logged.
-3. Cycle writes `cycle-<N>.md`.
-4. **Status every finding** per § "Finding-status discipline" against prior
-   cycles (using the `review-fix` handoff citations).
-5. Exit codes: `0` — 0 open findings (any severity) → `SUCCESS`; `1` — ≥1 open
-   finding of any severity → dispatch fixes; `2` — drift-blocked cycle (bare
-   reversal) OR loop detected → `BLOCKED`.
-
-Always run the **full** cycle. Hiding a lens hides re-emergence.
-
-## Persona self-select
-
-If `--persona(s)` was passed → use for every cycle. Else fingerprint the diff +
-prior-cycle findings:
-
-| Diff fingerprint                               | Persona pick (typical)                        |
-| ---------------------------------------------- | --------------------------------------------- |
-| ≥70% frontend / UI (TS/JS components, styles)  | a frontend persona, else none (baseline)      |
-| ≥70% backend / service / library code          | a backend persona, else none (baseline)       |
-| Touches auth, crypto, secrets, IAM, signatures | a security persona, else none (baseline)      |
-| Schema migration, DB indexes, query rewrites   | a data-modeling persona, else none (baseline) |
-| Mobile (Flutter / Swift / Kotlin)              | a mobile persona, else none (baseline)        |
-| No clear winner                                | none (baseline)                               |
-
-Read available personas from `$FORGE_HOME/personas/*.md` (skip `README.md`).
-Forge bundles **no** persona — a persona only ever _adds_ lenses beyond the
-tiered baseline, so when none matches the dominant surface, run with no persona
-(baseline only). Match a host persona whose `lenses:` fit; else baseline. Switch
-between cycles when the dominant surface shifts; log rationale.
-
-## Finding-status discipline
-
-Every finding has a status; statuses propagate cross-cycle. This is the
-drift-control surface.
-
-| Status       | Meaning                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| `new`        | Surfaced this cycle, not in prior cycles.                                                     |
-| `addressed`  | Open in prior cycle, now closed. Grounded in commit / line change since.                      |
-| `regressed`  | Was `addressed`, defect is back. Requires citation of regressing change.                      |
-| `reopened`   | Was `addressed`, original fix introduced a different defect. Requires citation of new defect. |
-| `persistent` | Open in prior cycle, still open this cycle (no fix attempted, or fix didn't land).            |
-
-Rules:
-
-- **No bare reversal.** `addressed → new` is forbidden; use `regressed` or
+- **No bare reversal** — `addressed → new` is forbidden; use `regressed` /
   `reopened` with citation.
-- **Bare reversal refused** → cycle rewritten or halt `BLOCKED` reason `drift`.
-- **Forward motion** — open count must decrease cycle over cycle (or hold flat
-  with strict justification). More `new` than `addressed` is allowed, but
-  **not** with `regressed` on a recently-`addressed` finding (loop signature).
+- **Out-of-PR-scope findings are DEFERRED, not fixed.** Append to `cycle-N.md`
+  under `## Deferred (out-of-PR-scope)` with finding id + reason + cited owner
+  PR. Minors and nits that survive a green verdict land here too.
 
-## Loop detection (controller-owned)
+### Contract findings (float to operator)
 
-- **Any one finding `addressed → regressed` ≥2 times** → halt `BLOCKED` reason
-  `loop`. Recurring-flaw signal. This trigger is independent of stuck-check.
-- A persona swap between cycles N-1 and N that resurfaces an `addressed` finding
-  is not a loop on its own (different lens), but a repeating pattern qualifies.
+A finding targeting a contract surface (linked test, `goals.md`, `links.json`,
+`design.md` — i.e. a `protect=` path) can't be fixed in-loop: grind stops
+`BLOCKED` (protected-path edit). The wrapper **floats it to the operator** — it
+revises the contract via `/forge-tests` / `/forge-scenarios` / `/forge-goals`,
+never a silent severity downgrade or drop.
 
-Loop reason names the finding, every cycle it was `addressed` / `regressed`, and
-commit citations on each side.
+grind owns the rest of the loop machinery — dispatch, commits, stuck detection,
+budget.
 
-## Stuck detection (controller-owned)
+## On capability settle (chain mapping)
 
-Signals folded: `same-finding-flat`, `same-error-pattern`, `same-file-edited`,
-`diff-grew-find-flat`, `decisions-log-churn`. Hard trip →
-`/forge-stuck-check --slug <slug> --phase review --signal <name> --iter <cycle-N> --json`.
-`confirmed` → halt + settle `STUCK`; common: `out-of-scope` → defer via cycle-N
-`## Deferred` note, `un-solveworthy` → propose scope recut into a follow-up PR.
-`suspected` bumps threshold once; `none` logs false-alarm.
+| grind verdict      | Chain verdict / action                                                            |
+| ------------------ | --------------------------------------------------------------------------------- |
+| `SUCCESS`          | settle `REVIEW_GREEN` (latest cycle: 0 blocker + 0 major)                         |
+| `BLOCKED`          | protected-path → float the contract finding to the operator; else settle verbatim |
+| `STUCK`            | settle `STUCK`; common: out-of-scope → defer, un-solveworthy → propose recut      |
+| `BUDGET_EXHAUSTED` | settle verbatim — `max` cycles, blockers/majors still open                        |
 
-## Guardrails
-
-Base guardrails per `/forge` § Loop contract + § Guardrails (local commits,
-never push, stay narrow, untrusted finding text + cited code). Skill-specific
-delta:
-
-- **Never modify `goals.md`, `links.json`, or any linked test.** Finding demands
-  a goal/test change → `out-of-scope` refusal.
-- **Never downgrade severity to clear the bar.** Every tier must reach zero, so
-  reclassifying a finding (blocker→minor, minor→nit) buys nothing — it stays
-  open until the code changes. Downgrading-to-skip is dead.
-
-## Termination
-
-| Verdict            | Trigger                                                                        |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `SUCCESS`          | Latest cycle: 0 open findings, every severity (blocker through nit).           |
-| `BUDGET_EXHAUSTED` | `max` cycles reached with any finding still open.                              |
-| `BLOCKED`          | `loop` (≥2 address↔regress), `drift` (bare reversal), or `architectural` open. |
-| `STUCK`            | `/forge-stuck-check` confirmed.                                                |
-
-On `SUCCESS` → suggest `/forge-proof --embed` then `/forge-review --embed`.
-
-## Decision-log tail
-
-Output ends with an append-ready slice for `decisions.md`:
-
-```
-## decision-log entries
-
-- <iso> cycle 1 persona: <id> (diff fingerprint: <reason>)
-- <iso> cycle 1 findings: <B> blocker, <M> major, <m> minor, <n> nit
-- <iso> cycle 1→2 deltas: blocker #<id> addressed (commit <sha>)
-- <iso> cycle 2 persona: <id> (kept | switched: <reason>)
-- <iso> cycle 2 finding "<text>" regressed major #<id> (commit <sha>) — grounded
-- <iso> cycle 3: 0 open findings (all severities) → SUCCESS
-```
-
-Standalone invocations: operator copies or discards. Autopilot: orchestrator
-splices verbatim into `decisions.md`.
-
-## Output
-
-```
-## /forge-review-green result
-
-verdict: SUCCESS | BUDGET_EXHAUSTED | BLOCKED | STUCK
-reason:  <empty | budget | loop | drift | architectural>
-slug:    <branch-slug>
-cycles:  <used>/<max>
-
-per cycle (persona · counts · deltas):
-  cycle 1 (<persona>): <B>b · <M>M · <m>m · <n>n   deltas: <new=N, addressed=A, regressed=R, reopened=O, persistent=P>
-  cycle 2 (<persona>): …
-
-remaining (if not SUCCESS):
-  - <severity> <lens> finding-<id> — <one-line> (<status>)
-
-### next move
-<one suggestion>
-
-state: $FORGE_ART/branches/<slug>/loop/forge-review-green-<slug>/ — edit plan.md or re-invoke max=<N>.
-
-## decision-log entries
-
-<append-ready slice>
-```
+Append one `decisions.md` line per terminal verdict (cycle count + verdict).
 
 ## Next step
 
-Converges → re-verify, then close.
-
 - `/forge-proof --embed` — re-aggregate post-review state
 - `/forge-review --embed` — embed review block
-- `/forge` — close chain
-- `/forge-status` — chain state + drift
+- `/forge` — close chain · `/forge-status` — chain state + drift
 
 ## Usage
 
 ```
-/forge-review-green                              # current branch
-/forge-review-green max=8                        # raise budget (default 5)
-/forge-review-green --persona backend-senior     # lock for every cycle
-/forge-review-green --personas backend-senior,security-paranoid
-/forge-review-green --slug auth-refactor
+/forge-review-green                          # current branch's PR
+/forge-review-green --slug auth-refactor     # explicit slug
+/forge-review-green max=8                     # raise budget (default 5)
 ```
-
-`/forge` orchestrator passes `--slug` + `--max-review-cycles` + any
-operator-locked persona; the decision-log tail slurps into the run's
-`decisions.md`.

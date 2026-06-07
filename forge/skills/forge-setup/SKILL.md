@@ -326,16 +326,17 @@ external suite (e.g. `@fordefi/*`) read it.
 
 Two classes of capability live here, distinguished by `required`:
 
-- **Optional enhancements** (`iteration_loop`, `root_cause`, `hypothesize`,
-  `trace_logging`) — nice to have; unconfigured → **degrade gracefully** (do the
-  work inline or skip the optional step).
-- **Required PR ops** (`request_review`, and its siblings extracted alongside) —
-  **chain-blind** operations on a GitHub PR that forge does **not** implement
-  itself. Forge **hardwires nothing**: it has no built-in fallback for these and
-  depends on full configuration. Unconfigured required capability →
+- **Optional enhancements** (`root_cause`, `hypothesize`, `trace_logging`) —
+  nice to have; unconfigured → **degrade gracefully** (do the work inline or
+  skip the optional step).
+- **Required** — capabilities forge does **not** implement itself and has no
+  built-in fallback for. Two kinds: the chain-blind **PR ops** (`request_review`
+  and its siblings, default `@orrgal1/devloop`) and the **`iteration_loop`** the
+  `*-green` wrappers drive (default `/grind`, `@orrgal1/grind`). Forge
+  **hardwires nothing**: unconfigured required capability →
   `NEEDS_SETUP cap=<name>`, halt, point at `/forge-setup`. forge-setup defaults
-  every required capability to its `@orrgal1/devloop` provider and **strongly
-  recommends installing `@orrgal1/devloop`** to satisfy them all in one move.
+  each to its provider and **strongly recommends installing them**
+  (`@orrgal1/devloop` + `@orrgal1/grind`).
 
 Forge supplies any chain context the chain-blind skill needs itself (e.g.
 persists the reviewer verdict to `$FORGE_ART/branches/<slug>/reviewer/last.json`
@@ -351,8 +352,9 @@ via the skill's `--out`).
 version = 1
 
 [capabilities.iteration_loop]
-skill    = "/grind"            # set "" if no provider installed
+skill    = "/grind"            # the *-green wrappers drive this; no built-in fallback
 provider = "@orrgal1/grind"
+required = true
 
 [capabilities.root_cause]
 skill    = "/root-cause"

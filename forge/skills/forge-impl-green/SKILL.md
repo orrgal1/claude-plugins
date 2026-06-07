@@ -1,7 +1,9 @@
 ---
 name: forge-impl-green
-description: "Drive linked scenario tests to green."
-argument-hint: "[--slug <name>] [--scenario SG<n>.<m>] [max=<N>]"
+description:
+  "Drive a PR's linked scenario tests to green — thin chain wrapper over the
+  iteration_loop capability."
+argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
   - "drive forge tests to green"
   - "make linked tests pass"
@@ -12,153 +14,119 @@ allowed-tools:
   - Skill
   - Bash
   - Read
-  - Edit
   - Write
   - Grep
   - Glob
-  - Agent
 practices:
   - tdd
   - commit-per-iteration
 user-invocable: true
 ---
 
-# /forge-impl-green — drive linked tests to green
+# /forge-impl-green — chain wrapper around the `iteration_loop` capability
 
-Loop per `/forge` § Loop contract. Target: the linked tests. Fix =
-**`impl-fix`** (one narrow delta + commit); check = **`impl-check`** (run linked
-tests, write `run.json`, return verdict). Local test runs only — never pushes,
-never polls CI; hand off to `/forge-ci-green` for CI.
+A **thin** chain layer over the `iteration_loop` capability (default `/grind`,
+`@orrgal1/grind`). The capability owns the entire fix-to-green loop machinery —
+`plan.md`, per-iteration commit, stuck detection, budget. This wrapper adds only
+what touches the **forge chain**: resolving `links.json` into the verify command
+
+- protect set, the baseline flake-exit, and the verdict mapping. Local test runs
+  only — never pushes, never polls CI; hand off to `/forge-ci-green` for CI.
 
 ## Inputs
 
-| Input        | Default                                         |
-| ------------ | ----------------------------------------------- |
-| `--slug`     | sanitized branch name                           |
-| `--scenario` | all failing scenarios (narrow with `SG<n>.<m>`) |
-| `max`        | `10`                                            |
+| Input    | Default               |
+| -------- | --------------------- |
+| `--slug` | sanitized branch name |
+| `max`    | `10`                  |
 
-Prereqs: `$FORGE_ART/branches/<slug>/goals.md` exists with `- test:` sub-bullets
-on every scenario. Missing → exit, point at `/forge` or `/forge-tests`.
+Prereqs: `$FORGE_ART/branches/<slug>/goals.md` exists with a `- test:`
+sub-bullet on every scenario, and `links.json` resolves each scenario to a test
+path + function. Missing → exit, point at `/forge` or `/forge-tests`.
 
-## State (file-backed loop memory)
+## Resolve
 
-Slot `$FORGE_ART/branches/<slug>/loop/forge-impl-green-<slug>/` per `/forge` §
-Loop contract. `plan.md` — one bullet per failing `REAL_BUG` scenario.
+1. Resolve slug + worktree + PR per `/forge` rules. Verify prereqs.
+2. Resolve the `iteration_loop` capability (`~/.claude/forge/capabilities.toml`;
+   default `/grind`; unconfigured → `NEEDS_SETUP cap=iteration_loop`, point at
+   `/forge-setup`).
 
-## Pre-flight (controller)
+## Baseline & failure handling
 
-1. Resolve slug + worktree. Verify prereqs.
-2. **Baseline `impl-check`** (first subagent) → fresh failing set.
-3. **Flake-shaped baseline** (intermittent, no code change plausibly caused it)
-   → exit `BLOCKED_FLAKY`; flakes are diagnosis-only, not a fix-loop target.
-4. On a failing run that looks like infra (not a code defect), consult repo
-   playbooks (`/forge-setup` § "Failure recovery — playbooks"): a match recovers
-   - retries; an interactive recovery no one completes → `BLOCKED_INFRA`.
-5. Seed `plan.md` (one bullet per failing scenario, isolated first).
+Run the linked set once (via the `test` capability) before invoking the loop:
 
-## Control loop (main thread — never offloaded)
+- **Flake-shaped baseline** (intermittent, no plausible code cause) → exit
+  `BLOCKED_FLAKY`; flakes are diagnosis-only, not a fix-loop target.
+- A failing baseline that looks like **infra** (not a code defect) → consult
+  repo playbooks (`/forge-setup` § "Failure recovery — playbooks"): a match
+  recovers + retries; an interactive recovery no one completes →
+  `BLOCKED_INFRA`.
+- Baseline already green → settle `IMPL_GREEN` (refresh `run.json`), no loop.
+
+## Invoke the capability
+
+The wrapper resolves `links.json` into both the verify command and the protect
+set, then hands the loop a single self-contained target:
 
 ```
-iter = 0
-while iter < max:
-    v = baseline (iter 0) | spawn impl-check          # heavy verify → subagent
-    if v.verdict == SUCCESS:        settle SUCCESS
-    if v.verdict == ERROR:          settle BLOCKED     # wrong-reason (exit 2)
-    fold v.signals into history → stuck check (below)  # cheap, controller-owned
-    spawn impl-fix(failing set, handoff)               # heavy fix → subagent
-    iter += 1
-settle BUDGET_EXHAUSTED                                # max hit, target unmet
+<iteration_loop> "drive this PR's linked scenario tests to green — verify: <command that runs exactly the tests linked in links.json, via the repo `test` capability ($FORGE_HOME/commands/test <selectors>), and exits 0 iff they all pass>" \
+  protect='<linked test file paths from links.json>,$FORGE_ART/branches/<slug>/{goals.md,links.json,design.md}' \
+  slot=impl-green-<slug> \
+  max=<N>
 ```
 
-`impl-check` runs once per iteration _before_ the fix, so check-count =
-fix-count + 1. Controller threads `v`'s `## handoff` (failing set + last-failure
-line) into the `impl-fix` brief, and the fix's `## handoff` into the next
-`impl-check`.
+**Key point:** the loop never knows _which_ tests. The wrapper answers "which
+tests" by resolving `links.json` → the verify command (the exact linked
+selectors, full set so sibling regressions surface) + the protect set (every
+linked test file + the chain-contract surfaces). The loop just drives that one
+verify command to exit 0 without editing what it protects.
 
-## Offloaded unit — `impl-check`
+## On capability settle (chain mapping)
 
-Read-only w.r.t. source; the only write is `run.json`. Dispatched as
-`forge-step-runner step: impl-check`.
+| Capability verdict       | Chain action                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `SUCCESS`                | settle `IMPL_GREEN`; refresh `run.json` by re-running the linked tests (automatic, never offered)            |
+| `BLOCKED` (protect path) | settle `BLOCKED_CONTRACT`, name the contract file (operator revises via `/forge-tests` / `/forge-scenarios`) |
+| `BLOCKED` (other)        | settle `RED_PERSISTENT` / `BLOCKED_IMPL` with the failure signature; log to `decisions.md`                   |
+| `BUDGET_EXHAUSTED`       | settle verbatim; log to `decisions.md`                                                                       |
 
-- Read `goals.md` scenarios + `- test:` / `- tier:` sub-bullets (strip
-  backticks). Run them via the `test` capability
-  (`$FORGE_HOME/commands/test <selector>`, per `/forge` § "Repo tooling").
-- Always run the **full** linked set per tick — sibling regressions must
-  surface. Aggregate to `$FORGE_ART/branches/<slug>/run.json` (overwrite).
-- Append a `## iter <N>` check line to `scratchpad.md`.
+The protect set is how the never-touch guard is enforced: a step that can only
+go green by editing a linked **test body**, `goals.md`, `links.json`, or
+`design.md` stops `BLOCKED` → `BLOCKED_CONTRACT`. A genuinely wrong test is
+fixed by re-running `/forge-tests`, never by the loop.
 
-Exit codes → verdict returned to the controller:
-
-- `0` — every result `pass` or `skipped` → `SUCCESS`.
-- `1` — ≥1 `fail`, OR a panic / exception carrying the literal marker
-  `forge-tests: unimplemented` from a `/forge-tests` step-3b scaffold. The
-  marker counts as `fail`; the next `impl-fix` fills that surface.
-- `2` — ≥1 `error` (compile / fixture / runner) **not carrying the unimplemented
-  marker** → `ERROR`. Controller settles `BLOCKED`. Wrong-reason — scaffold
-  missed a shape, impl regressed one, or the runner is broken; operator decides.
-
-## Offloaded unit — `impl-fix`
-
-One iteration's delta. Dispatched as `forge-step-runner step: impl-fix` with the
-controller-supplied failing set.
-
-- Read `scratchpad.md` + `plan.md` on entry (prior attempts, learnings).
-- Pick one failing scenario (controller-narrowed; isolated-first), read its
-  `then:`, apply the **smallest** impl-source delta. May run that single
-  scenario locally to sanity its own change; authoritative green is the next
-  `impl-check`.
-- Commit one focused commit: `forge-impl-green: SG<n>.<m> — <fix>`.
-- Append `## iter <N>` (tried / result / learned / plan-delta) to
-  `scratchpad.md`; tick the `plan.md` item.
-
-### Guardrails (both units)
-
-Base guardrails per `/forge` § Loop contract + § Guardrails (local commits,
-never push, untrusted failing-test text, stay in failing surface).
-Skill-specific delta:
-
-- **Never modify test bodies.** Tests encode the `then:`. Genuinely wrong test →
-  re-run `/forge-tests`. Reshaping a test breaks Layer 4 on next proof.
-- **Never modify `goals.md` or `links.json`** during the loop.
-
-## Stuck detection (controller-owned)
-
-Signals folded across iterations: `same-scenario-flat`, `same-error-string`,
-`same-file-edited`, `diff-grew-pass-flat`, `contract-guard-refused`,
-`decisions-log-churn`. On hard trip →
-`/forge-stuck-check --slug <slug> --phase impl --signal <name> --iter <N> --json`
-→ `confirmed` settles `STUCK` (reflect's reason); `suspected` bumps threshold
-once; `none` logs false-alarm.
+`run.json` refresh runs the **full** linked set so sibling regressions surface,
+overwriting `$FORGE_ART/branches/<slug>/run.json`.
 
 ## Termination
 
-| Verdict            | Trigger                                                               |
-| ------------------ | --------------------------------------------------------------------- |
-| `SUCCESS`          | `impl-check` returns all `pass` / `skipped`.                          |
-| `BUDGET_EXHAUSTED` | `max` reached with failures outstanding.                              |
-| `BLOCKED`          | Wrong-reason error (exit 2), 3 no-progress iters, contract-guard hit. |
-| `STUCK`            | `/forge-stuck-check` confirmed.                                       |
+| Verdict            | Trigger                                             |
+| ------------------ | --------------------------------------------------- |
+| `IMPL_GREEN`       | loop `SUCCESS` — linked set all `pass` / `skipped`. |
+| `BLOCKED_CONTRACT` | loop `BLOCKED` on a protected (contract) path.      |
+| `RED_PERSISTENT`   | loop `BLOCKED` on a non-contract failure.           |
+| `BUDGET_EXHAUSTED` | `max` reached with failures outstanding.            |
+| `BLOCKED_FLAKY`    | flake-shaped baseline.                              |
+| `BLOCKED_INFRA`    | infra-shaped baseline, no playbook recovery.        |
 
-On `SUCCESS` → suggest `/forge-proof --embed`.
+On `IMPL_GREEN` → suggest `/forge-proof --embed`.
 
 ## Output
 
 ```
 ## /forge-impl-green result
 
-verdict: SUCCESS | BUDGET_EXHAUSTED | BLOCKED | STUCK
-iterations: <used>/<max>   (checks: <c>, fixes: <f>)
+verdict: IMPL_GREEN | BUDGET_EXHAUSTED | BLOCKED_CONTRACT | RED_PERSISTENT | BLOCKED_FLAKY | BLOCKED_INFRA
 slug: <branch-slug>
-last batch: <P>/<total> passed
+loop: <used>/<max> iterations
 
-remaining failures (if not SUCCESS):
+remaining failures (if not IMPL_GREEN):
   - SG<n>.<m> — <function> — <last line of failure>
 
 ### next move
 <one line>
 
-state: $FORGE_ART/branches/<slug>/loop/forge-impl-green-<slug>/ — edit plan.md or re-invoke max=<N>.
+state: $FORGE_ART/branches/<slug>/grind/impl-green-<slug>/ — edit plan.md or re-invoke /forge-impl-green max=<N>.
 ```
 
 ## Next step
@@ -172,7 +140,7 @@ Green locally → push + drive CI.
 ## Usage
 
 ```
-/forge-impl-green                   # loop current branch's linked tests
-/forge-impl-green max=20            # raise budget
-/forge-impl-green --scenario SG2.1  # narrow to one scenario
+/forge-impl-green                    # loop current branch's linked tests
+/forge-impl-green max=20             # raise budget
+/forge-impl-green --slug auth-fix    # explicit slug
 ```
