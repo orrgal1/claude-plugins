@@ -319,6 +319,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/diagnose`) |
 | `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)    |
 | `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)      |
+| `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)          |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -370,6 +371,11 @@ required = true                # no built-in fallback; unconfigured -> NEEDS_SET
 
 [capabilities.find_blocker]
 skill    = "/find-blocker"     # emits a neutral condition spec; forge maps it to /forge-wait-for
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.ci_green]
+skill    = "/ci-green"         # forge-ci-green wraps it with triage + --protect + chain state
 provider = "@orrgal1/devloop"
 required = true
 ```
