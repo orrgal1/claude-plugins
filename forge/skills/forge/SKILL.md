@@ -722,16 +722,21 @@ halt the operator must act on.
 
 On a waitable halt:
 
-1. `/forge-find-blocker --slug <slug> --phase <phase> --halt <verdict> --json` —
-   confirm a _peripheral_ blocker exists and get its condition spec + resume.
+1. Resolve the `find_blocker` capability (default `/find-blocker`,
+   `@orrgal1/devloop`; unconfigured → `NEEDS_SETUP cap=find_blocker`). Run it
+   for this PR with the halt verdict as a hint, persisting to the chain:
+   `/find-blocker --hint <verdict> --json --out $FORGE_ART/branches/<slug>/blocker/last.json`
+   (pass `--infra-cmd` from the repo's `infra_health` wiring if present) —
+   confirm a _peripheral_ blocker exists and get its neutral condition spec.
    `found:false` / `waitable:false` → not actually external → float normally.
-2. Mode-gate the dispatch:
+2. Map the emitted `condition: {type, params}` to a `/forge-wait-for` invocation
+   and mode-gate the dispatch:
    - `yolo` / unattended → auto-launch
      `/forge-wait-for --condition <spec> --from <phase>` (mode-gated
      auto-resume: restack + `/forge --from <phase>` when the condition clears).
      Log `D<n>`.
    - `auto` / `manual` → don't auto-launch; settle the halt and surface the
-     ready-to-run `/forge-find-blocker` → `/forge-wait-for` next move.
+     ready-to-run `find_blocker` → `/forge-wait-for` next move.
 
 Honesty bright line holds: genuine halts still stop the run; wait-for only
 defers blocks an external actor owns. Never reclassify a code/contract/stuck
@@ -843,7 +848,7 @@ BLOCKED_VERIFY_RUNS      → /forge-impl-green; --from impl
 BLOCKED_VERIFY_VALIDATIONS → /forge-impl-green (finish removal) or /forge-validations --iterate; --from impl
 BLOCKED_PROOF            → see proof report; --from proof
 BLOCKED_CI               → see ci-green log; --from ci
-                           (base/infra cause → /forge-find-blocker → /forge-wait-for)
+                           (base/infra cause → find_blocker → /forge-wait-for)
 BLOCKED_REVIEW           → address open findings (any severity); --from review
 NEEDS_OPERATOR           → see decisions.md; --from <phase>
 STUCK                    → see /forge-stuck-check report; --from <phase>
@@ -864,8 +869,8 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
   stops at the phase 9.6 ready-for-review gate (`AWAIT_REVIEW_REQUEST`) — moving
   a PR out of draft needs author approval even in yolo (§ 9.6).
 - **External-block recognizer** — waitable `BLOCKED_*` (base behind/red, infra)
-  route through `/forge-find-blocker` → `/forge-wait-for` (auto restack+resume
-  in `yolo`/unattended; surfaced as next move in `auto`/`manual`); genuine halts
+  route through `find_blocker` → `/forge-wait-for` (auto restack+resume in
+  `yolo`/unattended; surfaced as next move in `auto`/`manual`); genuine halts
   always stop (§ "External-block recognizer").
 - **Push only where needed** — start, goals, design, scenarios (review
   surfaces), ci-green and the continuous monitor's fixes (CI). Local commits

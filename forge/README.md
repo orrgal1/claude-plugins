@@ -103,10 +103,10 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
   (review fixes, restacks, base syncs) and drives CI back to green until the PR
   merges. No one-shot "final CI".
 - **External-block recovery** — when a halt is something an external actor owns
-  (a red/behind base PR, an infra incident), `/forge-find-blocker` identifies
-  the peripheral blocker and `/forge-wait-for` watches that one condition (base
-  PR CI, a Slack thread, any predicate), then restacks and resumes the chain.
-  Genuine halts still stop.
+  (a red/behind base PR, an infra incident), the `find_blocker` capability
+  identifies the peripheral blocker and `/forge-wait-for` watches that one
+  condition (base PR CI, a Slack thread, any predicate), then restacks and
+  resumes the chain. Genuine halts still stop.
 - **Self-healing on known failures** — repo-scoped **recovery playbooks**
   (`[playbooks.<name>]`) let forge recover a known capability failure itself
   instead of blocking to ask. A failure matching a playbook's signature triggers
@@ -232,7 +232,7 @@ auto-posted.
 | `/forge-review`                                                                               | Lens-designed, chain-aware PR review                                              |
 | `/forge-review-watch` · `/forge-address-review`                                               | Watch for + drive submitted reviewer feedback to resolution                       |
 | `request_review` capability (`/request-review`, `@orrgal1/devloop`)                           | Rank the best peer reviewer; gated ready+request (consumed via capability map)    |
-| `/forge-find-blocker` · `/forge-wait-for`                                                     | Identify an external blocker; wait it out, then restack + resume                  |
+| `find_blocker` capability (`@orrgal1/devloop`) · `/forge-wait-for`                            | Identify an external blocker; wait it out, then restack + resume                  |
 | `/forge-map` (+ `-db` · `-api` · `-events` · `-config`)                                       | Build JSON domain snapshots under `$FORGE_HOME/maps/`                             |
 | `/forge-tool`                                                                                 | Package an ad-hoc flow as a reusable tool                                         |
 | `/forge-status` · `/forge-triage` · `/forge-stuck-check`                                      | Status, triage, loop-health                                                       |

@@ -242,14 +242,15 @@ next:  re-arm, raise --max-wait, or address manually.
 
 Invokable standalone, and dispatched by the **external-block recognizer**:
 
-- `/forge` § "External-block recognizer" — on a waitable `BLOCKED_*`, runs
-  `/forge-find-blocker --json` to confirm a peripheral blocker, then mode-gates
-  a dispatch here (`yolo`/unattended → auto; `auto`/`manual` → surfaced as next
-  move).
+- `/forge` § "External-block recognizer" — on a waitable `BLOCKED_*`, runs the
+  `find_blocker` capability (`/find-blocker --json`) to confirm a peripheral
+  blocker, then mode-gates a dispatch here (`yolo`/unattended → auto;
+  `auto`/`manual` → surfaced as next move).
 - `/forge-ci-green` — routes `BLOCKED_RESTACK` / `BLOCKED_INFRA` through the
   same recognizer before settling.
-- `/forge-find-blocker` — the discovery half: emits the `--condition` spec +
-  resume action this skill consumes.
+- `find_blocker` capability (`/find-blocker`, `@orrgal1/devloop`) — the
+  discovery half: emits the neutral condition spec forge maps to this skill's
+  `--condition`.
 
 ## Next step
 

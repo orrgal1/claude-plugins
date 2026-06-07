@@ -282,9 +282,9 @@ once; `none` logs false-alarm.
 `BLOCKED_RESTACK` (base behind / red) and `BLOCKED_INFRA` (triage
 `INFRA_FAILURE`) are _external_ — resolved by a base PR going green or an
 incident clearing, not by a fix here. Per `/forge` § "External-block
-recognizer", instead of plain-settling: run
-`/forge-find-blocker --slug <slug> --phase ci --halt <verdict> --json`; on a
-confirmed peripheral blocker, mode-gate the dispatch of
+recognizer", instead of plain-settling: run the `find_blocker` capability
+(`/find-blocker --hint <verdict> --json --out $FORGE_ART/branches/<slug>/blocker/last.json`);
+on a confirmed peripheral blocker, mode-gate the dispatch of
 `/forge-wait-for --condition <spec> --from ci` (`yolo`/unattended → auto
 restack+resume; `auto`/`manual` → surface the command, settle as-is).
 `BLOCKED_FLAKY` is diagnosis-only — **never** waitable; `BLOCKED_CONTRACT` and

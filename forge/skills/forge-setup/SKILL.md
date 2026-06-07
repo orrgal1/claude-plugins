@@ -318,6 +318,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/diagnose`)      |
 | `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/diagnose`) |
 | `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)    |
+| `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)      |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -366,6 +367,11 @@ provider = "@orrgal1/diagnose"
 skill    = "/request-review"   # chain-blind; forge passes --out for the verdict
 provider = "@orrgal1/devloop"
 required = true                # no built-in fallback; unconfigured -> NEEDS_SETUP
+
+[capabilities.find_blocker]
+skill    = "/find-blocker"     # emits a neutral condition spec; forge maps it to /forge-wait-for
+provider = "@orrgal1/devloop"
+required = true
 ```
 
 **Resolution contract (for any consumer skill):**
