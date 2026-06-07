@@ -42,11 +42,12 @@ carries out (conditional/multi-step flows). Unmapped capability → gap
 
 **No forge skill runs until `/forge-setup` completes locally for this repo** —
 final step writes `[meta].ready = true` to `$FORGE_HOME/forge.toml`, the gate
-every entry point checks. `/forge` + `forge-step-runner` refuse `SETUP_REQUIRED`
-when absent; `/forge-status` reports `NOT_SET_UP`. "Locally" = marker in **this
-repo's** `$FORGE_HOME` (keyed by git identity); a sibling repo's setup doesn't
-count. Setup also hard-requires built-in `/code-review` + `/security-review`
-(always-on channels wrap them) — refuses to mark ready without them.
+every entry point checks. `/forge` (and every dispatched step) refuses
+`SETUP_REQUIRED` when absent; `/forge-status` reports `NOT_SET_UP`. "Locally" =
+marker in **this repo's** `$FORGE_HOME` (keyed by git identity); a sibling
+repo's setup doesn't count. Setup also hard-requires built-in `/code-review` +
+`/security-review` (always-on channels wrap them) — refuses to mark ready
+without them.
 
 ## Forge home — where state lives
 

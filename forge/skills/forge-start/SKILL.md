@@ -26,9 +26,10 @@ off** — the operator switches to a session rooted in the new worktree and runs
 `/forge` or `/forge-yolo` from there (goals is the next step). Nothing else —
 goals / design / scenarios land via later skills.
 
-`/forge` calls this via `forge-step-runner step: start` when
-`status.phase = NO_CHAIN`. When start creates a new worktree, `/forge` cannot
-continue in the wrong cwd — it surfaces this handoff and stops (§ "Handoff").
+`/forge` calls this by dispatching step `start` to a general-purpose agent (per
+/forge § "Step dispatch") when `status.phase = NO_CHAIN`. When start creates a
+new worktree, `/forge` cannot continue in the wrong cwd — it surfaces this
+handoff and stops (§ "Handoff").
 
 **Idempotent.** Re-running from inside the already-scaffolded worktree is a
 double run: it no-ops what's done and completes only what's missing (sentinel /

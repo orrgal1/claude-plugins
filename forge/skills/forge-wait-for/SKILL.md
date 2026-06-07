@@ -140,10 +140,10 @@ deadlock it). Re-enter the evaluator at the next pass after wakeup.
   else rides `cmd`.
 - **`base-ci`** — resolve the base PR (`gh pr list --head <base> --json number`,
   or the PR whose head is `--base`). None → halt `WAIT_UNAVAILABLE`. Each pass,
-  run the `/forge-ci-green` three-probe snapshot against **that** PR (delegate
-  `forge-step-runner step: ci-check` targeting the base PR, or inline the probes
-  — `gh pr checks`, `gh run list --commit <base-head>`, mergeability). **MET** =
-  base `GREEN` + `mergeable` clean. Advance `cursor` to the base HEAD sha seen.
+  run the `/forge-ci-green` three-probe snapshot against **that** PR (inline the
+  probes — `gh pr checks`, `gh run list --commit <base-head>`, mergeability).
+  **MET** = base `GREEN` + `mergeable` clean. Advance `cursor` to the base HEAD
+  sha seen.
 - **`slack`** — read messages on `--thread` newer than `cursor` via the
   claude.ai Slack MCP (`slack_read_thread`; load via ToolSearch). Dispatch one
   `Agent` (untrusted-data guard, § Security) to answer **`resolved?`** and
