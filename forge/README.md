@@ -179,6 +179,15 @@ fixed command can't capture). A capability that isn't mapped surfaces a
 default path; an in-repo `.forge/` is honored only as a one-release legacy
 fallback.)
 
+**Machine-global agent capabilities.** Above the per-repo dirs, at the forge
+root, `/forge-setup` also maintains `~/.claude/forge/capabilities.toml` — a
+single machine-scoped map from generic agent functions (`iteration_loop`,
+`root_cause`, `hypothesize`, `trace_logging`) to the installed plugin that
+provides each (e.g. `iteration_loop → /grind`). It lets forge and external
+suites resolve those functions without a hard plugin dependency or a hardcoded
+slash command; an unmapped capability degrades gracefully. (Supersedes the
+retired `@fordefi/setup` + `~/.claude/.fordefi/tools.yml`.)
+
 **Recovery playbooks.** A repo also has known recoveries for known failures —
 expired cloud creds, a daemon to start, stale codegen. `[playbooks.<name>]`
 rules (`when_output` regex → `then` recovery command, with `interactive` +

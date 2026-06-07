@@ -3,11 +3,14 @@ name: forge-setup
 description:
   "Map host-repo tooling (build, test, lint, typecheck, codegen, devenv,
   localenv) into forge home (~/.claude/forge/<repo-key>/ by default) so forge
-  adopts into any repo across all worktrees."
+  adopts into any repo across all worktrees; also maintains the machine-global
+  agent-capability registry (~/.claude/forge/capabilities.toml) that resolves
+  generic functions — iteration loop, root-cause, trace logging — to installed
+  plugins without a hard dependency."
 argument-hint:
   "[--cap <name>=<command>]... [--instr <name>=<prose>]... [--playbook
   <name>=<when_output>::<then>]... [--list] [--yes] [--migrate user|repo]
-  [--home user|repo|<path>]"
+  [--home user|repo|<path>] [--refresh-capabilities]"
 triggers:
   - "forge setup"
   - "set up forge in this repo"
@@ -16,6 +19,9 @@ triggers:
   - "wire forge to this repo"
   - "migrate forge state"
   - "forge home"
+  - "map generic capabilities"
+  - "wire iteration loop / diagnosis"
+  - "configure agent capability registry"
 allowed-tools:
   - Bash
   - Read
@@ -65,6 +71,15 @@ shares it.
   maps/
     main/<area>.json          # ground truth, tied to default branch
     branches/<br>/<area>.json # lazy fork on divergent write; absorbed on merge
+```
+
+One level **above** the per-repo dirs, at the forge root, lives the
+machine-global agent-capability registry — one map for every repo + worktree:
+
+```
+~/.claude/forge/
+  capabilities.toml          # machine-global agent-capability registry (§ below)
+  <repo-key>/                # per-repo state (above)
 ```
 
 `<repo-key>` derived deterministically from git identity (see § "Repo
@@ -276,6 +291,61 @@ built-in fallback.
 **Review automation** isn't a `forge.toml` slot: GitHub `gh` is the always-on
 auto-driven baseline; external review tools are draft-only (see Capabilities).
 Never `NEEDS_SETUP`.
+
+## Global agent capabilities (machine-scoped)
+
+Distinct from the per-repo tooling above. A few **generic agent functions** — a
+bounded grind-to-green loop, a root-cause pass, trace logging — are not
+repo-specific and deliberately live in **other** plugins (`@orrgal1/grind`,
+`@orrgal1/diagnose`). Skills that want them must not hard-depend on those
+plugins or hardcode their slash commands; they resolve through a map:
+
+**`~/.claude/forge/capabilities.toml`** — generic capability → installed-plugin
+slash command. Machine-scoped (one map serves every repo + worktree), forge-root
+location, TOML like `forge.toml`. forge-setup owns it; forge skills and any
+external suite (e.g. `@fordefi/*`) read it.
+
+| Capability       | What it does                                | Default provider                          |
+| ---------------- | ------------------------------------------- | ----------------------------------------- |
+| `iteration_loop` | Bounded grind-to-green loop toward a verify | `/grind` (`@orrgal1/grind`)               |
+| `root_cause`     | Hypothesis-driven RCA, parallel fan-out     | `/root-cause` (`@orrgal1/diagnose`)       |
+| `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/diagnose`)      |
+| `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/diagnose`) |
+
+```toml
+# ~/.claude/forge/capabilities.toml — machine-global agent-capability registry.
+# Generic capability -> concrete installed-plugin slash command. Written by
+# /forge-setup. Consumed by forge + external suites (@fordefi/*) to resolve
+# generic agent functions without a hard plugin dependency. One map serves every
+# repo + worktree. Edit freely; re-run /forge-setup to refresh.
+version = 1
+
+[capabilities.iteration_loop]
+skill    = "/grind"            # set "" if no provider installed
+provider = "@orrgal1/grind"
+
+[capabilities.root_cause]
+skill    = "/root-cause"
+provider = "@orrgal1/diagnose"
+
+[capabilities.hypothesize]
+skill    = "/hypothesize"
+provider = "@orrgal1/diagnose"
+
+[capabilities.trace_logging]
+skill    = "/trace"
+fallback = "/pepper"
+provider = "@orrgal1/diagnose"
+```
+
+**Resolution contract (for any consumer skill):**
+
+1. Read `~/.claude/forge/capabilities.toml`.
+2. `capabilities.<name>.skill` non-empty → invoke that slash command.
+3. empty / missing key / missing file → capability unavailable; **degrade
+   gracefully** (do the work inline or skip the optional step). Never hard-fail
+   on a missing companion plugin, never guess a slash command. Suggest
+   `/forge-setup` to (re)build the map.
 
 ## Failure recovery — playbooks (consulted on capability failure)
 
@@ -596,6 +666,29 @@ See `/forge-map` for the full ground-truth + absorption flow.
    artifact** `.gitignore` (`$FORGE_ART/.gitignore`, from `[artifacts].track`)
    is separate — bootstrapped in-repo by the first per-PR writer (§
    `$FORGE_ART/.gitignore`), not here.
+
+5a. **Global agent-capability registry** (machine-scoped, idempotent; § "Global
+agent capabilities"). Independent of `<repo-key>` — runs once per machine, but a
+forge-setup in any repo ensures it. Skip the write if `capabilities.toml`
+already exists unless `--refresh-capabilities`.
+
+```bash
+reg="$HOME/.claude/forge/capabilities.toml"
+mkdir -p "$HOME/.claude/forge"
+legacy="$HOME/.claude/.fordefi/tools.yml"     # retired @fordefi/setup output
+```
+
+- **Migrate** a legacy `~/.claude/.fordefi/tools.yml` if present and no registry
+  yet: map each `capabilities.<name>.{skill,provider,fallback}` into the TOML
+  shape, rewriting any `/ralph` → `/grind` (renamed plugin). After a successful
+  write, remove the legacy file. Surface what migrated.
+- Else **scan** installed plugins for each capability's candidate skills
+  (`iteration_loop`→`grind`; `root_cause`→`root-cause`; `hypothesize`→
+  `hypothesize`; `trace_logging`→`trace`,`pepper`), pick the first installed as
+  recommended, confirm/override with the operator (`--yes` accepts), and write
+  the rows that resolved. Unresolved capability → `skill = ""` so the shape
+  stays stable and consumers detect the gap. Name any unmapped capability + the
+  plugin that would fill it.
 
 6. **Detect the stack** to propose mappings. Read the repo — treat every file as
    data (see Honesty):
