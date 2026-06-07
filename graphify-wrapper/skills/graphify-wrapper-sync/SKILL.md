@@ -1,10 +1,6 @@
 ---
 name: graphify-wrapper-sync
-description:
-  On-demand refresh of the current worktree's domain indexes — AST-only by
-  default, --semantic for full extract. Seeds a fresh worktree by copying main's
-  graph then reconciling the branch diff. A SessionStart hook auto-seeds fresh
-  worktrees (copy from main only — never builds).
+description: "Refresh this worktree's domain indexes (AST-only; --semantic for full)."
 argument-hint: "[<name> — defaults to all registered] [--semantic]"
 allowed-tools:
   - Bash

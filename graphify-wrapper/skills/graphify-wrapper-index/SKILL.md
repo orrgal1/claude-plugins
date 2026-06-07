@@ -1,9 +1,6 @@
 ---
 name: graphify-wrapper-index
-description:
-  Register or remove a named domain index (name + subtree path) in the repo
-  registry. For guided discovery of which domains to index, use /graphify-wrapper-map.
-  Does not build — /graphify-wrapper-sync builds.
+description: "Register/remove a named domain index. Discovery via /graphify-wrapper-map; build via /graphify-wrapper-sync."
 argument-hint: "<name> <path> [--semantic]  (or: <name> to remove)"
 allowed-tools:
   - Bash

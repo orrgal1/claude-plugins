@@ -1,9 +1,6 @@
 ---
 name: graphify-wrapper-setup
-description:
-  One-time per-machine/per-repo setup for the graphify wrapper — install the
-  CLI, gitignore graphify-out/ globally, init the per-repo registry, and pick a
-  semantic backend.
+description: "One-time per-machine/per-repo setup for the graphify wrapper."
 allowed-tools:
   - Bash
   - Read

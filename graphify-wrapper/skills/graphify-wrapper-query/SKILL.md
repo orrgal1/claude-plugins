@@ -1,9 +1,6 @@
 ---
 name: graphify-wrapper-query
-description:
-  Ask a question against a named domain index — routes the graphify query to the
-  right in-tree graph.json for the current worktree. Use to orient in a domain
-  before grepping.
+description: "Query a named domain index to orient in an area before grepping."
 argument-hint:
   '<name> "<question>" [--affected | --path "A" "B" | --explain] [--budget N]'
 allowed-tools:

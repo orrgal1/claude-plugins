@@ -1,8 +1,6 @@
 ---
 name: graphify-wrapper-status
-description:
-  Show the repo's registered domain indexes and their freshness for the current
-  worktree — which graphs exist here, when built, and whether seeded from main.
+description: "Show registered domain indexes and their freshness for this worktree."
 allowed-tools:
   - Bash
 ---

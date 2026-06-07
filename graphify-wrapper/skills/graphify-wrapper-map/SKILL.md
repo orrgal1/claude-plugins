@@ -1,9 +1,6 @@
 ---
 name: graphify-wrapper-map
-description:
-  Analyze the repo, propose a small focused set of named domains worth indexing,
-  refine them with the operator, and register the chosen ones. The guided front
-  door to /graphify-wrapper-index.
+description: "Propose and register a focused set of domains worth indexing — guided front door to /graphify-wrapper-index."
 allowed-tools:
   - Bash
   - Read
