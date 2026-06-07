@@ -321,6 +321,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)      |
 | `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)          |
 | `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)            |
+| `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)      |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -382,6 +383,11 @@ required = true
 
 [capabilities.review]
 skill    = "/review"           # forge-review wraps it with the proof gate + chain lenses + verdict ladder
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.review_watch]
+skill    = "/review-watch"     # forge-review-watch wraps it; --on-trigger dispatches /forge-address-review or the contract router
 provider = "@orrgal1/devloop"
 required = true
 ```
