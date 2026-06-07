@@ -5,7 +5,7 @@ tags: [code-quality, comments, hygiene]
 requires: diff
 severity-floor: minor
 brief-artifacts: [commentary-surface]
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Commentary Correctness
@@ -92,7 +92,7 @@ artifact.
 
 ## Severity
 
-`forge-review-green` drives only blockers + majors to zero; minors survive to
+the review fix-loop drives only blockers + majors to zero; minors survive to
 merge. So the two failure modes this lens exists to stop — **drift** and
 **over-the-cap verbosity** — promote to major so they are actually forced.
 

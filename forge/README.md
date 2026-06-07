@@ -204,19 +204,22 @@ block.
 
 ## Review
 
-`/forge-review` fans out review channels in parallel to one ranked verdict:
+`/forge-review` is a thin chain wrapper over the `review` capability (default
+`/review`, `@orrgal1/devloop`), which fans out review channels in parallel to
+one ranked verdict:
 
-- **Lens fan-out** — always-on chain-semantic lenses (goal-delivery,
-  scenario-realism, test-match) + code-quality lenses, plus 1–3 lenses designed
-  against the diff's risk surface, each dispatched to the bundled
-  `forge-lens-reviewer` agent.
+- **Lens fan-out** — code-quality + correctness lenses, diff-fingerprint
+  specialists, plus 1–3 lenses designed against the diff's risk surface, each
+  dispatched to the `lens-reviewer` agent. forge adds its chain-semantic lenses
+  (goal-delivery, scenario-realism, test-match) as context lenses when a chain
+  exists.
 - **Built-in `/code-review`** and **`/security-review`** — always on.
 
-The lens pool (`lenses/`) and reviewer personas (`personas/`) ship with the
-plugin and are extensible per-repo via `$FORGE_HOME/lenses/` and
-`$FORGE_HOME/personas/`. Extra channels are added per-repo via
-`$FORGE_HOME/review-channels/`; external CI/review tools are drafted, never
-auto-posted.
+The review engine, lens pool, reviewer personas, and channels ship with the
+capability provider (`@orrgal1/devloop`); forge bundles only the three chain
+lenses. All are extensible per-repo via `$FORGE_HOME/lenses/`,
+`$FORGE_HOME/personas/`, `$FORGE_HOME/review-channels/`; external CI/review
+tools are drafted, never auto-posted.
 
 ## Skills
 

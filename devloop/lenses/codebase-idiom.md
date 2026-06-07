@@ -5,7 +5,7 @@ tags: [code-quality, convergence, pattern-recurrence]
 requires: diff
 severity-floor: minor
 brief-artifacts: []
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Codebase Idiom / Pattern Convergence

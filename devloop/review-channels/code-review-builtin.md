@@ -14,7 +14,7 @@ severity_mapping:
   style: nit
 needs:
   - diff
-introduced-by: forge-review (peer-channel pattern)
+introduced-by: review (peer-channel pattern)
 ---
 
 # Built-in /code-review wrapper
@@ -37,7 +37,7 @@ never extends scope beyond what `/code-review` surfaced.
 
 ## Execution
 
-1. Diff scope: `/forge-review` already established PR + worktree; the wrapped
+1. Diff scope: `/review` already established PR + worktree; the wrapped
    skill reads the diff from the current worktree.
 2. Skill-call `/code-review` with channel config (no `--comment`, no `--fix`):
 
@@ -47,7 +47,7 @@ never extends scope beyond what `/code-review` surfaced.
 
    Default `--effort medium`. Override via channel config or per-run flag
    (`--channel code-review-builtin --effort high`). Never pass `--fix` — forge
-   owns the fix-loop via `/forge-review-green`.
+   owns the fix-loop via `the review fix-loop`.
 
 3. Capture output verbatim into
    `$FORGE_ART/branches/<slug>/review/code-review-builtin/raw.md`.
@@ -56,7 +56,7 @@ never extends scope beyond what `/code-review` surfaced.
 
 ### Parallelism
 
-Runs alongside other channels in `/forge-review`'s dispatch. No special ordering
+Runs alongside other channels in `/review`'s dispatch. No special ordering
 — the wrapped Skill call is one logical unit.
 
 ### Effort levels
@@ -118,7 +118,7 @@ Frontmatter copy, repeated as the operator-facing contract:
 
 | Category         | Forge severity | Rationale                                                        |
 | ---------------- | -------------- | ---------------------------------------------------------------- |
-| `correctness`    | major          | Likely-real bug. Drives `/forge-review-green`.                   |
+| `correctness`    | major          | Likely-real bug. Drives `the review fix-loop`.                   |
 | `security`       | blocker        | Rare from this skill, but if it surfaces one — must-fix.         |
 | `reuse`          | minor          | Pattern improvement; not blocking.                               |
 | `simplification` | minor          | Hygiene cleanup.                                                 |

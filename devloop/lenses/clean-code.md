@@ -5,7 +5,7 @@ tags: [code-quality, hygiene, martin]
 requires: diff
 severity-floor: minor
 brief-artifacts: []
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Clean Code (Martin)

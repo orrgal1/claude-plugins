@@ -1,7 +1,7 @@
 # Lens pool
 
-Reusable lens definitions for forge's lens-designed PR review (`/forge-review`,
-`/forge-review-green`). One lens per file; the markdown body is fed verbatim
+Reusable lens definitions for forge's lens-designed PR review (`/review`,
+the review fix-loop). One lens per file; the markdown body is fed verbatim
 into a reviewer subagent's brief.
 
 Ships **inside the forge plugin** — no dependency on any other review plugin. A
@@ -35,7 +35,7 @@ tags: [code-quality, hygiene, martin]
 requires: diff
 severity-floor: minor
 brief-artifacts: []
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Clean Code (Martin)
@@ -60,7 +60,7 @@ brief.>
 
 The body after the frontmatter is the **lens text fed verbatim into the subagent
 brief**. Write it second-person ("read every changed function") or as a
-checklist. The fan-out agent (`@orrgal1/forge:forge-lens-reviewer`) treats this
+checklist. The fan-out agent (`@orrgal1/devloop:lens-reviewer`) treats this
 as its operating prompt.
 
 Keep it self-contained. The agent receives only the lens body plus PR scope +

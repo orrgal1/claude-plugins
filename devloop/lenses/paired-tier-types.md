@@ -5,7 +5,7 @@ tags: [wire-contract, type-discipline, schema-fidelity]
 requires: diff
 severity-floor: minor
 brief-artifacts: []
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Paired-Tier Type Discipline

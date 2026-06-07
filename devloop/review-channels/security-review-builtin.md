@@ -12,7 +12,7 @@ severity_mapping:
   informational: nit
 needs:
   - diff
-introduced-by: forge-review (peer-channel pattern)
+introduced-by: review (peer-channel pattern)
 ---
 
 # Built-in /security-review wrapper
@@ -42,7 +42,7 @@ Optional `--scope <path>` per-run flag passes through to restrict the scan.
 
 ## Execution
 
-1. Diff scope: `/forge-review` already established PR + worktree.
+1. Diff scope: `/review` already established PR + worktree.
 2. Skill-call `/security-review`:
 
    ```
@@ -50,7 +50,7 @@ Optional `--scope <path>` per-run flag passes through to restrict the scan.
    ```
 
    Pass through `--scope <path>` when set. Never pass remediation flags — forge
-   owns the fix-loop via `/forge-review-green`.
+   owns the fix-loop via `the review fix-loop`.
 
 3. Capture output verbatim into
    `$FORGE_ART/branches/<slug>/review/security-review-builtin/raw.md`.
@@ -59,7 +59,7 @@ Optional `--scope <path>` per-run flag passes through to restrict the scan.
 
 ### Parallelism
 
-Runs alongside other channels in `/forge-review`'s dispatch. No special ordering
+Runs alongside other channels in `/review`'s dispatch. No special ordering
 — the wrapped Skill call is one logical unit.
 
 ## Finding shape
@@ -114,7 +114,7 @@ Frontmatter copy, repeated as the operator-facing contract:
 
 | Native severity | Forge severity | Rationale                                               |
 | --------------- | -------------- | ------------------------------------------------------- |
-| `critical`      | blocker        | Must-fix before merge. Drives `/forge-review-green`.    |
+| `critical`      | blocker        | Must-fix before merge. Drives `the review fix-loop`.    |
 | `high`          | blocker        | Must-fix. Security findings at this tier ship blockers. |
 | `medium`        | major          | Should-fix; drives the green-loop.                      |
 | `low`           | minor          | Advisory; hygiene-grade.                                |

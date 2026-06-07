@@ -87,11 +87,11 @@ health, run pytest").
 
 Three distinct surfaces — don't confuse them:
 
-| Surface                       | Owns                                             | Where it lives                    |
-| ----------------------------- | ------------------------------------------------ | --------------------------------- |
-| `$FORGE_HOME` (forge home)    | **How to run** this repo's tooling + repo state  | `~/.claude/forge/<repo-key>/`     |
-| `$FORGE_ART/branches/<slug>/` | **Per-PR chain artifacts** (goals, scenarios, …) | inside the worktree               |
-| Plugin bundle                 | Bundled defaults (lenses, channels, personas)    | inside the installed forge plugin |
+| Surface                       | Owns                                                                                                                              | Where it lives                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `$FORGE_HOME` (forge home)    | **How to run** this repo's tooling + repo state                                                                                   | `~/.claude/forge/<repo-key>/` |
+| `$FORGE_ART/branches/<slug>/` | **Per-PR chain artifacts** (goals, scenarios, …)                                                                                  | inside the worktree           |
+| Plugin bundle                 | Chain lenses (forge); review engine, lens pool, channels, personas (the `review` capability provider, default `@orrgal1/devloop`) | inside the installed plugins  |
 
 ## `$FORGE_HOME` resolver
 
@@ -320,6 +320,7 @@ external suite (e.g. `@fordefi/*`) read it.
 | `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)    |
 | `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)      |
 | `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)          |
+| `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)            |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -376,6 +377,11 @@ required = true
 
 [capabilities.ci_green]
 skill    = "/ci-green"         # forge-ci-green wraps it with triage + --protect + chain state
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.review]
+skill    = "/review"           # forge-review wraps it with the proof gate + chain lenses + verdict ladder
 provider = "@orrgal1/devloop"
 required = true
 ```
@@ -567,9 +573,10 @@ purpose         = "ECR image pull fails on expired SSO creds — re-auth, then r
 # component_tier = "command or notes to run the component tier specifically"
 # tiers          = ["unit", "component", "e2e"]
 
-# /forge-review reads [review] to pick which review channels to run.
-# Channels live in forge/review-channels/ (bundled) + $FORGE_HOME/review-channels/
-# (host-repo overrides). See forge/review-channels/README.md for the channel
+# /forge-review passes [review] through to the `review` capability to pick which
+# channels to run. Channels ship with the capability provider
+# (@orrgal1/devloop's review-channels/) + $FORGE_HOME/review-channels/ (host-repo
+# overrides). See the provider's review-channels/README.md for the channel
 # concept and authoring shape.
 [review]
 default_channels = ["lens-fanout", "code-review-builtin", "security-review-builtin"]    # active channel set; seeded from channels with default_enabled: true
@@ -580,7 +587,7 @@ aggregation      = "interleave"        # "interleave" (sort by file:line) | "gro
 # subtable = channel's frontmatter defaults apply.
 [review.channels.lens-fanout]
 enabled       = true
-agent         = "@orrgal1/forge:forge-lens-reviewer"
+agent         = "@orrgal1/devloop:lens-reviewer"
 lens_dir      = "lenses"
 order         = "lens-mode"            # "lens-mode" | "file-by-file"
 severity_cap  = ""                     # empty = no cap; values: blocker/major/minor/nit

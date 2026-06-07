@@ -1,9 +1,9 @@
 # Review channels
 
-A **channel** is one review mechanism `/forge-review` runs. The default — the
+A **channel** is one review mechanism `/review` runs. The default — the
 parallel lens fan-out (`lens-fanout`). Other channels wrap external review
 skills, run shell commands, or fan out to different agent shapes. Channels
-coexist: one `/forge-review` invocation can run several; findings normalize to
+coexist: one `/review` invocation can run several; findings normalize to
 forge's 4-tier severity (`blocker` / `major` / `minor` / `nit`), tagged with
 source, deduped, aggregated.
 
@@ -30,7 +30,7 @@ all surfaces (config, CLI flags, finding tags).
 ## File schema
 
 YAML frontmatter + markdown body. The body is the channel's contract — what
-`/forge-review` reads and follows.
+`/review` reads and follows.
 
 ```markdown
 ---
@@ -47,12 +47,12 @@ severity_mapping:
 needs:
   - diff
   - forge-chain
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Lens fan-out
 
-<channel body — instructions /forge-review follows literally. Includes:
+<channel body — instructions /review follows literally. Includes:
 selection (lenses, agents, briefs), execution, finding normalization.>
 ```
 
@@ -66,13 +66,13 @@ selection (lenses, agents, briefs), execution, finding normalization.>
 | `default_enabled`  | bool   | When `true` the channel is seeded into `default_channels` at setup, so it runs without explicit opt-in. Bundled defaults: `lens-fanout` + `code-review-builtin` + `security-review-builtin`. |
 | `severity_cap`     | enum   | Optional ceiling: `blocker` / `major` / `minor` / `nit` / `null`. Findings from this channel never exceed the cap. `null` = no cap.                                                          |
 | `severity_mapping` | map    | Required when the channel emits non-forge-native severities (skill-wrapper, command-wrapper). Maps native → forge severity.                                                                  |
-| `needs`            | list   | Pre-conditions the channel needs: `diff`, `forge-chain` (`goals.md` / `links.json`), `pr-metadata`. `/forge-review` enforces.                                                                |
+| `needs`            | list   | Pre-conditions the channel needs: `diff`, `forge-chain` (`goals.md` / `links.json`), `pr-metadata`. `/review` enforces.                                                                |
 | `introduced-by`    | string | Provenance — which skill / use case introduced it. Free text.                                                                                                                                |
 
 ### Body
 
 Markdown after the frontmatter. Required sections (use these headings so
-`/forge-review` can locate them):
+`/review` can locate them):
 
 - `## Selection` — what the channel picks to review (lenses, files, scope).
   Empty when wholesale (wraps a Skill that decides for itself).
@@ -131,13 +131,13 @@ severity_cap = "major"
 `enabled` is the master switch. `severity_cap` overrides the frontmatter default
 cap. Other fields are channel-specific — see each channel's body.
 
-Per-run overrides via `/forge-review` CLI: `--channels <ids>` replaces,
+Per-run overrides via `/review` CLI: `--channels <ids>` replaces,
 `--add-channel <id>` / `--drop-channel <id>` mutates. Channel-scoped flags:
 `--channel <id> --<flag> <value>`.
 
 ## Finding aggregation
 
-After every selected channel runs, `/forge-review` aggregates findings:
+After every selected channel runs, `/review` aggregates findings:
 
 1. **Cap** each finding's severity against the channel's `severity_cap`
    (frontmatter + config-override).
@@ -148,7 +148,7 @@ After every selected channel runs, `/forge-review` aggregates findings:
 4. **Sort** per aggregation mode:
    - `interleave` (default) — by `(file, line)`. Channel shown as tag.
    - `grouped` — section per channel, file/line within.
-5. **Verdict** — `/forge-review-green` chases **every** open finding regardless
+5. **Verdict** — `the review fix-loop` chases **every** open finding regardless
    of source channel or severity (blocker through nit). Severity sets fix order,
    not whether a finding is fixed; minors + nits drained too, never left
    informational.
@@ -162,7 +162,7 @@ After every selected channel runs, `/forge-review` aggregates findings:
 3. Fill the required frontmatter + four body sections.
 4. Add the matching `[review.channels.<id>]` subtable to `.forge/forge.toml` if
    the channel needs config (or rely on frontmatter defaults).
-5. Test via `/forge-review --add-channel <id>` on a small PR before adding to
+5. Test via `/review --add-channel <id>` on a small PR before adding to
    `default_channels`.
 
 ## Authoring discipline
@@ -175,4 +175,4 @@ After every selected channel runs, `/forge-review` aggregates findings:
 - **Wrappers advisory by default.** Set `severity_cap` if the wrapped tool tends
   to produce noise; the operator promotes in `.forge/forge.toml` when trusted.
 - **Channels run in parallel when possible.** A channel needing serial ordering
-  says so in its body — `/forge-review` defaults to parallel.
+  says so in its body — `/review` defaults to parallel.

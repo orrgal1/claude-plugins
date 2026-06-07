@@ -1,9 +1,9 @@
 ---
 description:
-  Lens-narrow PR reviewer for /forge-review fan-out. Reviews a PR through
-  exactly one assigned lens, reads full files (not diffs) for context, and emits
-  line findings with 4-tier severity (blocker/major/minor/nit). Strict scope
-  guard — out-of-lens findings go in a one-line tail section, not the body.
+  Lens-narrow PR reviewer for /review fan-out. Reviews a PR through exactly one
+  assigned lens, reads full files (not diffs) for context, and emits line
+  findings with 4-tier severity (blocker/major/minor/nit). Strict scope guard —
+  out-of-lens findings go in a one-line tail section, not the body.
 allowed-tools:
   - Read
   - Grep
@@ -78,7 +78,7 @@ consistent formatting.
 ### Severity (4-tier — use exactly these)
 
 - **blocker** — PR cannot merge as-is. Delivers an incorrect contract, fails a
-  goal-delivery check, or introduces a regression.
+  required behavior the assigned lens checks, or introduces a regression.
 - **major** — Real defect or contract drift. Won't break the build, but ships a
   name / optionality / structure another layer will trip over.
 - **minor** — Quality issue worth fixing in this PR if cheap; else a follow-up.

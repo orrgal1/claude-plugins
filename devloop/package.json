@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/devloop",
   "version": "1.0.0",
-  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop, /request-review, /find-blocker, /ci-green.",
+  "description": "Thin dev-loop skills — /restack, /restack-all, /deslop, /request-review, /find-blocker, /ci-green, /review (multi-channel PR review engine + lens-reviewer agent + lens pool).",
   "author": "orrgal1",
   "license": "MIT",
   "repository": {
@@ -20,6 +20,10 @@
   ],
   "files": [
     ".claude-plugin",
-    "skills"
+    "skills",
+    "agents",
+    "lenses",
+    "personas",
+    "review-channels"
   ]
 }

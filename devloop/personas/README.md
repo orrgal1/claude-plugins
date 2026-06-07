@@ -1,7 +1,7 @@
 # Reviewer personas
 
-A persona is a named reviewer profile that `/forge-review` and
-`/forge-review-green` layer on top of the always-on lens baseline. It
+A persona is a named reviewer profile that `/review` and
+the review fix-loop layer on top of the always-on lens baseline. It
 contributes a `lenses:` list (union'd with the baseline) plus a description of
 what that reviewer cares about and how they phrase findings.
 
@@ -33,7 +33,7 @@ lenses: [correctness, robustness, observability, api-design]
 
 ## Adding a persona for a surface
 
-`/forge-review-green` suggests a persona by diff fingerprint (dominant language
+the review fix-loop suggests a persona by diff fingerprint (dominant language
 / area). With none bundled, add personas matching the surfaces your repo reviews
 most — a backend persona for service code, a frontend persona for UI work. Until
 one exists (or when none matches), forge runs the baseline only.

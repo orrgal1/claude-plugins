@@ -11,25 +11,27 @@ severity_mapping:
   nit: nit
 needs:
   - diff
-introduced-by: forge-review
+introduced-by: review
 ---
 
-# Lens fan-out — forge's default review channel
+# Lens fan-out — the default review channel
 
-Parallel, lens-designed PR review; ground truth is the forge chain (`goals.md`,
-`links.json`, linked tests) when available. The lens set is composed in three
-tiers — **always-on core**, **chain-conditional** (fire only when a chain
-exists), and **diff-fingerprint auto-selected** specialists (fire only when the
+Parallel, lens-designed PR review; ground truth is the diff (plus any
+caller-supplied context, e.g. a forge chain's `goals.md` / `links.json`). The
+lens set is composed in three tiers — **always-on core**,
+**context-conditional** (fire only when a caller supplies the matching context +
+lenses), and **diff-fingerprint auto-selected** specialists (fire only when the
 diff touches their surface) — plus persona-derived and (rarely) per-PR designed
 lenses.
 
-Forge's bundled default — shipped enabled, always present unless dropped. Peers
+The bundled default — shipped enabled, always present unless dropped. Peers
 (`code-review-builtin`, `security-review-builtin`, custom) aggregate alongside
-at `/forge-review` synthesis time.
+at `/review` synthesis time.
 
 ## Selection
 
-Definitions live in `lenses/<id>.md` (host repo overrides/adds via
+Definitions live in `lenses/<id>.md` (a caller adds/overrides via an override
+lens dir it passes — e.g. forge points at its chain lenses + repo
 `.forge/lenses/<id>.md`). The lens body is inlined verbatim in each subagent
 brief. The dispatcher composes the set at review time from three tiers, then
 dedups against persona + designed lenses (designed lens duplicating a selected
@@ -52,19 +54,21 @@ Runs on **every** review, chain or not. Cheap + universal hygiene/correctness.
 | `correctness`             | correctness  | —                                 |
 | `completeness`            | correctness  | —                                 |
 
-### Tier 2 — chain-conditional
+### Tier 2 — context-conditional (caller-supplied)
 
-Require the forge chain (`goals.md` / `links.json`). **No chain** → skipped
-automatically; review still runs Tier 1 + Tier 3 + persona + designed. With a
-chain, `pr-description-fidelity` (Tier 1) and `goal-delivery` (Tier 2) overlap
-on fidelity — the chain lens is authoritative, the description lens still covers
+Fire only when the caller supplies both the matching context **and** the lens
+files (via the override lens dir). **No such context** → skipped automatically;
+review still runs Tier 1 + Tier 3 + persona + designed. Example: forge supplies
+chain context (`goals.md` / `links.json`) plus its three chain lenses below;
+with them, `pr-description-fidelity` (Tier 1) and `goal-delivery` overlap on
+fidelity — the chain lens is authoritative, the description lens still covers
 file-list / claim drift.
 
-| Pool id            | Group          | Brief artifacts                 |
-| ------------------ | -------------- | ------------------------------- |
-| `goal-delivery`    | chain-semantic | `goals.md`, PR description      |
-| `scenario-realism` | chain-semantic | `goals.md`                      |
-| `test-match`       | chain-semantic | `links.json`, linked test files |
+| Pool id (forge example) | Group          | Brief artifacts                 |
+| ----------------------- | -------------- | ------------------------------- |
+| `goal-delivery`         | chain-semantic | `goals.md`, PR description      |
+| `scenario-realism`      | chain-semantic | `goals.md`                      |
+| `test-match`            | chain-semantic | `links.json`, linked test files |
 
 ### Tier 3 — diff-fingerprint auto-select
 
@@ -104,8 +108,8 @@ drop.
 
 ## Execution
 
-Agent (Task `subagent_type`): exact string `@orrgal1/forge:forge-lens-reviewer`
-— **`/` before `forge`, `:` before the agent name**. Not `@orrgal1:forge:…`
+Agent (Task `subagent_type`): exact string `@orrgal1/devloop:lens-reviewer`
+— **`/` before `devloop`, `:` before the agent name**. Not `@orrgal1:devloop:…`
 (all-colons fails: "Agent type not found").
 
 One Agent call per selected lens, all in **a single message** for true
@@ -167,7 +171,7 @@ Native severities are forge's 4-tier — identity mapping:
 
 | Lens output | Forge   | Notes                                                |
 | ----------- | ------- | ---------------------------------------------------- |
-| `blocker`   | blocker | Must-fix before merge. Drives `/forge-review-green`. |
+| `blocker`   | blocker | Must-fix before merge. Drives `the review fix-loop`. |
 | `major`     | major   | Should-fix; drives the green-loop.                   |
 | `minor`     | minor   | Hygiene; informational unless promoted.              |
 | `nit`       | nit     | Cosmetic.                                            |
@@ -184,7 +188,7 @@ promotion rules. The agent honors floors per-lens.
 ```toml
 [review.channels.lens-fanout]
 enabled       = true            # master switch
-agent         = "@orrgal1/forge:forge-lens-reviewer"
+agent         = "@orrgal1/devloop:lens-reviewer"
 lens_dir      = "lenses"        # relative to plugin root; .forge/lenses/ overrides per file
 persona       = ""              # default persona id; empty = none (baseline only); CLI --persona overrides
 order         = "lens-mode"     # or "file-by-file"
@@ -205,11 +209,11 @@ $FORGE_ART/branches/<slug>/review/lens-fanout/
 Aggregated synthesis across all channels: one level up at
 `$FORGE_ART/branches/<slug>/review/synthesis.md`.
 
-## Notes for /forge-review
+## Notes for /review
 
 - **Always exists.** Dropping it (`--drop-channel lens-fanout`) is honored but
   flagged at the gate as unusual.
 - Consultation gate covers: lens edits (add/drop/rename/merge/split), persona
   selection, order. Other channels have their own gate sections.
-- `/forge-review-green` drives this channel's findings at **every** severity
+- `the review fix-loop` drives this channel's findings at **every** severity
   (blocker through nit) to zero — no severity-tier skipping.

@@ -5,7 +5,7 @@ tags: [code-quality, design, architecture]
 requires: diff
 severity-floor: minor
 brief-artifacts: []
-introduced-by: forge-review
+introduced-by: review
 ---
 
 # Elegance + Maintainability
