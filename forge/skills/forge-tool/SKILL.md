@@ -1,8 +1,6 @@
 ---
 name: forge-tool
-description:
-  "Capture an ad-hoc flow as a repeatable tool under $FORGE_HOME/tools/ and
-  register it in $FORGE_HOME/forge.toml [tools.<name>]."
+description: "Capture an ad-hoc flow as a repeatable forge tool."
 argument-hint:
   "[package <name> | list | run <name> [args] | show <name> | delete <name>]
   [--purpose <text>] [--form script|instructions|dir|agent] [--from-session]

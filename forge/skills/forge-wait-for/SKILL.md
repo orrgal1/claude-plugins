@@ -1,10 +1,6 @@
 ---
 name: forge-wait-for
-description:
-  "Gated resume monitor for a forge chain blocked on an external condition —
-  watch a base PR's CI, a Slack thread, or any predicate command; the moment it
-  clears, restack and resume the chain, then self-terminate. The bounded mirror
-  of /forge-review-watch."
+description: "Wait on an external condition, then restack and resume the chain."
 argument-hint:
   "[--condition base-ci|slack|cmd] [--cmd <pred>] [--thread <ref>] [--base
   <branch>] [--resume restack-then-resume|resume-only|none] [--from <phase>]

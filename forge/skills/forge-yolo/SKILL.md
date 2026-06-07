@@ -1,8 +1,6 @@
 ---
 name: forge-yolo
-description:
-  "Run the full forge chain with no contract pauses — drive scratch → READY,
-  stopping only at genuine blockers. Thin wrapper over /forge --mode yolo."
+description: "Full forge chain with no contract pauses (/forge --mode yolo)."
 argument-hint:
   "[<source>] [--slug <name>] [--max-review-cycles <N>] [--persona <id>] [--from
   <phase>] [--until <phase>]"

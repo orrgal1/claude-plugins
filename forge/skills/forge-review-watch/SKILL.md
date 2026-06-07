@@ -1,10 +1,6 @@
 ---
 name: forge-review-watch
-description:
-  "Put forge into watch mode for a PR — a persistent monitor that arms on new
-  reviews, standalone comments, bot / external-tool reviews, or any added
-  comment acting as actionable feedback, dispatches /forge-address-review on
-  each trigger, then re-arms until the operator stops it."
+description: "Watch a PR; auto-dispatch /forge-address-review on new feedback, re-arm until stopped."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--source github|all] [--interval <sec>]
   [stop]"

@@ -1,8 +1,6 @@
 ---
 name: forge-proof-green
-description:
-  "Drive the forge proof to PASS — main-thread loop controller; each fix + each
-  re-prove offloaded to a subagent."
+description: "Drive the forge proof to PASS."
 argument-hint: "[--slug <name>] [max=<N>]"
 triggers:
   - "forge proof green"

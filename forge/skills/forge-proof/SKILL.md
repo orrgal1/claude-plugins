@@ -1,8 +1,6 @@
 ---
 name: forge-proof
-description:
-  "Aggregate the full forge attestation chain: goals → scenarios/validations →
-  tests → match → runs → validations-hold."
+description: "Aggregate the full forge attestation chain (goals→…→validations)."
 argument-hint: "[--slug <name>] [--embed]"
 triggers:
   - "forge verify"

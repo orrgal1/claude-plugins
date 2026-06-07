@@ -1,7 +1,6 @@
 ---
 name: forge-goals
-description:
-  "Capture the PR's intended end-state as a goal list, loyal to its source."
+description: "Capture the PR's intended end-state as goals, loyal to source."
 argument-hint: '[<source>] [--slug <name>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge goals"

@@ -1,6 +1,6 @@
 ---
 name: forge-verify-match
-description: "Verify test bodies match their scenario when/then + AAA."
+description: "Verify test bodies match their scenario when/then."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify match"

@@ -1,9 +1,6 @@
 ---
 name: forge-review
-description:
-  "Forge-chain-aware multi-channel PR review — fans out parallel review
-  mechanisms — lens fan-out + built-in /code-review + built-in /security-review,
-  all on by default) and aggregates findings."
+description: "Multi-channel PR review — lens fan-out + code-review + security-review."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--channels <ids>] [--add-channel <id>]...
   [--drop-channel <id>]... [--channel <id> --<flag> <val>]... [--persona <id> |

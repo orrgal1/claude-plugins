@@ -1,10 +1,6 @@
 ---
 name: forge-brief
-description:
-  "Write or refresh the PR's brief — the tight, non-collapsible description at
-  the top of the body. Owns the body-layout contract: brief on top, forge chain
-  artifacts below as separate collapsible blocks. Idempotent; never touches a
-  collapsible block."
+description: "Write or refresh the PR's top brief (body-layout contract)."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--from <text>] [--check] [--json]"
 triggers:

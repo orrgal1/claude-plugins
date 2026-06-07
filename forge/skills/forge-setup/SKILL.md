@@ -1,12 +1,6 @@
 ---
 name: forge-setup
-description:
-  "Map host-repo tooling (build, test, lint, typecheck, codegen, devenv,
-  localenv) into forge home (~/.claude/forge/<repo-key>/ by default) so forge
-  adopts into any repo across all worktrees; also maintains the machine-global
-  agent-capability registry (~/.claude/forge/capabilities.toml) that resolves
-  generic functions — iteration loop, root-cause, trace logging — to installed
-  plugins without a hard dependency."
+description: "Adopt forge into a repo: map its build/test/lint/codegen tooling + capability registry."
 argument-hint:
   "[--cap <name>=<command>]... [--instr <name>=<prose>]... [--playbook
   <name>=<when_output>::<then>]... [--list] [--yes] [--migrate user|repo]

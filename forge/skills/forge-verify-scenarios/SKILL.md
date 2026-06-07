@@ -1,7 +1,6 @@
 ---
 name: forge-verify-scenarios
-description:
-  "Verify each goal is covered by ≥1 proof — a scenario or a validation."
+description: "Verify each goal is covered by ≥1 proof."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify scenarios"

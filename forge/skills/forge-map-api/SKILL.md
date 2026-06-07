@@ -1,8 +1,6 @@
 ---
 name: forge-map-api
-description:
-  "Generator: write the HTTP api map ($FORGE_HOME/maps/main/api.json).
-  Dispatched by /forge-map."
+description: "Generate the HTTP api domain map. Dispatched by /forge-map."
 argument-hint: "[--scope <path>] [--out <file>] [--refresh] [--quiet]"
 triggers:
   - "forge map api"

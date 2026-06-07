@@ -1,8 +1,6 @@
 ---
 name: forge-verify-validations
-description:
-  "Verify a goal's validations hold — run each command predicate, adversarially
-  confirm each attestation, record evidence."
+description: "Verify a goal's validations hold."
 argument-hint: "[--slug <name>] [--json]"
 triggers:
   - "forge verify validations"

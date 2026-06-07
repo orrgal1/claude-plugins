@@ -1,11 +1,6 @@
 ---
 name: forge-request-review
-description:
-  "Pick the most relevant peer reviewer for a PR and (gated) request them. Ranks
-  by signal precedence — reviewers of recent same-stack PRs, then reviewers of
-  the author's recent work, then people the author has reviewed (same team),
-  then reviewers of similar code areas / CODEOWNERS. Read-only ranking by
-  default; --ready executes the gated mark-ready-for-review + request."
+description: "Rank and (gated) request the most relevant peer reviewer."
 argument-hint:
   "[--slug <name>] [--pr <num>] [--top <N>] [--json] [--ready] [--reviewer
   <login>]"

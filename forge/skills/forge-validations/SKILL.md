@@ -1,9 +1,6 @@
 ---
 name: forge-validations
-description:
-  "Draft checkable validations that prove removal/negative/structural goals —
-  predicates bound to a shell command, or agent attestation when no command can
-  express it."
+description: "Draft checkable validations for removal/structural goals."
 argument-hint: '[--slug <name>] [--goal G<n>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge validations"

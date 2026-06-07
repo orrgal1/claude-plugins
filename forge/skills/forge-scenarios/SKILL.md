@@ -1,8 +1,6 @@
 ---
 name: forge-scenarios
-description:
-  "Draft when:/then: scenarios that cover each goal — component-tier-observable
-  behavior only."
+description: "Draft when/then scenarios covering each goal."
 argument-hint: '[--slug <name>] [--goal G<n>] [--iterate "<feedback>"] [--push]'
 triggers:
   - "forge scenarios"

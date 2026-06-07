@@ -1,6 +1,6 @@
 ---
 name: forge-tests
-description: "Write or attach a component-tier test for each scenario."
+description: "Write or attach a component-tier test per scenario."
 argument-hint:
   "[--slug <name>] [--scenario SG<n>.<m>] [--tier
   <component|integration|e2e|blackbox|qa>]"

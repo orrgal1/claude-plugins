@@ -1,8 +1,6 @@
 ---
 name: forge-map
-description:
-  "Domain maps of the host repo (db, api, events, config, ad-hoc) — pre-flight
-  aid that builds JSON snapshots downstream agents cheap-load."
+description: "Build domain maps of the host repo (db, api, events, config)."
 argument-hint:
   "[<area> | adhoc <name> --prompt <text>] [--list] [--refresh] [--all] [--scope
   <path>] [--out <file>] [--quiet]"

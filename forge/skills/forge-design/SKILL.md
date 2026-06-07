@@ -1,8 +1,6 @@
 ---
 name: forge-design
-description:
-  "Map every scenario to the design elements (components, symbols, data flow)
-  that satisfy it."
+description: "Map each scenario to the design elements that satisfy it."
 argument-hint:
   '[--slug <name>] [--scenario SG<n>.<m>] [--iterate "<feedback>"] [--push]'
 triggers:

@@ -1,9 +1,6 @@
 ---
 name: forge-review-green
-description:
-  "Drive the aggregated multi-channel review to 0 open findings (every severity,
-  blocker through nit) — main-thread loop controller; review cycle fans out in
-  main, each finding fix offloaded to a subagent."
+description: "Drive the aggregated review to zero open findings."
 argument-hint: "[--slug <name>] [--persona <id> | --personas <a,b,c>] [max=<N>]"
 triggers:
   - "forge review green"

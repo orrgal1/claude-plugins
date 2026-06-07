@@ -1,9 +1,6 @@
 ---
 name: forge-start
-description:
-  "Open a forge chain — turn a source into a 1–3 sentence brief, scaffold the
-  worktree, land a sentinel commit, push, open a draft PR, hand off for a
-  session switch."
+description: "Open a forge chain: source → brief, scaffold worktree, draft PR."
 argument-hint: "<source> [--slug <name>] [--base <branch>] [--branch <name>]"
 triggers:
   - "forge start"

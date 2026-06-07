@@ -1,8 +1,6 @@
 ---
 name: forge-address-review
-description:
-  "Process reviewer feedback on a forge PR — GitHub threads + external-tool
-  comments (drafted, not auto-posted)."
+description: "Process reviewer feedback on a forge PR (drafted, not auto-posted)."
 argument-hint:
   "[PR# or branch] [--slug <name>] [--auto] [--source github|self|all]"
 triggers:

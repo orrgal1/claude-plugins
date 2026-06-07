@@ -1,8 +1,6 @@
 ---
 name: forge-ci-green
-description:
-  "Drive PR CI to green — main-thread loop controller; each fix + each CI
-  snapshot offloaded to a subagent; controller owns the inter-tick wait."
+description: "Drive PR CI to green."
 argument-hint: "[--slug <name>] [--watch] [--until-merge] [max=<N>] [stop]"
 triggers:
   - "forge ci green"

@@ -1,10 +1,6 @@
 ---
 name: forge-find-blocker
-description:
-  "Identify the peripheral blocker holding a parked forge chain — fan out across
-  gh (base PR, run logs, linked issues), Slack (incident threads), and any wired
-  infra signal — then emit a /forge-wait-for condition spec + resume action, or
-  declare the halt genuine. The discovery half of the external-block recognizer."
+description: "Identify the external blocker holding a parked forge chain."
 argument-hint:
   "[--slug <name>] [--phase <phase>] [--halt <BLOCKED_*>] [--channels
   gh,slack,infra] [--json]"

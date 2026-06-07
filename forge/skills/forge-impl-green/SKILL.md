@@ -1,8 +1,6 @@
 ---
 name: forge-impl-green
-description:
-  "Drive linked scenario tests to green — main-thread loop controller; each fix
-  + each green-check offloaded to a subagent."
+description: "Drive linked scenario tests to green."
 argument-hint: "[--slug <name>] [--scenario SG<n>.<m>] [max=<N>]"
 triggers:
   - "drive forge tests to green"
