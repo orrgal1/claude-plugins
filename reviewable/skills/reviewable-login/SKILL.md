@@ -35,8 +35,7 @@ it (≈170MB Chrome download on first run):
 brew install agent-browser && agent-browser install
 ```
 
-Do not run the install silently — `brew install` mutates the user's machine.
-One-prompt confirm, then run.
+Do not run the install silently — one-prompt confirm, then run.
 
 ## Open Reviewable Landing — Headed
 
@@ -73,8 +72,6 @@ flow before proceeding.
   skills, eval contexts, or model context.
 - `--headed` is required for the OAuth tap. Subsequent `/reviewable-*` skills
   run the same session **headless** by default.
-- Tap stays valid across machine restarts. Re-run this skill only when another
-  `/reviewable-*` skill hits a login wall.
 
 ## Usage
 

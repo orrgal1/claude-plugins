@@ -83,8 +83,7 @@ discussion.
 - One reply per discussion per cycle — Reviewable's reply box accumulates a
   single draft per thread until publish.
 - Multi-line replies: pass with `$'line1\nline2'` in bash, or use a HEREDOC
-  piped into `agent-browser fill` via stdin (check `agent-browser fill --help`
-  for stdin support).
+  piped into `agent-browser fill` via stdin.
 - Markdown allowed; renders on publish via Reviewable's GitHub mirror.
 
 ## Usage

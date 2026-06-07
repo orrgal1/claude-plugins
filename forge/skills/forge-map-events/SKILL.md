@@ -207,8 +207,8 @@ Multiple transports coexist — parse each, attribute each event.
   `producers[]`) is a real signal — surfaces orphaned topics for the agent.
   Never invent a counterpart.
 - **Payload schemas link, not embed.** Record `schema_file` paths; let the agent
-  open the schema if it needs the full shape. Keeps the map compact.
+  open the schema if it needs the full shape.
 - **Read-only on host repo.** Writes confined to
   `$FORGE_HOME/maps/main/events.json` and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every producer / consumer carries
-  `file` + `line`. Agents verify against live source before acting.
+  `file` + `line`.

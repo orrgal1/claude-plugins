@@ -52,20 +52,15 @@ state (single-sourced; tracking is configurable).
 
 ## Process
 
-1. Resolve slug (argument or branch-derived).
-2. Read `$FORGE_ART/branches/<slug>/goals.md`. Enumerate LINKED scenarios per
-   the linkage rules in `/forge-verify-tests`.
-3. For each LINKED scenario, open the referenced test file. Read:
-   - `when:` / `then:` comments above the test function (typically two adjacent
-     `//` / `#` lines).
-   - `// --- arrange:` / `// --- act:` / `// --- assert:` markers inside the
-     body (and the code each contains).
-4. Verify the triangle:
-   - Comments restate the scenario without material loss.
-   - `arrange:` + `act:` realize the `when:` setup.
-   - `assert:` realizes the `then:` outcome.
-   - All three reference the same surface the scenario names.
-5. Apply verdict table per scenario. Emit report.
+Enumerate LINKED scenarios (per `/forge-verify-tests` linkage rules). For each,
+open the referenced test and read the two sides of the triangle:
+
+- `when:` / `then:` comments above the function (typically two adjacent `//` /
+  `#` lines).
+- `// --- arrange:` / `// --- act:` / `// --- assert:` markers + code in the
+  body.
+
+Then apply the verdict table.
 
 ## Report shape
 

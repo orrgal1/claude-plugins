@@ -133,9 +133,6 @@ Orchestrator re-settles `AWAIT_SCENARIOS_REVIEW` after push.
 
 ## Harvest
 
-Operators often write `when:` / `then:` on tests before formalizing — don't make
-them re-state.
-
 **Scope:** PR diff only (`gh pr diff --name-only` filtered to test paths +
 non-test files where the diff added annotations to an existing test). Out: tests
 that already had `when:` / `then:` before this PR opened.

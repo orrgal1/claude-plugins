@@ -85,14 +85,11 @@ finding to `review-fix`.
 
 ## Progress todos
 
-Forge is **bullish on the in-session todo list** (`TodoWrite`) — it is the
-operator's at-a-glance progress surface across a long unattended run. Use it at
-**every** opportunity: any time the run gains, completes, or re-scopes a unit of
-work, reflect it in the todo list **before** moving on. Default to writing a
-todo, not skipping one — a stale or empty list during a long run is a defect.
-This bias propagates to every sub-skill forge dispatches (green-loop
-controllers, verify atoms, the READY-phase steps); each keeps its slice of the
-list live.
+The in-session todo list (`TodoWrite`) is the operator's at-a-glance progress
+surface across a long unattended run. Reflect every gained, completed, or
+re-scoped unit of work in it **before** moving on; a stale or empty list during
+a long run is a defect. The sub-skills forge dispatches (green-loop controllers,
+verify atoms, READY-phase steps) each keep their slice of the list live.
 
 - **Seed at entry.** On the first invocation, write a todo per phase that will
   run this invocation (entry phase → `--until`), in chain order, **including the
@@ -221,9 +218,8 @@ the green verdict — and offloads the two heavy halves of each iteration to
 `forge-step-runner` subagents: a **`*-fix`** (apply one narrow delta + commit)
 and a **`*-check`** (re-verify the target, return a verdict). The controller
 never runs tests, parses proof output, or edits source itself. This gives every
-fix and every check a **clean context** (iter 12 isn't buried under 11 iters of
-scrollback) while keeping the loop's authority — when to stop, when it's green —
-in one place.
+fix and every check a **clean context** while keeping the loop's authority —
+when to stop, when it's green — in one place.
 
 - **State dir** — `$FORGE_ART/branches/<slug>/loop/<slot>/` holds `plan.md` (a
   checklist) + `scratchpad.md` (append-only iteration log). Tracked per
@@ -303,10 +299,6 @@ artifacts remain on the PR, so the operator can review after the fact and
 (`AWAIT_REVIEW_REQUEST`). Marking the PR ready + requesting a reviewer is the
 author's gesture — `yolo` still proposes a reviewer and stops for approval. It
 never moves a PR out of draft autonomously.
-
-Because nothing pauses, the **in-session todo list is the operator's only live
-progress signal** — keep it current at every phase transition (§ "Progress
-todos").
 
 ### 0. start
 
@@ -884,8 +876,7 @@ STUCK                    → see /forge-stuck-check report; --from <phase>
   honored.
 - **Decision log canonical.**
 - **Todo list kept current** — seed phase todos at entry, one `in_progress`,
-  tick on every transition; the only live progress surface in `yolo` (§
-  "Progress todos").
+  tick on every transition (§ "Progress todos").
 - **`approvals.json` sha-pinned.** Iterate invalidates the prior approval.
 - **Stack discipline** — cross-PR refactors surfaced during review → focused
   follow-up PRs, not pulled into this PR.

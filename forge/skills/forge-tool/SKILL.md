@@ -384,10 +384,7 @@ Print the resolved file(s) + the registry subtable. No writes.
 
 ## Honesty
 
-- **Never invent steps the operator didn't describe.** Q&A is source of truth;
-  `--from-session` proposes, operator confirms.
-- **Script form requires determinism.** Anything conditional → instructions
-  form. Surface a multi-step flow honestly, don't fake a one-liner.
+- **Never invent steps the operator didn't describe.** Q&A is source of truth.
 - **Tools never auto-run during `package`.** Dry-run is opt-in.
 - **`$FORGE_HOME/tools/` is user-layer by default** (see `/forge-setup` § "Forge
   home"). Operator-local, untracked. Team-shared →

@@ -66,8 +66,8 @@ cat "$reg"
 local `claude` CLI on the operator's Pro/Max plan — **no API key**, billed to
 the plan). The `claude-cli` path defaults to **Opus** (overkill for
 structured-JSON extraction), so the registry pins `cli_model: "sonnet"`;
-`/graphify-wrapper-sync --semantic` exports it as `GRAPHIFY_CLAUDE_CLI_MODEL`. If an API
-key is already in the env, prefer it (faster, parallel):
+`/graphify-wrapper-sync --semantic` exports it as `GRAPHIFY_CLAUDE_CLI_MODEL`.
+If an API key is already in the env, prefer it:
 
 ```bash
 if   [ -n "${ANTHROPIC_API_KEY:-}" ]; then b=claude
@@ -82,10 +82,10 @@ echo "semantic backend: $b"
 
 ## 5. Report
 
-Tell the operator setup is done and suggest next steps:
-
-- `/graphify-wrapper-index <name> <path>` to register a domain (or `/graphify-wrapper-index`
-  with no args to have me analyze the repo and suggest domains).
+- `/graphify-wrapper-index <name> <path>` to register a domain (or
+  `/graphify-wrapper-index` with no args to have me analyze the repo and suggest
+  domains).
 - `/graphify-wrapper-sync` to build/refresh the current worktree's indexes.
 
-Do **not** build any index here — that is `/graphify-wrapper-index` + `/graphify-wrapper-sync`.
+Do **not** build any index here — that is `/graphify-wrapper-index` +
+`/graphify-wrapper-sync`.

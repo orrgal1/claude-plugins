@@ -30,8 +30,7 @@ explicit `--mode`, ignore it and use `yolo` (this command's whole purpose).
 
 Everything else is `/forge` exactly — same chain, phases, loop contract, honesty
 bright lines, and result summary. See `/forge` § "Yolo mode" for the
-contract-gate override. Yolo relaxes **no** bright line and skips **no** halt;
-it removes only the three contract pauses.
+contract-gate override.
 
 Because no gate pauses, keep the **in-session todo list** current at every phase
 transition — it is the operator's only live progress signal in this mode

@@ -72,7 +72,6 @@ head -20 "$PERSONA"
 
 - The persona is **inlined**: everything Claude needs lives in `persona.md`. No
   `skills-inline` fence, no `@-import` ladder, no per-skill renderer.
-- To change behavior, edit `~/.claude/persona.md` directly.
 - To reset to the default template, delete `~/.claude/persona.md` and re-run
   `/setup-persona`.
 - The plugin does not touch any other file under `~/.claude/`.

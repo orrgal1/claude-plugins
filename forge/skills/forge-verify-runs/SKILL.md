@@ -53,14 +53,9 @@ out at runtime (e.g. environment-gated). Surface the count.
 
 ## Process
 
-1. Resolve slug (argument or branch-derived).
-2. Read `$FORGE_ART/branches/<slug>/run.json`. Missing → exit 2.
-3. Enumerate LINKED scenarios from `goals.md`.
-4. For each, look up in `run.json` and apply verdict table.
-5. Compare `run.json` mtime to each linked test file's mtime — emit STALE if any
-   test was edited more recently than the last run.
-6. Cross-check for DANGLING entries.
-7. Emit report.
+Per LINKED scenario in `goals.md`, look up its result in `run.json` and apply
+the verdict table. STALE compares `run.json` mtime against each linked test
+file's mtime; DANGLING is a `run.json` entry with no matching scenario.
 
 ## Report shape
 

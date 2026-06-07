@@ -1,6 +1,8 @@
 ---
 name: pepper
-description: Scatter uniquely-marked trace logs through suspect code, run repro, grep, iterate, clean up.
+description:
+  Scatter uniquely-marked trace logs through suspect code, run repro, grep,
+  iterate, clean up.
 argument-hint: "bug description + suspected file(s) or function(s)"
 triggers:
   - "add debug logs"
@@ -88,9 +90,6 @@ instead of reading the full log (see `/trace` for the pattern):
 grep "\[DBG-swap-42\]" /tmp/pepper-42.log
 ```
 
-Read the trace as a story: what values did each step see? Where did the actual
-path diverge from the expected path?
-
 ## 6. Narrow
 
 Based on what the trace revealed:
@@ -119,16 +118,7 @@ repo history stays clean.
 
 ## Anti-patterns
 
-- Generic markers like `[DEBUG]` or `fmt.Println("here")` — collide with
-  existing logs, uncleanable.
-- Peppering in hot loops without a counter gate — floods output, obscures
-  signal.
 - Leaving markers in because "they might be useful later" — that's what real
-  logging is for; debug markers rot.
+  logging is for.
 - Peppering before forming a hypothesis — you'll add logs everywhere and learn
   nothing. Pair this with `/hypothesize`.
-
-## Tools used
-
-`Edit` (add/remove markers), `Bash` (run repro), `Grep` (extract trace, confirm
-cleanup).

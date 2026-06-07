@@ -196,12 +196,11 @@ the candidate files. Never guess a schema.
 
 - **Migrations win on conflict with stale ORM models** only if the operator asks
   — the generator never picks. Both views emit, gaps flag the conflict.
-- **Never synthesize a column.** Unparsed → `type: "unknown"` + gap. Better to
-  surface ignorance than fabricate types the agent will trust.
+- **Never synthesize a column.** Unparsed → `type: "unknown"` + gap.
 - **Empty result is valid.** `items: []` + `gaps: [{reason: no-db-signal}]` is
   the right answer for a repo without persistence.
 - **Read-only on the host repo.** Writes confined to
   `$FORGE_HOME/maps/main/db.json` and `$FORGE_HOME/forge.toml`. Never touch
   tracked files.
 - **Source attribution is mandatory.** Every item carries `source` +
-  `source_line`. Downstream agents verify against the live file before acting.
+  `source_line`.

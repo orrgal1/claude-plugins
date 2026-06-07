@@ -36,7 +36,7 @@ context, then draft replies via `/reviewable-reply`, then batch via
    brew install agent-browser && agent-browser install
    ```
 
-   Do not run silently — `brew install` mutates the user's machine.
+   Do not run silently — one-prompt confirm, then run.
 
 2. **Session authenticated.** All ops use `--session-name reviewable`. First run
    (or after session expiry) requires a one-time interactive GitHub OAuth tap;
@@ -61,8 +61,6 @@ agent-browser --session-name reviewable snapshot > /tmp/reviewable-snap.txt
 ```
 
 The snapshot can be large (several thousand lines on PRs with many revisions).
-Prefer `grep`/`Read` with `offset/limit` over re-reading the whole file into
-context.
 
 ## Extract Discussions
 

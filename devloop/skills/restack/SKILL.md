@@ -33,6 +33,6 @@ tracked upstream or the repo default branch
    - merge: `git merge origin/<base>` on the head branch.
    - rebase: `git rebase origin/<base>` (only if prefs say so, or `--rebase` is
      passed).
-3. Conflicts → stop, surface them. Don't guess resolutions.
+3. Conflicts → stop, surface them.
 4. Push once at the end: plain push for merge, `--force-with-lease` for rebase.
    Never force-push the base/default branch.

@@ -30,8 +30,8 @@ user-invocable: true
 Bounded fix-to-green loop against a GitHub PR's CI. Check = **`ci-check`**
 (mergeability gate + three-probe snapshot + classify → verdict); fix =
 **`ci-fix`** (diagnose one failing run, minimal fix, commit + push). The
-controller owns the inter-tick wait; verify is poll-based (CI can't compress to
-one exit code); **push per iteration** (CI can't verify a local commit).
+controller owns the inter-tick wait; verify is poll-based; **push per
+iteration**.
 
 Repo-agnostic and standalone — no dependency on any other plugin or on a forge
 chain. Generic extension points (`--protect`, `--state`, `--on-green`) let a
@@ -134,8 +134,7 @@ loop:
 
 **Re-arms on every new HEAD even after green** — a follow-up push, a
 per-iteration base-sync, or a manual commit each re-triggers the inner fix loop;
-CI is driven back to green and `last_green` advances. There is no "final" CI
-check — the monitor _is_ the check, continuously.
+CI is driven back to green and `last_green` advances.
 
 - **Status file** (`<state>/status.json`) for any external consumer:
   `{ "head": "<sha>", "verdict": "GREEN|RED|RUNNING|GATED", "since": "<iso>", "armed": true }`.
@@ -148,10 +147,9 @@ warm — `ScheduleWakeup` under `/loop`, else `Monitor` with an until-loop. Don'
 handroll a `Bash` poll predicate (a naive `until pending==0` deadlocks on
 perpetual-pending gates). Re-enter at the next `ci-check` after wakeup.
 
-**Act-vs-wait** is the controller's judgment per tick: act when the failure is
-self-contained and unrelated to what's still running; wait when in-flight jobs
-touch the same surface (one fix with the full set beats two pushes), or the
-failures look flake-suspicious. If unsure, wait one more tick.
+**Act-vs-wait** per tick: act when the failure is self-contained and unrelated
+to what's still running; wait when in-flight jobs touch the same surface or the
+failures look flake-suspicious.
 
 ## Offloaded unit — `ci-check`
 

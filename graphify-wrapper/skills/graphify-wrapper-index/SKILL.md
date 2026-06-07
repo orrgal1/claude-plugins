@@ -1,6 +1,8 @@
 ---
 name: graphify-wrapper-index
-description: "Register/remove a named domain index. Discovery via /graphify-wrapper-map; build via /graphify-wrapper-sync."
+description:
+  "Register/remove a named domain index. Discovery via /graphify-wrapper-map;
+  build via /graphify-wrapper-sync."
 argument-hint: "<name> <path> [--semantic]  (or: <name> to remove)"
 allowed-tools:
   - Bash
@@ -38,19 +40,13 @@ echo "registered '$name' -> $path (semantic=$sem)"
 jq '.indexes' "$reg"
 ```
 
-Then tell the operator to run `/graphify-wrapper-sync $name` to build it.
-
 ## Don't know the domains yet?
 
-Use **`/graphify-wrapper-map`** — it analyzes the repo, proposes a focused domain set,
-refines it with you interactively, and registers the chosen ones. This skill is
-the precise low-level tool for when you already know the `name` and `path`.
+Use **`/graphify-wrapper-map`** — it analyzes the repo, proposes a focused
+domain set, refines it with you interactively, and registers the chosen ones.
 
 ## Removing a domain
 
 ```bash
 tmp=$(mktemp); jq --arg n "$1" 'del(.indexes[$n])' "$reg" > "$tmp" && mv "$tmp" "$reg"
 ```
-
-(The in-tree `graphify-out/` under that path can be deleted manually if
-desired.)

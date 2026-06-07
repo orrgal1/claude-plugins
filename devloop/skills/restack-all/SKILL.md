@@ -26,7 +26,6 @@ If `gh` fails, fall back to raw git analysis (tracked upstreams / merge-bases).
 ## Restack
 
 Order the chain bottom-up (closest to trunk first). For each PR in order, run
-`/restack` on it. Each restack picks up the parent's just-updated head, so
-changes propagate up the stack.
+`/restack` on it. Each restack picks up the parent's just-updated head.
 
 Stop on the first conflict and surface it — do not continue past a broken layer.

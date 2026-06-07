@@ -25,8 +25,7 @@ allowed-tools:
 # /grind
 
 Inspired by Geoffrey Huntley's "Ralph Wiggum as a software engineer" — adapted
-for a single Claude session. Pick the next item from the plan, do it, verify,
-write down what you learned, repeat. Stop at success or budget exhaustion.
+for a single Claude session.
 
 ## When to use
 
@@ -105,8 +104,7 @@ All paths below are under `.pr-artifacts/<slug>/grind/<slot>/`.
 
 1. Write `target.md`: goal + verification command, exactly as given.
 2. Run verification once; record baseline tail + exit code in `scratchpad.md`.
-3. Draft `plan.md` as a Markdown checklist of concrete steps. Coarse is fine —
-   the plan adapts.
+3. Draft `plan.md` as a Markdown checklist of concrete steps.
 4. Open `scratchpad.md` with a header naming the slot, run start time, and
    budget.
 
@@ -117,8 +115,7 @@ For each iteration up to `max`:
 1. **Verify**. Run the verification command. Exit 0 → `SUCCESS`, stop.
 2. **Pick** the next unchecked item in `plan.md`. If the list is empty, infer
    one step from the latest scratchpad signal and append it.
-3. **Implement**. One step. Use Read/Edit/Write/Grep/Bash as needed. Stay narrow
-   — don't smuggle in unrelated changes.
+3. **Implement**. One step. Stay narrow — don't smuggle in unrelated changes.
 4. **Re-verify**. Capture exit code and the last 30 lines of output.
 5. **Log** to `scratchpad.md`:
    ```
@@ -202,8 +199,6 @@ re-invoke with a fresh target. To wipe everything: delete
 
 - Verification that's a heuristic ("looks good", "no obvious errors") — the loop
   will lie to you. Pick a command.
-- Setting `max` too high to compensate for a vague target — fix the target
-  instead.
 - Letting the loop swallow a real refactor. If scratchpad shows thrash, stop and
   rethink the plan; don't grind harder.
 - Running `/grind` in a worktree that shares mutable state (DBs, dev servers)
@@ -212,9 +207,3 @@ re-invoke with a fresh target. To wipe everything: delete
   collide.
 - Reusing a slot across unrelated targets — old plan.md and scratchpad.md will
   mislead the next run. New target = new slot (or delete the old slot first).
-
-## Tools used
-
-`Bash` (verification + git commits), `Read`/`Edit`/`Write` (the change),
-`Grep`/`Glob` (find code), `TodoWrite` (mirror plan.md as in-session todos for
-visibility). No MCP, no subagents — single context by design.

@@ -1,6 +1,8 @@
 ---
 name: trace
-description: Route verbose process output to disk and grep instead of polluting agent context.
+description:
+  Route verbose process output to disk and grep instead of polluting agent
+  context.
 argument-hint: "command or service name"
 triggers:
   - "tail the logs"
@@ -101,21 +103,6 @@ Then treat `/tmp/window.log` as the full context — it's small enough to read.
 
 - Use a unique `<topic>` per debugging run so concurrent sessions don't clobber
   each other's files.
-- `rm /tmp/trace-<topic>.log*` when the investigation is done; `/tmp` is
-  session-scoped but habits matter.
+- `rm /tmp/trace-<topic>.log*` when the investigation is done.
 - Don't commit trace files. Add `/tmp/` patterns to `.gitignore` only if you're
   genuinely putting traces inside the repo (don't).
-
-## Anti-patterns
-
-- `cat /tmp/huge.log` — defeats the whole point.
-- Streaming stdout directly in a Bash call without redirection — context
-  catastrophe.
-- Reading a 50 MB file with `Read` and no offset — slow and useless.
-- Grepping without `-A` / `-B` context and then re-grepping to get surrounding
-  lines — set context on the first Grep.
-
-## Tools used
-
-`Bash` (redirect, background, sort/awk), `Grep`, `Read` (with `offset` /
-`limit`).

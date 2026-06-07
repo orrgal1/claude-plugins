@@ -222,4 +222,4 @@ Multiple stacks coexist — parse each.
   `$FORGE_HOME/maps/main/config.json` and `$FORGE_HOME/forge.toml`. Never modify
   `.env*` or manifests.
 - **Source attribution is mandatory.** Every read + declaration carries `file` +
-  `line`. Agents verify against the live file before acting.
+  `line`.

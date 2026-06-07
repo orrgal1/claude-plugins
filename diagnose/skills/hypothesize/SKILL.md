@@ -1,6 +1,7 @@
 ---
 name: hypothesize
-description: Diagnose a local bug via 2–4 candidates and one cheap experiment per round.
+description:
+  Diagnose a local bug via 2–4 candidates and one cheap experiment per round.
 argument-hint: "bug description or error message"
 triggers:
   - "I think it might be"
@@ -86,7 +87,7 @@ Evidence: <the specific observations>
 Fix: <smallest change that resolves it>
 ```
 
-Stop. Don't keep investigating "just to be sure" — the evidence is the evidence.
+Stop. Don't keep investigating "just to be sure."
 
 ## Escalation
 
@@ -99,14 +100,5 @@ Switch to `/root-cause` if:
 
 ## Anti-patterns
 
-- Listing every possibility without priors — useless.
-- Running all tests up front — eats context, dilutes focus.
 - "It might be a race condition" with no falsifier — that's not a hypothesis,
   that's a shrug.
-- Fixing the first thing that looks wrong — if it's not the confirmed root
-  cause, the bug will come back.
-
-## Tools used
-
-`Bash` (run the repro), `Read` / `Grep` / `Glob` (inspect code), `Edit` (add a
-trace log if needed). No MCP — this is desk-side thinking.

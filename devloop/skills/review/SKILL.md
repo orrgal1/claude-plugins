@@ -31,7 +31,7 @@ user-invocable: true
 Runs N **review channels** in parallel and aggregates their findings into one
 ranked verdict. Repo-agnostic and standalone — no dependency on any other plugin
 or on a forge chain. A caller (e.g. forge) layers its own context on top via
-`--context` / `--context-lens-dir` without re-implementing the engine.
+`--context` / `--context-lens-dir`.
 
 Ships three channels (`review-channels/`):
 
@@ -176,8 +176,7 @@ channel.
 | `CLEAN`          | every channel clean (no blockers, no majors).              |
 | `REVIEW_BLOCKED` | aggregated review found ≥1 blocker or major (any channel). |
 
-`REVIEW_BLOCKED` → fix the blocking set, re-run `/review`. (A caller may map
-these to its own richer verdict ladder.)
+`REVIEW_BLOCKED` → fix the blocking set, re-run `/review`.
 
 ## Embed
 

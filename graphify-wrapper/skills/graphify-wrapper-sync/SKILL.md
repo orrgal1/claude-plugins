@@ -1,6 +1,7 @@
 ---
 name: graphify-wrapper-sync
-description: "Refresh this worktree's domain indexes (AST-only; --semantic for full)."
+description:
+  "Refresh this worktree's domain indexes (AST-only; --semantic for full)."
 argument-hint: "[<name> — defaults to all registered] [--semantic]"
 allowed-tools:
   - Bash
@@ -8,8 +9,7 @@ allowed-tools:
 
 # /graphify-wrapper-sync
 
-Bring this worktree's graphs up to date with its files, on demand. This is the
-only thing that builds graphs.
+This is the only thing that builds graphs.
 
 ```bash
 . "${CLAUDE_PLUGIN_ROOT}/lib/gfx.sh"
@@ -73,8 +73,7 @@ done
 ## Notes
 
 - `update` is AST-only and free; `extract` runs the LLM backend. `claude-cli` is
-  serial — a large `--semantic` domain is slow and consumes plan quota. Prefer
-  scoping semantic to the domains that need architecture answers.
+  serial — a large `--semantic` domain is slow and consumes plan quota.
 - `extract` sends docs **and images** to the LLM as text. SVG markup and decoded
   binary bytes are pure token noise (and the cause of oversized chunks that time
   out), so semantic builds exclude image/asset globs by default — see

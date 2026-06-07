@@ -33,8 +33,7 @@ not run unattended.** Before invoking, confirm with the operator:
    the replies refer to.
 3. **Verification done.** Tests / typechecks pass on the pushed tip.
 
-If any of the above is unclear, stop and ask. The cost of an unwanted re-review
-ping is high; the cost of pausing to confirm is zero.
+If any of the above is unclear, stop and ask.
 
 ## Locate Button
 
@@ -107,8 +106,7 @@ sleep 2
 agent-browser --session-name reviewable mouse up
 ```
 
-The 2-second hold is conservative; Reviewable's arm window appears to be under 2
-seconds but the upper bound has not been measured precisely.
+Hold for 2 seconds.
 
 ## Verify Published
 

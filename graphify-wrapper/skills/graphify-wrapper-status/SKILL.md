@@ -1,13 +1,12 @@
 ---
 name: graphify-wrapper-status
-description: "Show registered domain indexes and their freshness for this worktree."
+description:
+  "Show registered domain indexes and their freshness for this worktree."
 allowed-tools:
   - Bash
 ---
 
 # /graphify-wrapper-status
-
-Report the graphify-wrapper state for this repo + worktree.
 
 ```bash
 . "${CLAUDE_PLUGIN_ROOT}/lib/gfx.sh"

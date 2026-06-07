@@ -40,8 +40,6 @@ interactive UI). For plugin installs, **emit paste-ready commands** in a code
 block and let the operator run them. Everything else — file ops, the registry,
 invoking other skills via the Skill tool — you do directly after confirming.
 
-Keep output as bullets, not prose. One line per finding.
-
 ---
 
 ### Phase 1 — Prerequisites
@@ -160,15 +158,3 @@ Print the plugin table at the top of this file, then the canonical entry points:
 
 Close by listing what's still unset (any phase the operator skipped) so they can
 come back with `/welcome <step>`.
-
----
-
-## Notes
-
-- Idempotent: every phase detects state and skips completed work. Safe to
-  re-run.
-- The skill never installs plugins itself — it emits the `/plugin` commands. All
-  other setup (persona, graphify, forge) it performs via the relevant skills
-  after confirming.
-- Jump to a phase: `/welcome persona`, `/welcome graphify`, `/welcome repo`,
-  `/welcome usage`.

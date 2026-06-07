@@ -322,8 +322,6 @@ Unknown subtables tolerated (forward-compat), ignored by `--list`.
 
 ## Honesty
 
-- **Maps are snapshots, not source of truth.** Verify against live source before
-  acting. Freshness signals are hints, not guarantees.
 - **Never invent items.** Can't parse a construct → emit a `gap`, not a guess.
   Empty `items[]` is valid.
 - **Never partial-write.** Atomic mv only; a crashed generator leaves the

@@ -78,15 +78,9 @@ component is the default; operator owes a one-liner when deviating up.
 
 ## Process
 
-1. Resolve slug (argument or branch-derived).
-2. Read `$FORGE_ART/branches/<slug>/goals.md`. Enumerate scenarios + their
-   `- test:` / `- tier:` sub-bullets.
-3. Read `$FORGE_ART/branches/<slug>/links.json` if present.
-4. For each scenario, apply link verdict table. Resolve `<path>::<func>` —
-   confirm path exists, function is defined.
-5. Cross-check against `links.json` — emit DESYNC / DANGLING as applicable.
-6. Apply tier check per scenario.
-7. Emit report.
+Per scenario, resolve `<path>::<func>` (confirm path exists, function defined)
+and apply the link + tier verdict tables. Cross-check against `links.json` when
+present for DESYNC / DANGLING.
 
 ## Report shape
 

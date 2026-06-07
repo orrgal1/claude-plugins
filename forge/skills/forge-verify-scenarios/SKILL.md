@@ -61,14 +61,9 @@ visible. Surface count + scenario IDs; don't fail the chain.
 
 ## Process
 
-1. Resolve slug (argument or branch-derived).
-2. Read `$FORGE_ART/branches/<slug>/goals.md`. Missing → exit 2.
-3. Enumerate `Gn` headers. For each, read its `## Scenarios` block **and** its
-   `## Validations` block (either satisfies coverage).
-4. Apply verdict table per goal.
-5. Scan all `SG<n>.<m>` entries: any under a missing `Gn` → ORPHAN; any under
-   `## Orphan scenarios` → PARKED.
-6. Emit report.
+Per `Gn`, read both its `## Scenarios` and `## Validations` block — either
+satisfies coverage — then apply the verdict table. Then scan all `SG<n>.<m>`:
+under a missing `Gn` → ORPHAN; under `## Orphan scenarios` → PARKED.
 
 ## Report shape
 

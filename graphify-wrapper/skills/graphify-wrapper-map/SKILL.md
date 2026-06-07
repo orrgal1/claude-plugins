@@ -1,6 +1,8 @@
 ---
 name: graphify-wrapper-map
-description: "Propose and register a focused set of domains worth indexing — guided front door to /graphify-wrapper-index."
+description:
+  "Propose and register a focused set of domains worth indexing — guided front
+  door to /graphify-wrapper-index."
 allowed-tools:
   - Bash
   - Read
@@ -24,9 +26,8 @@ root=$(gfx_this_worktree)
 
 ## 1. Discover
 
-Gather structural signals — don't guess. Read the output, then drill into any
-parent dir (`services/`, `apps/`, `packages/`, `cmd/`, `libs/`) that clearly
-holds multiple independent units.
+Drill into any parent dir (`services/`, `apps/`, `packages/`, `cmd/`, `libs/`)
+that holds multiple independent units.
 
 ```bash
 cd "$root"
@@ -53,10 +54,9 @@ sample its languages before proposing.
 
 ## 2. Propose
 
-Synthesize the signals into **≤ ~6 coherent domains**, each a single
-repo-relative subtree (graphify indexes one path per graph). Prefer a few medium
-domains over one giant or many tiny ones. Group by stack or bounded context
-(e.g. `backend`, `frontend`, `mobile`, `protos`, `infra`).
+**≤ ~6 coherent domains**, each a single repo-relative subtree (graphify indexes
+one path per graph). Group by stack or bounded context (e.g. `backend`,
+`frontend`, `mobile`, `protos`, `infra`).
 
 Present a table:
 
@@ -69,7 +69,7 @@ Rules for the proposal:
   architecture questions about — it costs serial `sonnet` calls per chunk
   (`claude-cli`). Everything else stays AST-only (free).
 - Explicitly list what you're **leaving unindexed** and why (vendored deps,
-  generated code, build output, docs, fixtures) — focus is the point.
+  generated code, build output, docs, fixtures).
 - Flag overlaps/nesting: two domains must not nest (a parent path's graph would
   re-cover the child). If they do, pick one granularity.
 - If a logical domain spans multiple disjoint subtrees, either pick their common
@@ -79,8 +79,7 @@ Rules for the proposal:
 
 Use `AskUserQuestion` to confirm the set and collect edits. Offer the operator
 the obvious levers: keep / merge two / split one / rename / change a path / drop
-/ toggle semantic. Iterate on the table until they approve. Do **not** touch the
-registry before approval.
+/ toggle semantic. Do **not** touch the registry before approval.
 
 ## 4. Register
 
@@ -99,7 +98,7 @@ echo "registered domains:"; jq '.indexes' "$reg"
 
 ## 5. Next
 
-Point the operator at `/graphify-wrapper-sync` to build all registered domains (AST,
-plus semantic where marked), or `/graphify-wrapper-sync <name>` for one. For a large
-first domain, suggest an AST-only `/graphify-wrapper-sync <name>` to gauge build time
-before committing to a `--semantic` pass.
+Point the operator at `/graphify-wrapper-sync` to build all registered domains
+(AST, plus semantic where marked), or `/graphify-wrapper-sync <name>` for one.
+For a large first domain, suggest an AST-only `/graphify-wrapper-sync <name>` to
+gauge build time before committing to a `--semantic` pass.

@@ -21,8 +21,7 @@ user-invocable: true
 
 # /forge-goals — capture PR goals (operator-led)
 
-First link. **Most interactive skill** — goals are the spine; wrong goals
-cascade. Operator drives; sources are reference.
+First link. Operator drives; sources are reference.
 
 A **goal** = future end-state the PR commits to. Not tasks, not file lists —
 what the system **will support** or **will be**. Else it's impl detail.
@@ -51,7 +50,6 @@ Every goal needs ≥1 proof, not ≥1 of each.
 
 - **G1** = main (the one sentence reviewers should remember).
 - **G2**, **G3** = secondary outcomes the PR also commits to.
-- Right-size, don't pad slots. A 1-goal tight PR > 3-goal padded one.
 - **>3 → halt + recommend splitting into focused PRs.** No `--force` escape
   hatch.
 
