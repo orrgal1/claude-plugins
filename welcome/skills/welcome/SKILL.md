@@ -1,5 +1,8 @@
 ---
 name: welcome
+description:
+  "Interactive, idempotent onboarding for the orrgal1 marketplace — wire setup,
+  then print a usage guide."
 argument-hint: "[step name to jump to, optional]"
 allowed-tools:
   - Bash

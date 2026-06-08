@@ -1,5 +1,8 @@
 ---
 name: reviewable-read
+description:
+  "List a Reviewable.io PR's unresolved discussion threads as a structured list,
+  via agent-browser."
 argument-hint: "[PR# or Reviewable URL]"
 triggers:
   - "read reviewable"

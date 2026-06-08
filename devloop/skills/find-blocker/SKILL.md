@@ -1,7 +1,7 @@
 ---
 name: find-blocker
 description:
-  "Identify whether a PR is held by an external blocker, and classify its
+  "Identify whether a PR is held by an external blocker; classify its
   waitability."
 argument-hint:
   "[--pr <num>] [--hint <text>] [--channels gh,slack,infra] [--infra-cmd <cmd>]

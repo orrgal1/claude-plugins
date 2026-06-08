@@ -1,5 +1,8 @@
 ---
 name: reviewable-login
+description:
+  "One-time interactive Reviewable.io auth — stand up an authenticated
+  agent-browser session."
 argument-hint: ""
 triggers:
   - "reviewable login"

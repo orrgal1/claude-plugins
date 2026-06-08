@@ -1,5 +1,8 @@
 ---
 name: load-persona
+description:
+  "Load a named persona from the plugin's builtin pool into
+  ~/.claude/persona.md."
 argument-hint: "[name]"
 allowed-tools:
   - Bash

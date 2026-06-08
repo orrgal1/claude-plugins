@@ -1,5 +1,8 @@
 ---
 name: reviewable-reply
+description:
+  "Draft a reply into a specific Reviewable.io discussion's follow-up box
+  (auto-saved, not published)."
 argument-hint: "<follow_up_ref> <reply-text>"
 triggers:
   - "reply to reviewable"

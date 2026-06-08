@@ -1,9 +1,8 @@
 ---
 name: pr-brief
 description:
-  "Write or refresh a PR's brief — a tight 1–3 sentence description of what the
-  PR does and why, idempotently spliced into a marker-bounded region of the
-  body."
+  "Write or refresh a PR's brief — a tight 1–3 sentence what/why, spliced
+  idempotently into a marker-bounded body region."
 argument-hint:
   "[--pr <num>] [--from <text>] [--region <name>] [--check] [--json]"
 triggers:

@@ -1,8 +1,8 @@
 ---
 name: address-review
 description:
-  "Drive externally-submitted reviewer feedback on a PR to resolution — triage,
-  fix, reply (GitHub posted; external-tool drafted), re-request."
+  "Drive reviewer feedback on a PR to resolution — triage, fix, reply (GitHub
+  posted, external-tool drafted), re-request."
 argument-hint:
   "[PR# or branch] [--auto] [--source github|self|all] [--protect <globs>]
   [--self-marker <name>] [--state <dir>]"

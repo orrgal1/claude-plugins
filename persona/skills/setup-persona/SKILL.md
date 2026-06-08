@@ -1,5 +1,8 @@
 ---
 name: setup-persona
+description:
+  "One-shot idempotent setup of an inlined persona — write ~/.claude/persona.md
+  and @-import it from CLAUDE.md."
 argument-hint: ""
 allowed-tools:
   - Bash

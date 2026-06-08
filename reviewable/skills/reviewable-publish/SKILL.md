@@ -1,5 +1,8 @@
 ---
 name: reviewable-publish
+description:
+  "Batch-publish all draft Reviewable.io replies — mirror them to the GitHub PR
+  and notify reviewers."
 argument-hint: ""
 triggers:
   - "publish reviewable"
