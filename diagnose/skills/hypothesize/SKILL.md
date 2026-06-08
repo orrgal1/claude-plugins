@@ -44,8 +44,8 @@ H<N>: <one-line claim>
   cheapest test: <one concrete check>
 ```
 
-Ordering by `prior × (1/cost of test)` is usually right — cheap tests on
-medium-prior hypotheses beat expensive tests on high-prior ones.
+Order by `prior × (1/cost of test)` — cheap tests on medium-prior hypotheses
+beat expensive tests on high-prior ones.
 
 ## 3. Run the cheapest test on the top candidate
 
@@ -87,7 +87,7 @@ Evidence: <the specific observations>
 Fix: <smallest change that resolves it>
 ```
 
-Stop. Don't keep investigating "just to be sure."
+Then stop.
 
 ## Escalation
 

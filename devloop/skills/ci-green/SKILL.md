@@ -96,16 +96,15 @@ settle BUDGET_EXHAUSTED
 ```
 
 **Base-sync (every iteration, controller-owned).** At the top of each iteration
-— before `ci-check` — bring the base into the branch so CI always evaluates
-against the current base and base-introduced breakage surfaces here, not after
-merge. Use `/restack` if available, else plain git (`git fetch <remote> <base>`
-→ merge `<remote>/<base>` into the branch). No new base commits → no-op (HEAD
-unchanged, nothing pushed). A merge **conflict** → settle
-`BLOCKED_REBASE_CONFLICT` (genuine — caller resolves; do not loop). A sync that
-advances HEAD pushes once (merge, never force to a shared base) and re-triggers
-CI; the same-iteration `ci-check` reads the synced HEAD. This proactively clears
-`mergeStateStatus=BEHIND` rather than settling `BLOCKED_REBASE` for a stale
-base.
+— before `ci-check` — bring the base into the branch so CI evaluates against the
+current base and base-introduced breakage surfaces here, not after merge. Use
+`/restack` if available, else plain git (`git fetch <remote> <base>` → merge
+`<remote>/<base>` into the branch). No new base commits → no-op (HEAD unchanged,
+nothing pushed). A merge **conflict** → settle `BLOCKED_REBASE_CONFLICT`
+(genuine — caller resolves; do not loop). A sync that advances HEAD pushes once
+(merge, never force to a shared base) and re-triggers CI; the same-iteration
+`ci-check` reads the synced HEAD. This proactively clears
+`mergeStateStatus=BEHIND` rather than settling `BLOCKED_REBASE`.
 
 Under `--watch`, the controller never spawns `ci-fix` — it loops `ci-check` +
 WAIT and reports the terminal verdict (GREEN / GATED / still-RED) without

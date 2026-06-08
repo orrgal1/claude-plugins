@@ -96,7 +96,7 @@ existing test:
 ## Test count — one per scenario
 
 **1:1 mapping is the contract.** Splitting a scenario across multiple tests
-dilutes the chain — Layer 4 inspects one, the rest go unproven. Merging two
+dilutes the chain — Layer 4 inspects one, the rest go unproven. Merging
 scenarios into one mega-test is the same problem inverted.
 
 Table-driven tests fine if each named row maps cleanly to one scenario. Extra

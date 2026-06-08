@@ -51,11 +51,9 @@ slug=${SLUG:-$(echo "$branch" | sed -E 's|^(feat\|fix\|chore)/||' \
 art="$FORGE_ART/branches/$slug"
 ```
 
-`$FORGE_ART` resolves against the **worktree**, not `$FORGE_HOME`. The chain
-lives under the PR — even with an `[artifacts].prefix`, that only nests it
-deeper _inside this worktree_. Finding `forge.toml` under `~/.claude/forge/`
-does not mean the chain is there; never look for `branches/<slug>/` under the
-home.
+`$FORGE_ART` resolves against the **worktree**, not `$FORGE_HOME` — even with an
+`[artifacts].prefix`, that only nests it deeper inside this worktree. Never look
+for `branches/<slug>/` under `~/.claude/forge/`.
 
 ### 2. Read artifacts
 

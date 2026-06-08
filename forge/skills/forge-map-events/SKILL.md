@@ -201,13 +201,10 @@ Multiple transports coexist — parse each, attribute each event.
 ## Honesty
 
 - **Never resolve a dynamic topic by guessing.** Templated / config-driven
-  topics stay literal-with-placeholders + gap. Agents reconcile against config
-  maps (see `/forge-map-config`) themselves.
+  topics stay literal-with-placeholders + gap.
 - **Producer-only or consumer-only is valid.** Empty `consumers[]` (or
-  `producers[]`) is a real signal — surfaces orphaned topics for the agent.
-  Never invent a counterpart.
-- **Payload schemas link, not embed.** Record `schema_file` paths; let the agent
-  open the schema if it needs the full shape.
+  `producers[]`) is a real signal. Never invent a counterpart.
+- **Payload schemas link, not embed.** Record `schema_file` paths only.
 - **Read-only on host repo.** Writes confined to
   `$FORGE_HOME/maps/main/events.json` and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every producer / consumer carries

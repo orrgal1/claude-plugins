@@ -28,11 +28,10 @@ user-invocable: true
 
 A **thin** chain layer over the chain-blind `review` capability (default
 `/review`, `@orrgal1/devloop`). The capability owns the whole engine — channel
-selection, the lens fan-out (`lens-reviewer` agent + lens pool), the built-in
-`/code-review` + `/security-review` channels, the gate, normalize/aggregate/
-synthesize, and `--embed`. This wrapper adds only what's **forge-chain**: the
-proof precondition, the chain context + chain lenses, chain-located state, and
-forge's richer verdict ladder.
+selection, the lens fan-out, the built-in `/code-review` + `/security-review`
+channels, the gate, normalize/aggregate/synthesize, and `--embed`. This wrapper
+adds only what's **forge-chain**: the proof precondition, the chain context +
+chain lenses, chain-located state, and forge's richer verdict ladder.
 
 Most flags (`--channels`, `--add-channel`, `--drop-channel`, `--channel … --…`,
 `--persona`/`--personas`/`--no-persona`, `--embed`, a PR#/branch) pass straight

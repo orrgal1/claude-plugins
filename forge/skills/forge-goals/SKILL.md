@@ -40,10 +40,9 @@ Wrong: "Refactor X" (task), "Add tests" (means), "Fix the bug" (no specificity).
 
 **Proof depends on shape.** Behavioral goals (capability / end-state / invariant
 with a runtime observable) → **scenarios** (`/forge-scenarios` → component
-tests). **Removal** + structural goals — end-state is a source-level fact with
-no runtime observable ("the field is gone") → **validations**
-(`/forge-validations` → `git grep` / build predicate, or agent attestation). A
-goal may carry both: removal as validations + one behavioral guard scenario.
+tests). **Removal** + structural goals (source-level fact, no runtime
+observable: "the field is gone") → **validations** (`/forge-validations` →
+`git grep` / build predicate, or agent attestation). A goal may carry both.
 Every goal needs ≥1 proof, not ≥1 of each.
 
 ## Count — hard cap 3, floor 1

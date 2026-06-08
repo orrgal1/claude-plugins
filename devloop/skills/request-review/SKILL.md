@@ -132,9 +132,8 @@ converting draft→ready is a **lazy** prerequisite carried out only if needed.
 2. **Request** — `gh pr edit <pr> --add-reviewer <login>` (`--reviewer`, else
    `top`).
 
-It exists so an approved request is one command — **but moving a PR out of draft
-and requesting review is the author's gesture.** Run `--ready` only on explicit
-operator approval.
+Moving a PR out of draft and requesting review is the author's gesture — run
+`--ready` only on explicit operator approval.
 
 ## Usage
 

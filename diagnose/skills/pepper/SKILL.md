@@ -36,9 +36,9 @@ Choose a prefix that won't collide with anything in the codebase:
 [DBG-<topic>-<session>]    e.g. [DBG-swap-42]
 ```
 
-`Grep` the codebase for the literal prefix first and confirm zero hits. Unique
-markers make cleanup safe and `Grep` cheap. Two-digit session number lets you
-pepper twice in one debugging run without confusion.
+`Grep` the codebase for the literal prefix first and confirm zero hits — unique
+markers make cleanup safe and `Grep` cheap. The two-digit session number lets
+you pepper twice in one run.
 
 ## 2. Pick placement points
 
@@ -105,8 +105,7 @@ Add / move markers, bump the session number if desired, re-run.
 
 ## 7. Cleanup (mandatory)
 
-When the bug is diagnosed, remove every marker. The unique prefix makes this
-safe:
+When the bug is diagnosed, remove every marker:
 
 ```bash
 grep -rn "\[DBG-swap-42\]" <repo>   # review what you added

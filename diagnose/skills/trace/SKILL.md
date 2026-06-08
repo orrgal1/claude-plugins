@@ -27,9 +27,8 @@ agent context, route it to disk and extract only what you need.
 
 ## The rule
 
-**Never let verbose output land directly in agent context.** Every byte of log
-you scroll past is a byte of cache gone. File → Grep → Read-with-offset stays
-cheap.
+**Never let verbose output land directly in agent context.** File → Grep →
+Read-with-offset stays cheap.
 
 ## Pattern 1 — run a single command, keep output
 
@@ -45,8 +44,7 @@ Grep pattern="<marker>" path=/tmp/trace-<topic>.log -A 3 -B 1
 Read file_path=/tmp/trace-<topic>.log offset=<N> limit=50
 ```
 
-Never `cat` the whole file. If you think you need to, you don't — narrow the
-`Grep`.
+Never `cat` the whole file — narrow the `Grep`.
 
 ## Pattern 2 — background a long-running process
 
@@ -104,5 +102,4 @@ Then treat `/tmp/window.log` as the full context — it's small enough to read.
 - Use a unique `<topic>` per debugging run so concurrent sessions don't clobber
   each other's files.
 - `rm /tmp/trace-<topic>.log*` when the investigation is done.
-- Don't commit trace files. Add `/tmp/` patterns to `.gitignore` only if you're
-  genuinely putting traces inside the repo (don't).
+- Don't commit trace files; keep them in `/tmp/`, not the repo.

@@ -194,13 +194,12 @@ the candidate files. Never guess a schema.
 
 ## Honesty
 
-- **Migrations win on conflict with stale ORM models** only if the operator asks
-  — the generator never picks. Both views emit, gaps flag the conflict.
+- **Conflict between migrations and stale ORM models** — never pick. Both views
+  emit, gaps flag the conflict.
 - **Never synthesize a column.** Unparsed → `type: "unknown"` + gap.
-- **Empty result is valid.** `items: []` + `gaps: [{reason: no-db-signal}]` is
-  the right answer for a repo without persistence.
+- **Empty result is valid.** `items: []` + `gaps: [{reason: no-db-signal}]` for
+  a repo without persistence.
 - **Read-only on the host repo.** Writes confined to
-  `$FORGE_HOME/maps/main/db.json` and `$FORGE_HOME/forge.toml`. Never touch
-  tracked files.
+  `$FORGE_HOME/maps/main/db.json` and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every item carries `source` +
   `source_line`.

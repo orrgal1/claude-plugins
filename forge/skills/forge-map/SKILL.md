@@ -40,9 +40,9 @@ recap. Generators are not user-invocable — go through here.
 
 It also runs **ad-hoc maps**: operator describes an area in prose
 (`/forge-map adhoc <name> --prompt "<description>"`) and the dispatcher scans
-inline, writing the same JSON envelope. Lets the operator spin up new map types
-on demand without authoring a generator — for one-off or still-shaping areas.
-Promote to a real generator once the shape stabilizes.
+inline, writing the same JSON envelope — for one-off or still-shaping areas
+without authoring a generator. Promote to a real generator once the shape
+stabilizes.
 
 ## Ground truth + branch divergence + absorption
 
@@ -333,5 +333,4 @@ Unknown subtables tolerated (forward-compat), ignored by `--list`.
   contract — same envelope, atomic write, `$FORGE_HOME/`-only surface, `gap`
   discipline. The prompt directs _what_ to scan, not _how_ output is shaped.
 - **Promote ad-hoc when it stabilizes.** Once a name re-runs with a steady
-  shape, ship a generator and drop the `adhoc` form. Keeping it forever lets the
-  shape silently drift.
+  shape, ship a generator and drop the `adhoc` form.

@@ -94,8 +94,7 @@ independent loop — concurrent runs in different slots never share files:
 Bootstrap the dir + nested `.gitignore` via `/pr-artifacts` (inline the slug
 
 - bootstrap recipes with `SKILL_NAME="grind"`) on first run; re-used on resume.
-  None of the slot files are tracked — grind state is all operator-local
-  scratch.
+  None of the slot files are tracked.
 
 ## Process
 
@@ -116,9 +115,8 @@ For each iteration up to `max`:
 1. **Verify**. Run the verification command. Exit 0 → `SUCCESS`, stop.
 2. **Pick** the next unchecked item in `plan.md`. If the list is empty, infer
    one step from the latest scratchpad signal and append it.
-3. **Implement**. One step. Stay narrow — don't smuggle in unrelated changes. If
-   the only way to make the verification pass is editing a `protect=` path, stop
-   `BLOCKED` (the loop must not cheat the check by editing what it protects).
+3. **Implement**. One step. If the only way to make the verification pass is
+   editing a `protect=` path, stop `BLOCKED`.
 4. **Re-verify**. Capture exit code and the last 30 lines of output.
 5. **Log** to `scratchpad.md`:
    ```
@@ -203,13 +201,10 @@ re-invoke with a fresh target. To wipe everything: delete
 
 ## Anti-patterns
 
-- Verification that's a heuristic ("looks good", "no obvious errors") — the loop
-  will lie to you. Pick a command.
-- Letting the loop swallow a real refactor. If scratchpad shows thrash, stop and
-  rethink the plan; don't grind harder.
+- Verification that's a heuristic ("looks good") — the loop will lie. Pick a
+  command.
 - Running `/grind` in a worktree that shares mutable state (DBs, dev servers)
-  with another active task. Slots scope scratchpad files but not the underlying
-  environment — two loops touching the same shared dev environment will still
-  collide.
-- Reusing a slot across unrelated targets — old plan.md and scratchpad.md will
+  with another active task. Slots scope scratchpad files, not the environment —
+  two loops on the same dev environment still collide.
+- Reusing a slot across unrelated targets — old plan.md and scratchpad.md
   mislead the next run. New target = new slot (or delete the old slot first).

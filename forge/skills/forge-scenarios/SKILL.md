@@ -74,14 +74,9 @@ A scenario's `then:` is exposable by hitting the actual service endpoint — HTT
 response, RPC result, queue message, persisted record, log line, metric, render
 output.
 
-NOT scenarios (internal → unit-level concern, not a scenario):
-
-- "Returns from private method X with value Y." Internal mechanic.
-- "Field `cache.lastRefresh` becomes Z." Internal state.
-- "Function W is called." Impl detail.
-
-Only-honest-`then:`-is-internal → promote the closest endpoint-visible
-consequence into the `then:`, or drop the scenario.
+NOT a scenario (internal → unit-level concern): "Field `cache.lastRefresh`
+becomes Z" — internal state. Only-honest-`then:`-is-internal → promote the
+closest endpoint-visible consequence into the `then:`, or drop the scenario.
 
 Consequence: every scenario gets a **component-or-higher tier test**.
 `/forge-tests` rejects unit-tier attachment; `/forge-proof` re-checks; this
@@ -222,14 +217,9 @@ your head reading top-to-bottom = over-specified.
   event, state mutation, response shape). No "calls X with Y" leaks.
 
 Internal-only `then:` ("the cache is warmed", "the mutex held") → flag
-too-internal. Restate in externally observable terms (observing internals is a
-unit-tier concern — scenarios reject unit per § "Scope rule").
+too-internal. Restate in externally observable terms (§ "Scope rule").
 
 ## Output shape (excerpt)
-
-Rendered plain-code-fenced so prettier doesn't reflow the example. The
-**rendered goals.md** uses sub-bullets specifically because they're
-prettier-safe.
 
 ```
 ## G1 — <short name> (main)

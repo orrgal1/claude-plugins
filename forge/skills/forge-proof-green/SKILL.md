@@ -55,8 +55,7 @@ grind's verify command — that coupling is what makes this a forge skill.
 
    Pass the finding-routing guidance below into the loop's brief. grind loops:
    re-prove → fix the smallest blocking set → re-prove, committing each step,
-   until `/forge-proof` PASSes or it stops on budget/stuck/protected edit. grind
-   owns the loop, plan, scratchpad, stuck detection, and per-iter commits.
+   until `/forge-proof` PASSes or it stops on budget/stuck/protected edit.
 
 4. **On SUCCESS** → settle `PROOF_GREEN`, then run `/forge-proof --embed` once
    (one-shot, no push) to write the proof block into the PR body.

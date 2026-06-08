@@ -204,12 +204,10 @@ coexist — parse all, attribute each route.
 
 ## Honesty
 
-- **Never invent a route.** A handler with an unresolvable path / method → emit
-  a gap, skip the item.
-- **Never collapse multi-method routes into one item.** One verb per item;
-  agents filter by method.
+- **Never invent a route.** Unresolvable path / method → gap, skip the item.
+- **Never collapse multi-method routes into one item.** One verb per item.
 - **OpenAPI is authoritative for shape, not for existence.** Spec-only routes
-  are recorded but tagged so agents know they may not be wired.
+  are recorded but tagged.
 - **Read-only on host repo.** Writes confined to
   `$FORGE_HOME/maps/main/api.json` and `$FORGE_HOME/forge.toml`.
 - **Source attribution is mandatory.** Every item carries `handler.file` +

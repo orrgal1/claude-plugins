@@ -75,11 +75,11 @@ set, then hands the loop a single self-contained target:
   max=<N>
 ```
 
-**Key point:** the loop never knows _which_ tests. The wrapper answers "which
-tests" by resolving `links.json` → the verify command (the exact linked
-selectors, full set so sibling regressions surface) + the protect set (every
-linked test file + the chain-contract surfaces). The loop just drives that one
-verify command to exit 0 without editing what it protects.
+**Key point:** the loop never knows _which_ tests. The wrapper resolves
+`links.json` → the verify command (the exact linked selectors, full set so
+sibling regressions surface) + the protect set (every linked test file + the
+chain-contract surfaces). The loop just drives that verify command to exit 0
+without editing what it protects.
 
 ## On capability settle (chain mapping)
 

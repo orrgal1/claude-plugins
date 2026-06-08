@@ -385,16 +385,11 @@ Print the resolved file(s) + the registry subtable. No writes.
 ## Honesty
 
 - **Never invent steps the operator didn't describe.** Q&A is source of truth.
-- **Tools never auto-run during `package`.** Dry-run is opt-in.
 - **`$FORGE_HOME/tools/` is user-layer by default** (see `/forge-setup` § "Forge
   home"). Operator-local, untracked. Team-shared →
   `/forge-setup --migrate repo` + commit `.forge/tools/`.
-- **Operator-named, operator-owned.** Registers + resolves; never imposes
-  structure on what the tool does.
 - **No host-repo edits during `package`.** Writes confined to
   `$FORGE_HOME/tools/` + `$FORGE_HOME/forge.toml`.
-- **Source attribution on capture.** `source` records when + how. Edits refresh
-  `captured`, never rewrite history.
 
 ## Usage
 

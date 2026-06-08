@@ -49,8 +49,8 @@ echo "## already registered (skip / refine these)"
 gfx_index_names
 ```
 
-For a candidate path, size it precisely with `git ls-files <path> | wc -l` and
-sample its languages before proposing.
+Size a candidate path with `git ls-files <path> | wc -l` and sample its
+languages before proposing.
 
 ## 2. Propose
 
@@ -100,5 +100,5 @@ echo "registered domains:"; jq '.indexes' "$reg"
 
 Point the operator at `/graphify-wrapper-sync` to build all registered domains
 (AST, plus semantic where marked), or `/graphify-wrapper-sync <name>` for one.
-For a large first domain, suggest an AST-only `/graphify-wrapper-sync <name>` to
-gauge build time before committing to a `--semantic` pass.
+For a large first domain, suggest an AST-only sync to gauge build time before a
+`--semantic` pass.

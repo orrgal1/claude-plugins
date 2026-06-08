@@ -207,12 +207,11 @@ Multiple stacks coexist — parse each.
 
 - **Never write secret values into the map.** Runtime dotenv files (`.env`,
   `.env.local`, `.env.production`) get `value: "<redacted>"` + gap. Template
-  files (`.env.example`) are treated as safe-to-record because they ship in the
-  repo by design — but still redact any line that looks like a real credential
-  (long random strings, JWTs, base64 blobs over 32 chars).
-- **`secret: true` requires evidence.** Name-based inference is allowed but
-  always paired with a `secret-by-name` gap. Explicit validators / k8s
-  `secretKeyRef` are accepted without a gap.
+  files (`.env.example`) are safe-to-record — but still redact any line that
+  looks like a real credential (long random strings, JWTs, base64 blobs over 32
+  chars).
+- **`secret: true` requires evidence.** Name-based inference always paired with
+  a `secret-by-name` gap. Explicit validators / k8s `secretKeyRef` need no gap.
 - **Read sites are authoritative for required-ness, not declarations.** A var
   declared in `.env.example` but never read → orphan declaration, not required.
   A var read with no default → required, even if absent from every template.

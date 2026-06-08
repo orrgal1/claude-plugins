@@ -32,8 +32,7 @@ monitor, the trigger filter, single-flight, cursor, and re-arm. This wrapper
 picks the **handler** the monitor dispatches and supplies chain context.
 
 `/forge` arms this at `READY` (phase 9.5) so peer feedback is addressed
-hands-free, and at each contract pause in `--contract` mode. Arming is forge's
-job; moving the PR out of draft stays the author's gesture — the watch polls
+hands-free, and at each contract pause in `--contract` mode. The watch polls
 harmlessly while draft and fires once marked ready.
 
 Prereq (refuse without): chain artifacts exist —
@@ -99,7 +98,7 @@ router resumes the awaiting phase directly:
 ## Guardrails
 
 - **Routing only.** Never edits code or chain artifacts — the dispatched
-  consumer / router does, under its own guard.
+  consumer / router does.
 - Capability guarantees (manual lifecycle, single-flight, no self-trigger except
   `--contract`) hold — see the `review_watch` capability.
 

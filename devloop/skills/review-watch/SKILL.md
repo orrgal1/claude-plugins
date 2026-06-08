@@ -34,7 +34,7 @@ review submission, standalone issue comment, review-thread reply, bot /
 external-tool review (e.g. a Reviewable summary comment lands as a GitHub
 comment), or any added comment reading as actionable feedback — runs the
 caller-supplied **`--on-trigger` handler**. On completion the cursor advances
-and the monitor **re-arms**. Hands-free between start and stop.
+and the monitor **re-arms**.
 
 Repo-agnostic and standalone — no dependency on any other plugin or on a forge
 chain. What to _do_ with a trigger is entirely the handler's business; this

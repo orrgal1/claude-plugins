@@ -35,7 +35,7 @@ it (≈170MB Chrome download on first run):
 brew install agent-browser && agent-browser install
 ```
 
-Do not run the install silently — one-prompt confirm, then run.
+One-prompt confirm, then run — never silently.
 
 ## Open Reviewable Landing — Headed
 

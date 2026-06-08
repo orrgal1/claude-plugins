@@ -70,9 +70,9 @@ Attestation form, when no command can express the predicate:
 ```
 
 Sub-bullets, not bare indented `key: value` — prettier reflows bare continuation
-lines into one paragraph, destroying the block; sub-bullets are prettier-safe.
-`check:` command in backticks — inline code spans never wrap, so it stays atomic
-across prettier's 80-col reflow.
+lines into one paragraph; sub-bullets are prettier-safe. `check:` command in
+backticks — inline code spans never wrap, so it stays atomic across prettier's
+80-col reflow.
 
 ID = `VG<n>.<m>`: `VG2.1` is the first validation under `G2`. `VG` prefix is
 distinct from scenarios' `SG` so enumeration never collides (`^- VG\d+\.\d+` vs

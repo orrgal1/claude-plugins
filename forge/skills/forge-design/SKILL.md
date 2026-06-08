@@ -121,8 +121,7 @@ autopilot.
 
    **Right-size to the diff.** Surgical / small-diff PRs (≈≤5 files, no new
    subsystem, no new module boundary) → tight per-goal element list
-   (`file · symbol · one-line role`), not a component tree. If every "component"
-   wraps a single existing function or one-line edit, collapse. Anti-pattern: 8
+   (`file · symbol · one-line role`), not a component tree. Anti-pattern: 8
    components for a flag repoint. Data flow to a line or two.
 
 4. **Sketch data flow.** Short narrative / numbered list, SG tags inline.
@@ -131,9 +130,8 @@ autopilot.
 5. **Record decisions.** Real ones only — "Use Postgres" when everything's
    Postgres isn't a decision. Cap soft ~5; more = design not settled.
 
-   **Format — nested, unambiguous.** Chosen plan on its own line; rejected
-   alternatives under a `Rejected options:` sub-bullet so the parent line isn't
-   misread as the rejected one:
+   **Format — nested.** Chosen plan on its own line; rejected alternatives under
+   a `Rejected options:` sub-bullet:
 
    ```markdown
    - D1 — <chosen decision, stated as the plan>.
@@ -141,14 +139,12 @@ autopilot.
        - <alternative> — <why rejected>.
    ```
 
-   Never put a bare inline `Alternative:` / `Rejected:` on the decision's line.
-
    **Ground in the host repo.** Decisions reflect the host codebase's actual
    conventions, verified this turn — not generic best-practice. E.g. before
    "reserve vs bare-delete" in a proto, grep the target file's `reserved` usage
-   and match; before an error shape, read sibling handlers. Cite evidence in the
-   rationale (`Why: matches existing <file>:<line> pattern`), not a textbook
-   rule. No convention → say so and pick explicitly.
+   and match. Cite evidence in the rationale
+   (`Why: matches existing <file>:<line> pattern`). No convention → say so and
+   pick explicitly.
 
 6. **Build coverage map.** Mechanical — walk `proves:` lines, invert into
    `SG → elements`. Refuse to write if coverage incomplete.

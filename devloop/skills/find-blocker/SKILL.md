@@ -31,8 +31,7 @@ channels, then emits a neutral, ready-to-watch **condition spec** (waitable) or
 declares the block genuine.
 
 Repo-agnostic and standalone — no dependency on any other plugin or on a forge
-chain. The **discovery** half of an external-block recognizer; it never watches,
-fixes, or edits — it gathers, classifies, and emits a spec the caller acts on.
+chain. The **discovery** half of an external-block recognizer.
 
 Prereq: a PR exists for the current branch (or `--pr`). No PR → exit.
 

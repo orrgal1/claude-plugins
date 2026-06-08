@@ -120,6 +120,5 @@ contract holds with no extra splice work here. The capability's
 - **Never touches a collapsible block.** Proof and review own theirs; the
   capability preserves the entire stack verbatim across a brief rewrite.
 - **Never pushes or triggers CI.** Body-only edit, like `/forge-proof --embed`.
-- **Stale brief is a defect, not a courtesy.** `/forge` refreshes it
-  automatically when intent evolves (`pr.brief_stale` drift); it is never
-  offered as an optional "want me to…?".
+- **Stale brief is a defect.** `/forge` refreshes it automatically when intent
+  evolves (`pr.brief_stale` drift); never offered as a "want me to…?".

@@ -108,9 +108,3 @@ brief:    <one-line preview>
 /pr-brief --region pr-summary                      # custom marker region
 /pr-brief --json                                  # machine receipt
 ```
-
-## Notes
-
-- **Touches only its region.** Everything outside the marker pair is preserved
-  verbatim — the brief is the only thing this skill writes.
-- **Never pushes or triggers CI.** Body-only edit.

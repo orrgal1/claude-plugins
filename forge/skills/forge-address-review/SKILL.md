@@ -50,9 +50,8 @@ state, the self-review marker, and CHAIN-IMPACTING escalation routing.
 
 - `--protect` carries the chain-contract surfaces (goals/design/links + every
   test in `links.json`). A capability `PROTECTED`-escalated item ⇒
-  **CHAIN-IMPACTING**: route to the operator for a deliberate chain edit +
-  `/forge` re-verify — never satisfied inline. Mirrors `/forge-review-green`'s
-  guard.
+  **CHAIN-IMPACTING**: route to the operator for a chain edit + `/forge`
+  re-verify — never satisfied inline. Mirrors `/forge-review-green`'s guard.
 - `--state` lands `external-<cycle>.md` + reply scratch where `/forge-status`
   and the watch expect them.
 - After the capability returns, validate linked tests via the `test` capability

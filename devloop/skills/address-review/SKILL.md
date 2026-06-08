@@ -120,16 +120,15 @@ unless `--auto`.
 
 Per item, in triaged order:
 
-- **fix** — smallest delta; no drive-by refactors. Commit per item:
+- **fix** — smallest delta. Commit per item:
   `address-review: <T#|S#> — <one-line>`. Queue reply in `<state>/replies.md`.
 - **push back** — queue the technical-reason reply; no code change.
 - **defer** — note + reason (+ follow-up ref); no reply queued.
 - **clarify** — halt that item to the operator.
 
-Never touch a `--protect` path as a "fix" — escalate it. After the walk: one
-self-review pass over the cumulative diff. Write per-item status to
-`<state>/external-<cycle>.md` (`new`/`addressed`/`regressed`/`reopened`/
-`persistent`).
+After the walk: one self-review pass over the cumulative diff. Write per-item
+status to `<state>/external-<cycle>.md`
+(`new`/`addressed`/`regressed`/`reopened`/ `persistent`).
 
 ### 4. Push, reply, re-request
 

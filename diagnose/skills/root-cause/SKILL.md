@@ -34,9 +34,8 @@ allowed-tools:
 > collapses the fan-out to a single pass.
 
 Find the root cause of anything — incidents, flaky tests, performance
-regressions, unexpected behavior. Doesn't stop until it lands a
-hypothesis-backed-by-hard-evidence, or exhausts sources and tells you what's
-left.
+regressions, unexpected behavior. Doesn't stop until it lands a hypothesis
+backed by hard evidence, or exhausts sources and reports what's left.
 
 ## Usage
 

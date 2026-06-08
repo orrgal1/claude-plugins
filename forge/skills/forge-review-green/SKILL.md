@@ -57,8 +57,7 @@ blocker + 0 major. Minors and nits do **not** gate — they survive to deferral
   in-loop; grind stops `BLOCKED` on it (§ Contract findings).
 
 **`/forge-review` fan-out runs in the main thread** — a loop step can't nest
-fan-out. The verify command's invocation of `/forge-review` is therefore the
-controller's, consistent with grind running in the main context.
+fan-out, so the verify command's `/forge-review` is the controller's.
 
 ## Loop guidance (chain bookkeeping the steps follow)
 
