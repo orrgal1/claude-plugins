@@ -19,7 +19,6 @@ allowed-tools:
   - Grep
   - Glob
   - Agent
-  - ScheduleWakeup
   - Monitor
   - TaskStop
 user-invocable: true
@@ -141,10 +140,18 @@ CI is driven back to green and `last_green` advances.
   pauses fixing and surfaces (keeps armed); the caller resolves, the next HEAD
   re-fires.
 
-**WAIT** (controller-owned): bounded sleep ~120–180s to keep the prompt cache
-warm — `ScheduleWakeup` under `/loop`, else `Monitor` with an until-loop. Don't
-handroll a `Bash` poll predicate (a naive `until pending==0` deadlocks on
-perpetual-pending gates). Re-enter at the next `ci-check` after wakeup.
+**WAIT** (controller-owned, builtin `Monitor`): arm a `Monitor` that polls every
+**60s** and emits one line per state change, then re-enter `ci-check` on the
+event. On `RUNNING`, poll `gh pr checks <num>` and emit each check that lands in
+a terminal bucket, exiting once no required check is left pending; in
+continuous-mode idle, poll for a new HEAD sha or a merged/closed PR instead.
+Monitor runs in the background and re-invokes the controller only on a real
+transition — not on every poll — so the 1-min cadence costs nothing between
+events (no foreground `sleep`, no per-tick re-invocation, no prompt-cache
+concern). Give it a bounded `timeout_ms` (a few minutes) as a backstop: a
+perpetual-pending gate (e.g. a never-resolving `code-review/*` context) hits the
+timeout and returns control to `ci-check` — which classifies it `GATED` —
+instead of deadlocking the watch.
 
 **Act-vs-wait** per tick: act when the failure is self-contained and unrelated
 to what's still running; wait when in-flight jobs touch the same surface or the
