@@ -752,13 +752,17 @@ legacy="$HOME/.claude/.fordefi/tools.yml"     # retired @fordefi/setup output
   yet: map each `capabilities.<name>.{skill,provider,fallback}` into the TOML
   shape, rewriting any `/ralph` → `/grind` (renamed plugin). After a successful
   write, remove the legacy file. Surface what migrated.
-- Else **scan** installed plugins for each capability's candidate skills
-  (`iteration_loop`→`grind`; `root_cause`→`root-cause`; `hypothesize`→
-  `hypothesize`; `trace_logging`→`trace`,`pepper`), pick the first installed as
-  recommended, confirm/override with the operator (`--yes` accepts), and write
-  the rows that resolved. Unresolved capability → `skill = ""` so the shape
-  stays stable and consumers detect the gap. Name any unmapped capability + the
-  plugin that would fill it.
+- Else **scan** installed plugins for each capability's candidate skills —
+  diagnose/grind: `iteration_loop`→`grind`; `root_cause`→`root-cause`;
+  `hypothesize`→`hypothesize`; `trace_logging`→`trace`,`pepper`. Chain-blind PR
+  ops (all `@orrgal1/devloop`): `ci_green`→`ci-green`; `review`→`review`;
+  `review_watch`→`review-watch`; `address_review`→`address-review`;
+  `pr_brief`→`pr-brief`; `request_review`→`request-review`;
+  `find_blocker`→`find-blocker`. Pick the first installed as recommended,
+  confirm/override with the operator (`--yes` accepts), and write the rows that
+  resolved. Unresolved capability → `skill = ""` so the shape stays stable and
+  consumers detect the gap. Name any unmapped capability + the plugin that would
+  fill it.
 
 5b. **Global `forge-resolve` helper** (machine-scoped, idempotent — like 5a).
 Install the deterministic artifact resolver so every skill resolves
