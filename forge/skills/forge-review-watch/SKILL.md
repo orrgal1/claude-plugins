@@ -40,7 +40,10 @@ Prereq (refuse without): chain artifacts exist —
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules.
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules.
 2. Resolve the `review_watch` capability (`~/.claude/forge/capabilities.toml`;
    unconfigured → `NEEDS_SETUP cap=review_watch`).
 3. `stop` → pass through:

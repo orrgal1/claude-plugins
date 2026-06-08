@@ -34,8 +34,11 @@ state, the self-review marker, and CHAIN-IMPACTING escalation routing.
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules. Load `goals.md` +
-   `links.json`. Missing → exit (no chain to guard).
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules. Load `goals.md` + `links.json`. Missing →
+   exit (no chain to guard).
 2. Resolve the `address_review` capability (`~/.claude/forge/capabilities.toml`;
    unconfigured → `NEEDS_SETUP cap=address_review`).
 

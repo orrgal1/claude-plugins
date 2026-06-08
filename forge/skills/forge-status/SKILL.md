@@ -44,16 +44,20 @@ yet). Exit non-zero.
 
 ### 1. Resolve slug + worktree
 
-```
-branch=$(git branch --show-current)
-slug=${SLUG:-$(echo "$branch" | sed -E 's|^(feat\|fix\|chore)/||' \
-  | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')}
-art="$FORGE_ART/branches/$slug"
+Run the canonical resolver — it derives slug, `$FORGE_ART`, and chain presence
+exactly as `/forge-start` created them (single source; no divergent sed):
+
+```bash
+eval "$(~/.claude/forge/bin/forge-resolve.sh --sh)"   # --json for structured
+slug="$FORGE_SLUG"; art="$FORGE_CHAIN_ROOT"
 ```
 
-`$FORGE_ART` resolves against the **worktree**, not `$FORGE_HOME` — even with an
-`[artifacts].prefix`, that only nests it deeper inside this worktree. Never look
-for `branches/<slug>/` under `~/.claude/forge/`.
+`$FORGE_ART` is **worktree-rooted**, not `$FORGE_HOME` — even with an
+`[artifacts].prefix`, that only nests it deeper inside this worktree. Never
+`ls`/`find` for `branches/<slug>/`, and never look under `~/.claude/forge/`.
+`FORGE_CHAIN_PRESENT=false` → no chain here (run `/forge-start`);
+`FORGE_BRANCHES` lists existing chain dirs for reconciliation if a passed
+`--slug` disagrees.
 
 ### 2. Read artifacts
 

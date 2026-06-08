@@ -33,7 +33,10 @@ blocker + 0 major. Minors and nits do **not** gate — they survive to deferral
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules. Confirm
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules. Confirm
    `$FORGE_ART/branches/<slug>/{goals.md,links.json}` exist.
 2. **Entry condition** (refuse without): `/forge-proof` PASS + linked tests all
    green/skipped (cached OK). Tests red → `/forge-impl-green` first.

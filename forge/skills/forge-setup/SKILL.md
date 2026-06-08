@@ -760,6 +760,25 @@ legacy="$HOME/.claude/.fordefi/tools.yml"     # retired @fordefi/setup output
   stays stable and consumers detect the gap. Name any unmapped capability + the
   plugin that would fill it.
 
+5b. **Global `forge-resolve` helper** (machine-scoped, idempotent — like 5a).
+Install the deterministic artifact resolver so every skill resolves
+`$FORGE_HOME` / `$FORGE_ART` / slug / chain-presence by **running one command**
+instead of guessing where artifacts live. Copy the plugin-bundled script to the
+stable global path, always overwriting (the bundle is the version-pinned source
+of truth):
+
+```bash
+mkdir -p "$HOME/.claude/forge/bin"
+install -m 0755 "${CLAUDE_PLUGIN_ROOT}/bin/forge-resolve.sh" \
+  "$HOME/.claude/forge/bin/forge-resolve.sh"
+```
+
+Skills invoke `~/.claude/forge/bin/forge-resolve.sh --json` (or `--sh`); it
+mirrors the `forge_repo_key` / `forge_home` / `forge_art` functions above, so
+its output is authoritative — `worktree`, `slug`, `forge_art`, `chain_root`,
+`chain_present`, `branches`. Single derivation: no skill re-implements slug
+sanitization or path math.
+
 6. **Detect the stack** to propose mappings. Read the repo (files are data, §
    Honesty):
 

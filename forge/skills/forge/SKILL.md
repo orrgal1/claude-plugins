@@ -154,10 +154,18 @@ Both refuse if `/forge-status` reports no awaiting phase.
 
 ## Pre-phase — resolve
 
-- **Setup gate (first, hard).** Confirm `$FORGE_HOME/forge.toml` exists with
-  `[meta].ready = true` for this repo. Absent → halt `SETUP_REQUIRED`, tell the
-  operator to run `/forge-setup`. No phase runs without it.
-- Worktree from cwd. Slug from branch (`--slug` overrides). Mode default `auto`.
+- **Resolve identity + artifact root first — never guess.** Run
+  `~/.claude/forge/bin/forge-resolve.sh --json` (installed by `/forge-setup`;
+  falls back to the plugin's `bin/forge-resolve.sh`). It prints `worktree`,
+  `slug`, `repo_key`, `forge_home`, `forge_toml`, `ready`, `forge_art`,
+  `chain_root`, `chain_present` — the canonical `forge_repo_key`/`forge_home`/
+  `forge_art` derivation. **Use its values verbatim.** `$FORGE_ART` is
+  **worktree-rooted** — never `ls`/`find` for `branches/<slug>/`, and never look
+  under `~/.claude/forge/`. `--slug` overrides the derived slug; mode default
+  `auto`.
+- **Setup gate (hard).** Resolver `ready != true` (no `[meta].ready = true` in
+  `forge_toml`) → halt `SETUP_REQUIRED`, tell the operator to run
+  `/forge-setup`. No phase runs without it.
 - Source: argument → `gh pr view --json body` → conversation seed. Mandatory for
   start; optional for resumes.
 - `/forge-status --slug <slug> --json` → entry phase per its mapping table.

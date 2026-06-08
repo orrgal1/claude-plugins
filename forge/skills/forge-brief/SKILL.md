@@ -70,8 +70,11 @@ Rules:
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules. No PR → no-op, hint "no PR
-   yet — `/forge-start` opens one."
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules. No PR → no-op, hint "no PR yet —
+   `/forge-start` opens one."
 2. Resolve the `pr_brief` capability (`~/.claude/forge/capabilities.toml`;
    unconfigured → `NEEDS_SETUP cap=pr_brief`, point at `/forge-setup`). No
    built-in substitute.

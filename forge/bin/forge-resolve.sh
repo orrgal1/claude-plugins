@@ -28,7 +28,14 @@ if ! worktree="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   echo "forge-resolve: not inside a git worktree (cwd=$(pwd))" >&2; exit 3
 fi
 branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
-if [ -n "$slug_override" ]; then slug="$slug_override"; else slug="${branch//\//-}"; fi
+# Slug derivation MUST match /forge-start (the dir creator): lowercase, non-alnum
+# runs -> '-', strip leading/trailing '-'. --slug or $SLUG override.
+slug_override="${slug_override:-${SLUG:-}}"
+if [ -n "$slug_override" ]; then
+  slug="$slug_override"
+else
+  slug="$(printf '%s' "$branch" | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//')"
+fi
 
 # --- tiny TOML reader: value of <key> in [<section>], '' if absent ---------
 toml_get() { # <file> <section> <key>
@@ -95,6 +102,18 @@ if [ -d "$chain_root" ] && { [ -f "$chain_root/links.json" ] || [ -f "$chain_roo
   chain_present="true"
 fi
 
+# Existing chain dirs — reconciliation net if the derived slug ever disagrees
+# with what's on disk. Space-separated for --sh; JSON array for --json.
+existing=""
+if [ -d "$forge_art/branches" ]; then
+  for d in "$forge_art"/branches/*/; do
+    [ -d "$d" ] || continue
+    n="$(basename "$d")"; existing="$existing${existing:+ }$n"
+  done
+fi
+existing_json=""
+for n in $existing; do existing_json="$existing_json${existing_json:+, }\"$n\""; done
+
 # --- emit ------------------------------------------------------------------
 if [ "$fmt" = "sh" ]; then
   cat <<EOF
@@ -108,6 +127,7 @@ FORGE_READY='$ready'
 FORGE_ART='$forge_art'
 FORGE_CHAIN_ROOT='$chain_root'
 FORGE_CHAIN_PRESENT='$chain_present'
+FORGE_BRANCHES='$existing'
 EOF
 else
   cat <<EOF
@@ -122,7 +142,8 @@ else
   "prefix": "$prefix",
   "forge_art": "$forge_art",
   "chain_root": "$chain_root",
-  "chain_present": $chain_present
+  "chain_present": $chain_present,
+  "branches": [$existing_json]
 }
 EOF
 fi

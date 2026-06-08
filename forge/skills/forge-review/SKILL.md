@@ -39,7 +39,10 @@ through.
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules.
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules.
 2. Resolve the `review` capability (`~/.claude/forge/capabilities.toml`;
    unconfigured → `NEEDS_SETUP cap=review`, point at `/forge-setup`). No
    built-in substitute.

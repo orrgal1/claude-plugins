@@ -46,7 +46,10 @@ path + function. Missing → exit, point at `/forge` or `/forge-tests`.
 
 ## Resolve
 
-1. Resolve slug + worktree + PR per `/forge` rules. Verify prereqs.
+1. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules. Verify prereqs.
 2. Resolve the `iteration_loop` capability (`~/.claude/forge/capabilities.toml`;
    default `/grind`; unconfigured → `NEEDS_SETUP cap=iteration_loop`, point at
    `/forge-setup`).

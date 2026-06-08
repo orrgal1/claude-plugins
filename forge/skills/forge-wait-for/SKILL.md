@@ -93,8 +93,11 @@ the resume to the operator).
 
 1. `stop` arg → resolve slug, `TaskStop` the wait monitor for this PR, clear
    `busy`, append `stop` to `log.md`, report, exit.
-2. Resolve slug + worktree + PR per `/forge` rules. Load `goals.md` +
-   `links.json`. Missing → exit (no chain to resume).
+2. Resolve the chain — run `~/.claude/forge/bin/forge-resolve.sh --json` and use
+   its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
+   `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
+   resolve the PR per `/forge` rules. Load `goals.md` + `links.json`. Missing →
+   exit (no chain to resume).
 3. Resolve `--from`: explicit wins; else `/forge-status --slug <slug> --json` →
    the halted/earliest-unsatisfied phase. State the target:
    `Waiting to resume PR #<N> at phase <from> when <condition> clears.`
