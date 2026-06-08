@@ -123,13 +123,17 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
 
 ## Install
 
-From the `orrgal1` marketplace (forge runs standalone; `devloop` is optional —
-it provides the recommended `/restack`, see **Dependency** above):
+From the `orrgal1` marketplace. forge runs **standalone** — on the built-in
+plain-git restack and the always-on `/code-review` + `/security-review` channels
+— but **`devloop` is the strongly recommended companion**: it powers the
+`/forge-review` lens fan-out, `request_review`, `find_blocker`, and the richer
+stacked-PR `/restack` (see **Dependency** and **Review** above):
 
 ```
 /plugin marketplace add orrgal1/claude-plugins
 /plugin install forge@orrgal1
-/plugin install devloop@orrgal1   # optional: richer stacked-PR /restack
+/plugin install devloop@orrgal1   # recommended: powers /forge-review,
+                                  # request-review, find-blocker, /restack
 ```
 
 Or point Claude Code at a local checkout:
