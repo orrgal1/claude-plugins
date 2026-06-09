@@ -166,6 +166,15 @@ Both refuse if `/forge-status` reports no awaiting phase.
 - **Setup gate (hard).** Resolver `ready != true` (no `[meta].ready = true` in
   `forge_toml`) → halt `SETUP_REQUIRED`, tell the operator to run
   `/forge-setup`. No phase runs without it.
+- **Provider preflight (hard).** Resolve every required registry cap up front
+  (`/forge-setup` § "Global agent capabilities" resolution contract): override →
+  its plugin; else the built-in default provider. Any required cap un-overridden
+  whose default provider is **not installed** → halt
+  `PROVIDER_MISSING provider=<p> caps=<list>` (collapsed per provider —
+  `@orrgal1/devloop` absent ⇒ the un-overridden PR-op caps; `@orrgal1/grind`
+  absent ⇒ `iteration_loop`). Fix: install the provider, or override the caps
+  via `/forge-setup`. Refuses at entry, not mid-chain; each step re-checks at
+  point of use. This is the deliberate forge↔devloop/grind coupling.
 - Source: argument → `gh pr view --json body` → conversation seed. Mandatory for
   start; optional for resumes.
 - `/forge-status --slug <slug> --json` → entry phase per its mapping table.
@@ -548,9 +557,11 @@ own no-double-arm guard).
 After arming the watch, forge **proposes** moving the PR out of draft for peer
 review:
 
-1. Resolve the `request_review` capability (default `/request-review`,
-   `@orrgal1/devloop`; unconfigured → `NEEDS_SETUP cap=request_review`). Run it
-   for this branch's PR, persisting the verdict to the chain via `--out`:
+1. Resolve the `request_review` capability: override → use it; else fall back to
+   the default `/request-review` (`@orrgal1/devloop`); default provider absent &
+   no override → refuse
+   `PROVIDER_MISSING cap=request_review provider=@orrgal1/devloop`. Run it for
+   this branch's PR, persisting the verdict to the chain via `--out`:
    `/request-review --json --out $FORGE_ART/branches/<slug>/reviewer/last.json`
    → ranked candidate(s) + evidence (same-stack reviewers > reviewers of the
    author's work > people the author reviews > code-area / CODEOWNERS).
@@ -663,9 +674,11 @@ halt the operator must act on.
 
 On a waitable halt:
 
-1. Resolve the `find_blocker` capability (default `/find-blocker`,
-   `@orrgal1/devloop`; unconfigured → `NEEDS_SETUP cap=find_blocker`). Run it
-   for this PR with the halt verdict as a hint, persisting to the chain:
+1. Resolve the `find_blocker` capability: override → use it; else fall back to
+   the default `/find-blocker` (`@orrgal1/devloop`); default provider absent &
+   no override → refuse
+   `PROVIDER_MISSING cap=find_blocker provider=@orrgal1/devloop`. Run it for
+   this PR with the halt verdict as a hint, persisting to the chain:
    `/find-blocker --hint <verdict> --json --out $FORGE_ART/branches/<slug>/blocker/last.json`
    (pass `--infra-cmd` from the repo's `infra_health` wiring if present) —
    confirm a _peripheral_ blocker exists and get its neutral condition spec.

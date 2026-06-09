@@ -50,9 +50,12 @@ path + function. Missing → exit, point at `/forge` or `/forge-tests`.
    its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules. Verify prereqs.
-2. Resolve the `iteration_loop` capability (`~/.claude/forge/capabilities.toml`;
-   default `/grind`; unconfigured → `NEEDS_SETUP cap=iteration_loop`, point at
-   `/forge-setup`).
+2. Resolve the `iteration_loop` capability
+   (`~/.claude/forge/capabilities.toml`): override → use it; else fall back to
+   the default `/grind` (`@orrgal1/grind`). Default provider absent & no
+   override → refuse
+   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install it or
+   override via `/forge-setup`).
 
 ## Baseline & failure handling
 

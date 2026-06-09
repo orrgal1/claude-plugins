@@ -39,8 +39,12 @@ state, the self-review marker, and CHAIN-IMPACTING escalation routing.
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules. Load `goals.md` + `links.json`. Missing →
    exit (no chain to guard).
-2. Resolve the `address_review` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=address_review`).
+2. Resolve the `address_review` capability
+   (`~/.claude/forge/capabilities.toml`): override → use it; else fall back to
+   the default `/address-review` (`@orrgal1/devloop`). Default provider absent &
+   no override → refuse
+   `PROVIDER_MISSING cap=address_review provider=@orrgal1/devloop` (install it
+   or override via `/forge-setup`).
 
 ## Invoke the capability
 

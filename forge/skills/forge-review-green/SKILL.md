@@ -40,8 +40,12 @@ blocker + 0 major. Minors and nits do **not** gate — they survive to deferral
    `$FORGE_ART/branches/<slug>/{goals.md,links.json}` exist.
 2. **Entry condition** (refuse without): `/forge-proof` PASS + linked tests all
    green/skipped (cached OK). Tests red → `/forge-impl-green` first.
-3. Resolve the `iteration_loop` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=iteration_loop`, point at `/forge-setup`).
+3. Resolve the `iteration_loop` capability
+   (`~/.claude/forge/capabilities.toml`): override → use it; else fall back to
+   the default `/grind` (`@orrgal1/grind`). Default provider absent & no
+   override → refuse
+   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install it or
+   override via `/forge-setup`).
 
 ## Invoke the capability
 

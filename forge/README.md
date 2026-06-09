@@ -10,14 +10,20 @@ running a lens-designed code review. What sets it apart is the **proof chain**:
 nothing reaches READY that isn't backed by a goal, a scenario, a test, and a
 passing run — and forge mechanically attests every link.
 
-**Dependency:** forge has **no hard plugin dependency** — the `gh` CLI is the
-only external requirement. Forge needs to restack a branch onto its base (every
-CI iteration, and when resuming after an external block); the **`restack`
-capability** is configured via `/forge-setup` and can point to an installed
-skill (e.g. **`@orrgal1/devloop`**'s `/restack` — recommended when present), a
-command/instructions, or fall back to forge's **built-in plain-git restack**
-(fetch the base, merge it into the branch). Install devloop for the richer
-stacked-PR restack, or run forge standalone on the built-in fallback.
+**Works best with:** the `gh` CLI is the one hard external requirement. For its
+agent capabilities forge **works best with two companion plugins**, which it
+uses by default — **`@orrgal1/devloop`** for the chain-blind PR ops
+(`/forge-review` fan-out, `request_review`, `find_blocker`, `ci_green`, …) and
+**`@orrgal1/grind`** for the `iteration_loop` behind every `*-green` loop.
+They're the default backing, so the chain needs them installed (or the
+capability repointed) to run — an un-overridden capability whose default
+provider is missing halts that step (`PROVIDER_MISSING`) until you install it.
+Every capability is **repointable** to another plugin via `/forge-setup`, so the
+coupling is tight by default yet never hardwired. The one capability that needs
+no companion at all is **`restack`**: it has a **built-in plain-git fallback**
+(fetch the base, merge it into the branch); `/forge-setup` can still point it at
+an installed skill (e.g. `@orrgal1/devloop`'s `/restack`, richer for stacked
+PRs) or a command/instructions.
 
 ## The proof chain — forge's core idea
 
@@ -123,18 +129,26 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
 
 ## Install
 
-From the `orrgal1` marketplace. forge runs **standalone** — on the built-in
-plain-git restack and the always-on `/code-review` + `/security-review` channels
-— but **`devloop` is the strongly recommended companion**: it powers the
-`/forge-review` lens fan-out, `request_review`, `find_blocker`, and the richer
-stacked-PR `/restack` (see **Dependency** and **Review** above):
+From the `orrgal1` marketplace. forge bundles only its own chain logic + chain
+lenses; it **works best with two companion plugins** it uses by default for its
+agent capabilities, so install them alongside (see **Works best with** and
+**Review** above):
 
 ```
 /plugin marketplace add orrgal1/claude-plugins
 /plugin install forge@orrgal1
-/plugin install devloop@orrgal1   # recommended: powers /forge-review,
-                                  # request-review, find-blocker, /restack
+/plugin install devloop@orrgal1   # default provider for the PR ops — /forge-review,
+                                  # request-review, find-blocker, ci-green, /restack
+/plugin install grind@orrgal1     # default provider for iteration_loop (the *-green loops)
 ```
+
+Because they're the default backing, the chain needs both installed (or the
+capability repointed) to run — forge halts a step (`PROVIDER_MISSING`,
+preflighted at `/forge` + `/forge-status`) when an un-overridden capability's
+default provider is missing; install both, or repoint individual capabilities
+via `/forge-setup`. The pieces that need no companion at all: the plain-git
+`restack` fallback and the always-on `/code-review` + `/security-review` review
+channels.
 
 Or point Claude Code at a local checkout:
 
@@ -185,12 +199,23 @@ fallback.)
 
 **Machine-global agent capabilities.** Above the per-repo dirs, at the forge
 root, `/forge-setup` also maintains `~/.claude/forge/capabilities.toml` — a
-single machine-scoped map from generic agent functions (`iteration_loop`,
-`root_cause`, `hypothesize`, `trace_logging`) to the installed plugin that
-provides each (e.g. `iteration_loop → /grind`). It lets forge and external
-suites resolve those functions without a hard plugin dependency or a hardcoded
-slash command; an unmapped capability degrades gracefully. (Supersedes the
-retired `@fordefi/setup` + `~/.claude/.fordefi/tools.yml`.)
+single machine-scoped map from generic agent functions to the installed plugin
+that provides each. Two classes: **optional enhancements** (`root_cause`,
+`hypothesize`, `trace_logging` → `@orrgal1/diagnose`) degrade gracefully when
+their provider is absent; **required** capabilities — the chain-blind PR ops
+(`ci_green`, `review`, `review_watch`, `address_review`, `pr_brief`,
+`request_review`, `find_blocker` → `@orrgal1/devloop`) and the `iteration_loop`
+the `*-green` wrappers drive (→ `@orrgal1/grind`). Every capability carries a
+**built-in default provider**: forge falls back to it automatically, so the
+registry is an **override surface**, not required wiring. Forge **works best
+with** these default providers and uses them by default — they're the default
+backing for the required caps, so an un-overridden required capability whose
+default provider isn't installed makes forge **refuse** (`PROVIDER_MISSING`;
+install the provider, or repoint the cap via `/forge-setup`), preflighted at
+`/forge` and `/forge-status` entry. Forge honors any override, so the coupling
+is the deliberate forge↔devloop/grind kind: tight by default, fully repointable;
+no hardcoded slash command. (Supersedes the retired `@fordefi/setup` +
+`~/.claude/.fordefi/tools.yml`.)
 
 **Recovery playbooks.** A repo also has known recoveries for known failures —
 expired cloud creds, a daemon to start, stale codegen. `[playbooks.<name>]`

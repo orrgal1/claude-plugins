@@ -38,9 +38,11 @@ straight through to the capability.
    its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules.
-2. Resolve the `ci_green` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=ci_green`, point at `/forge-setup`). No
-   built-in substitute.
+2. Resolve the `ci_green` capability (`~/.claude/forge/capabilities.toml`):
+   override → use it; else fall back to the default `/ci-green`
+   (`@orrgal1/devloop`). Default provider absent & no override → refuse
+   `PROVIDER_MISSING cap=ci_green provider=@orrgal1/devloop` (install it or
+   override via `/forge-setup`). No built-in substitute.
 
 ## Failure handling (settle mapping)
 

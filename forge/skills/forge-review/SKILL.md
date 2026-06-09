@@ -43,9 +43,11 @@ through.
    its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules.
-2. Resolve the `review` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=review`, point at `/forge-setup`). No
-   built-in substitute.
+2. Resolve the `review` capability (`~/.claude/forge/capabilities.toml`):
+   override → use it; else fall back to the default `/review`
+   (`@orrgal1/devloop`). Default provider absent & no override → refuse
+   `PROVIDER_MISSING cap=review provider=@orrgal1/devloop` (install it or
+   override via `/forge-setup`). No built-in substitute.
 
 ## Proof gate (chain)
 

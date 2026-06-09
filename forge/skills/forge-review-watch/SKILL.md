@@ -44,8 +44,11 @@ Prereq (refuse without): chain artifacts exist —
    its `forge_art`/`slug`/`worktree`/`chain_present` (worktree-rooted — never
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules.
-2. Resolve the `review_watch` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=review_watch`).
+2. Resolve the `review_watch` capability (`~/.claude/forge/capabilities.toml`):
+   override → use it; else fall back to the default `/review-watch`
+   (`@orrgal1/devloop`). Default provider absent & no override → refuse
+   `PROVIDER_MISSING cap=review_watch provider=@orrgal1/devloop` (install it or
+   override via `/forge-setup`).
 3. `stop` → pass through:
    `/review-watch stop --state $FORGE_ART/branches/<slug>/review/watch/`.
 

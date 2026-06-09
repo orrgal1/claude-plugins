@@ -42,6 +42,15 @@ Confirm `$FORGE_HOME/forge.toml` has `[meta].ready = true` for this repo. Absent
 → emit `phase: NOT_SET_UP`, next move `run /forge-setup`, stop (no chain to read
 yet). Exit non-zero.
 
+**Provider preflight.** Resolve every required registry cap (`/forge-setup` §
+"Global agent capabilities"): override → its plugin; else the built-in default
+provider (`@orrgal1/devloop` for the PR ops, `@orrgal1/grind` for
+`iteration_loop`). Any required cap un-overridden whose default provider is
+**not installed** → emit `phase: PROVIDER_MISSING`, list the missing provider(s)
+
+- affected caps, next move `install <provider> or override via /forge-setup`,
+  stop (exit 3). Forge can't run those caps until the backing exists.
+
 ### 1. Resolve slug + worktree
 
 Run the canonical resolver — it derives slug, `$FORGE_ART`, and chain presence
@@ -229,10 +238,10 @@ JSON (`--json`):
 
 ## Exit codes
 
-| Code | Meaning                                |
-| ---- | -------------------------------------- |
-| 0    | phase = READY                          |
-| 1    | phase < READY                          |
-| 2    | ≥1 `block` drift                       |
-| 3    | phase = NOT_SET_UP (no `[meta].ready`) |
-| 64   | unrecoverable read error               |
+| Code | Meaning                                                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------- |
+| 0    | phase = READY                                                                                        |
+| 1    | phase < READY                                                                                        |
+| 2    | ≥1 `block` drift                                                                                     |
+| 3    | phase = NOT_SET_UP (no `[meta].ready`) or PROVIDER_MISSING (default provider absent, not overridden) |
+| 64   | unrecoverable read error                                                                             |

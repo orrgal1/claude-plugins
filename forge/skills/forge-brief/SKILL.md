@@ -75,9 +75,11 @@ Rules:
    `ls`/`find` for `branches/<slug>/`, never look under `~/.claude/forge/`);
    resolve the PR per `/forge` rules. No PR → no-op, hint "no PR yet —
    `/forge-start` opens one."
-2. Resolve the `pr_brief` capability (`~/.claude/forge/capabilities.toml`;
-   unconfigured → `NEEDS_SETUP cap=pr_brief`, point at `/forge-setup`). No
-   built-in substitute.
+2. Resolve the `pr_brief` capability (`~/.claude/forge/capabilities.toml`):
+   override → use it; else fall back to the default `/pr-brief`
+   (`@orrgal1/devloop`). Default provider absent & no override → refuse
+   `PROVIDER_MISSING cap=pr_brief provider=@orrgal1/devloop` (install it or
+   override via `/forge-setup`). No built-in substitute.
 
 ## Source the brief from the chain
 

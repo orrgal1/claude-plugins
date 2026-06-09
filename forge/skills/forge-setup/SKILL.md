@@ -302,10 +302,15 @@ Never `NEEDS_SETUP`.
 ## Global agent capabilities (machine-scoped)
 
 Distinct from the per-repo tooling above. A few **generic agent functions** — a
-bounded grind-to-green loop, a root-cause pass, trace logging — are not
-repo-specific and deliberately live in **other** plugins (`@orrgal1/grind`,
-`@orrgal1/diagnose`). Skills that want them must not hard-depend on those
-plugins or hardcode their slash commands; they resolve through a map:
+bounded grind-to-green loop, a root-cause pass, trace logging, the chain-blind
+PR ops — are not repo-specific and live in **companion** plugins
+(`@orrgal1/devloop`, `@orrgal1/grind`, `@orrgal1/diagnose`). Skills that want
+them don't hardcode a slash command: they resolve through a map with a
+**built-in default provider per capability**, falling back to it automatically
+and honoring any operator override. Forge **works best with** these default
+providers and uses them by default — they're the default backing for
+un-overridden required caps, so forge refuses (`PROVIDER_MISSING`) when one is
+absent — but every cap stays repointable, so nothing is truly hardwired:
 
 **`~/.claude/forge/capabilities.toml`** — generic capability → installed-plugin
 slash command. Machine-scoped (one map serves every repo + worktree), forge-root
@@ -329,16 +334,31 @@ external suite (e.g. `@fordefi/*`) read it.
 Two classes of capability live here, distinguished by `required`:
 
 - **Optional enhancements** (`root_cause`, `hypothesize`, `trace_logging`) —
-  nice to have; unconfigured → **degrade gracefully** (do the work inline or
-  skip the optional step).
-- **Required** — capabilities forge does **not** implement itself and has no
-  built-in fallback for. Two kinds: the chain-blind **PR ops** (`request_review`
-  and its siblings, default `@orrgal1/devloop`) and the **`iteration_loop`** the
-  `*-green` wrappers drive (default `/grind`, `@orrgal1/grind`). Forge
-  **hardwires nothing**: unconfigured required capability →
-  `NEEDS_SETUP cap=<name>`, halt, point at `/forge-setup`. forge-setup defaults
-  each to its provider and **strongly recommends installing them**
-  (`@orrgal1/devloop` + `@orrgal1/grind`).
+  nice to have; no override **and** provider absent → **degrade gracefully** (do
+  the work inline or skip the optional step). Never refuse.
+- **Required** — capabilities forge does **not** implement itself. Two kinds:
+  the chain-blind **PR ops** (`request_review` and its siblings, default
+  `@orrgal1/devloop`) and the **`iteration_loop`** the `*-green` wrappers drive
+  (default `/grind`, `@orrgal1/grind`). Each carries a **built-in default
+  provider + skill** baked into this contract (the table above). Forge **falls
+  back to it automatically** — a fresh install with the default plugins present
+  needs **no** registry wiring at all. The registry file is an **override
+  surface**, not a required hand-wiring.
+
+**Forge works best with the default provider (and needs it unless overridden).**
+This is the deliberate forge↔devloop/grind coupling. When a required capability
+is **not overridden**, forge resolves it to its built-in default skill and
+therefore needs the **default provider plugin installed** (`@orrgal1/devloop`
+for the PR ops, `@orrgal1/grind` for `iteration_loop`). Default provider absent
+**and** no override → forge **refuses to run** that capability:
+`PROVIDER_MISSING cap=<name> provider=<provider>`, halt, with the fix — install
+the provider plugin, **or** point the capability at an alternative via
+`/forge-setup` (an override binds only _its own_ plugin, never the default).
+This replaces the old "unconfigured → `NEEDS_SETUP`" friction for registry caps:
+forge no longer demands `/forge-setup` to hand-wire each default — it falls back
+to the default provider and refuses only when that backing is genuinely missing.
+(Repo-tooling caps — `test`/`build`/`lint`/… — keep `NEEDS_SETUP`: they have
+**no** built-in default to fall back to, so they must be wired.)
 
 Forge supplies any chain context the chain-blind skill needs itself (e.g.
 persists the reviewer verdict to `$FORGE_ART/branches/<slug>/reviewer/last.json`
@@ -346,15 +366,18 @@ via the skill's `--out`).
 
 ```toml
 # ~/.claude/forge/capabilities.toml — machine-global agent-capability registry.
-# Generic capability -> concrete installed-plugin slash command. Written by
-# /forge-setup. Consumed by forge + external suites (@fordefi/*). Forge hardwires
-# no capability: optional ones degrade gracefully when unconfigured, required
-# ones surface NEEDS_SETUP. One map serves every repo + worktree. Edit freely;
-# re-run /forge-setup to refresh.
+# Generic capability -> concrete installed-plugin slash command. OVERRIDE SURFACE:
+# forge has a built-in default provider+skill per capability and falls back to it
+# when a row is absent/empty, so this file is OPTIONAL. Written by /forge-setup
+# (records the defaults + any overrides). Consumed by forge + external suites
+# (@fordefi/*). A required cap with no override binds its default provider; that
+# provider missing -> forge REFUSES (PROVIDER_MISSING). Optional caps degrade
+# gracefully. One map serves every repo + worktree. Edit freely; re-run
+# /forge-setup to refresh.
 version = 1
 
 [capabilities.iteration_loop]
-skill    = "/grind"            # the *-green wrappers drive this; no built-in fallback
+skill    = "/grind"            # *-green wrappers drive this; default provider — no override -> needs @orrgal1/grind
 provider = "@orrgal1/grind"
 required = true
 
@@ -374,7 +397,7 @@ provider = "@orrgal1/diagnose"
 [capabilities.request_review]
 skill    = "/request-review"   # chain-blind; forge passes --out for the verdict
 provider = "@orrgal1/devloop"
-required = true                # no built-in fallback; unconfigured -> NEEDS_SETUP
+required = true                # default provider — no override -> needs @orrgal1/devloop, else PROVIDER_MISSING
 
 [capabilities.find_blocker]
 skill    = "/find-blocker"     # emits a neutral condition spec; forge maps it to /forge-wait-for
@@ -409,14 +432,38 @@ required = true
 
 **Resolution contract (for any consumer skill):**
 
-1. Read `~/.claude/forge/capabilities.toml`.
-2. `capabilities.<name>.skill` non-empty → invoke that slash command.
-3. empty / missing key / missing file → capability unavailable:
-   - `required = true` → forge hardwires no substitute. Surface
-     `NEEDS_SETUP cap=<name>`, halt, point at `/forge-setup` (which provisions
-     the `@orrgal1/devloop` provider). Never guess a slash command.
-   - otherwise (optional) → **degrade gracefully**: do the work inline or skip
-     the optional step. Never hard-fail on a missing companion plugin.
+1. Read `~/.claude/forge/capabilities.toml` (absent file ⇒ every cap uses its
+   built-in default).
+2. **Override?** `capabilities.<name>.skill` non-empty **and** different from
+   the built-in default skill for `<name>` (the table above) → operator
+   override. Invoke it. Its providing plugin missing → refuse
+   `PROVIDER_MISSING cap=<name> provider=<override-provider>` (a broken override
+   is the operator's to fix; never silently fall back to the default). Done.
+3. **No override** (row absent/empty, or it merely restates the built-in
+   default) → resolve to the **built-in default skill**. Is the default provider
+   plugin installed/available (its skill resolves in the available-skills
+   registry / is invocable via the Skill tool)?
+   - **Installed** → invoke the default skill.
+   - **Missing, `required = true`** → **refuse to run**:
+     `PROVIDER_MISSING cap=<name> provider=<default-provider>`, halt. Fix:
+     install the provider plugin (`@orrgal1/devloop` / `@orrgal1/grind`) **or**
+     set an override via `/forge-setup`. Never guess another slash command.
+   - **Missing, optional** → **degrade gracefully**: do the work inline or skip.
+     Never hard-fail on a missing companion plugin.
+
+"Overridden" means a row names a skill that isn't the cap's built-in default —
+that case needs only the override's own plugin. The un-overridden case is the
+common one and binds forge to the default provider: the deliberate
+forge↔devloop/grind coupling. Forge never surfaces `NEEDS_SETUP` for a registry
+cap — that token is for repo-tooling caps (`test`/`build`/…) only.
+
+**Provider preflight (early gate).** Entry points (`/forge`, `/forge-status`)
+run this resolution for every required registry cap **up front**, before
+dispatching any phase. Any required cap that is un-overridden whose default
+provider is absent → halt early with the same `PROVIDER_MISSING` (collapsed per
+provider, e.g. `@orrgal1/devloop` missing ⇒ all its un-overridden PR-op caps).
+Refusing at entry beats dead-ending mid-chain. The per-capability check above
+still fires at the point of use (covers a provider removed mid-run).
 
 ## Failure recovery — playbooks (consulted on capability failure)
 
@@ -739,7 +786,10 @@ See `/forge-map` for the full ground-truth + absorption flow.
 
 5a. **Global agent-capability registry** (machine-scoped, idempotent; § "Global
 agent capabilities"). Independent of `<repo-key>` — runs once per machine, but a
-forge-setup in any repo ensures it. Skip the write if `capabilities.toml`
+forge-setup in any repo ensures it. The registry is an **override surface**:
+forge falls back to each cap's **built-in default provider** when a row is
+absent, so this file is **never required** for forge to run. Writing it just
+records the defaults + any overrides. Skip the write if `capabilities.toml`
 already exists unless `--refresh-capabilities`.
 
 ```bash
@@ -752,17 +802,22 @@ legacy="$HOME/.claude/.fordefi/tools.yml"     # retired @fordefi/setup output
   yet: map each `capabilities.<name>.{skill,provider,fallback}` into the TOML
   shape, rewriting any `/ralph` → `/grind` (renamed plugin). After a successful
   write, remove the legacy file. Surface what migrated.
-- Else **scan** installed plugins for each capability's candidate skills —
-  diagnose/grind: `iteration_loop`→`grind`; `root_cause`→`root-cause`;
-  `hypothesize`→`hypothesize`; `trace_logging`→`trace`,`pepper`. Chain-blind PR
-  ops (all `@orrgal1/devloop`): `ci_green`→`ci-green`; `review`→`review`;
-  `review_watch`→`review-watch`; `address_review`→`address-review`;
-  `pr_brief`→`pr-brief`; `request_review`→`request-review`;
-  `find_blocker`→`find-blocker`. Pick the first installed as recommended,
-  confirm/override with the operator (`--yes` accepts), and write the rows that
-  resolved. Unresolved capability → `skill = ""` so the shape stays stable and
-  consumers detect the gap. Name any unmapped capability + the plugin that would
-  fill it.
+- Else **write the built-in defaults** for each capability (the table in §
+  "Global agent capabilities"), recording any operator override the run
+  supplies. A cap left at its default needs no row to work — forge falls back to
+  it — so an empty/absent row means "use the default," **not** a gap. Only a row
+  whose skill differs from the default is an override.
+
+- **Default-provider presence check.** Resolve each required cap (override →
+  built-in default) and verify its provider plugin is installed (skill resolves
+  in the available-skills registry). Missing default provider with no override →
+  **warn loudly**: forge will **refuse** (`PROVIDER_MISSING`) at runtime for
+  that cap until the provider is installed or the cap is overridden. Name the
+  plugin to install (`@orrgal1/devloop` for the PR ops, `@orrgal1/grind` for
+  `iteration_loop`). This is a **warning**, not a setup hard-block — the
+  operator may install the provider later or override; the runtime preflight
+  enforces it. Optional caps (diagnose) absent → note "degrades gracefully,"
+  never warn.
 
 5b. **Global `forge-resolve` helper** (machine-scoped, idempotent — like 5a).
 Install the deterministic artifact resolver so every skill resolves
