@@ -3,7 +3,8 @@ name: deslop
 description:
   Scan a PR diff and strip AI slop — verbose obvious comments and over-complex
   local code.
-argument-hint: "[pr number, url, or branch — defaults to current branch]"
+argument-hint:
+  "[pr number, url, or branch — defaults to current branch] [--protect <globs>]"
 allowed-tools:
   - Bash
   - Read
@@ -19,6 +20,11 @@ Remove AI slop from a PR's changed code.
 
 Only the PR's diff. Resolve base/head from GitHub (`gh pr view`), fall back to
 `git diff <base>...HEAD`. Touch only changed hunks — don't reformat the repo.
+
+Honor `--protect <comma-separated globs>` (same convention as `/ci-green`):
+never edit a changed file matching one — skip it silently. Callers pass paths
+whose exact bytes are load-bearing (e.g. a forge chain's linked test bodies +
+contract artifacts), so a slop pass must leave them untouched.
 
 ## Fix
 
