@@ -58,7 +58,7 @@ status → entry phase → phases in order:
   2  design --push      AWAIT_DESIGN_REVIEW (auto/manual; yolo auto-approves)
   3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (auto/manual; yolo auto-approves)
   4  tests              (+ scaffolds impl surface for red bar)
-  5  impl-green
+  5  impl-green          (drive linked tests green, then a deslop pass over the diff)
   5a verify-goals
   5b verify-scenarios
   5c verify-tests
@@ -182,10 +182,11 @@ Both refuse if `/forge-status` reports no awaiting phase.
   its plugin; else the built-in default provider. Any required cap un-overridden
   whose default provider is **not installed** → halt
   `PROVIDER_MISSING provider=<p> caps=<list>` (collapsed per provider —
-  `@orrgal1/devloop` absent ⇒ the un-overridden PR-op caps; `@orrgal1/grind`
-  absent ⇒ `iteration_loop`). Fix: install the provider, or override the caps
-  via `/forge-setup`. Refuses at entry, not mid-chain; each step re-checks at
-  point of use. This is the deliberate forge↔devloop/grind coupling.
+  `@orrgal1/devloop` absent ⇒ the un-overridden PR-op caps + `deslop`;
+  `@orrgal1/grind` absent ⇒ `iteration_loop`). Fix: install the provider, or
+  override the caps via `/forge-setup`. Refuses at entry, not mid-chain; each
+  step re-checks at point of use. This is the deliberate forge↔devloop/grind
+  coupling.
 - Source: argument → `gh pr view --json body` → conversation seed. Mandatory for
   start; optional for resumes.
 - `/forge-status --slug <slug> --json` → entry phase per its mapping table.
@@ -408,10 +409,12 @@ Halts: `BLOCKED_TESTS` (wrong-reason red bar, missing fixture).
 ### 5. impl
 
 Invoke `/forge-impl-green` (§ "Loop contract") — it drives the linked tests to
-green via the `iteration_loop` capability and refreshes `run.json`. Consume its
-verdict: `IMPL_GREEN` → 5a; `BLOCKED_FLAKY` / `BLOCKED_INFRA` /
-`BLOCKED_CONTRACT` / `RED_PERSISTENT` / `BUDGET_EXHAUSTED` → `BLOCKED_IMPL` with
-the named reason.
+green via the `iteration_loop` capability, then **always runs a deslop pass over
+the diff** (the `deslop` capability, protecting the linked tests + contract
+artifacts) and refreshes `run.json`. The deslop pass is folded into reaching
+`IMPL_GREEN` — surface it as a child todo under this phase. Consume its verdict:
+`IMPL_GREEN` → 5a; `BLOCKED_FLAKY` / `BLOCKED_INFRA` / `BLOCKED_CONTRACT` /
+`RED_PERSISTENT` / `BUDGET_EXHAUSTED` → `BLOCKED_IMPL` with the named reason.
 
 Per Bias to progress — try matching auto-decide rule once, halt only if recovery
 fails:

@@ -30,8 +30,10 @@ A **thin** chain layer over the `iteration_loop` capability (default `/grind`,
 `plan.md`, per-iteration commit, stuck detection, budget. This wrapper adds only
 what touches the **forge chain**: resolving `links.json` into the verify command
 
-- protect set, the baseline flake-exit, and the verdict mapping. Local test runs
-  only — never pushes, never polls CI; hand off to `/forge-ci-green` for CI.
+- protect set, the baseline flake-exit, the verdict mapping, and a **deslop pass
+  on green** (the `deslop` capability, same protect set — § "Deslop pass").
+  Local test runs + a local deslop commit only — never pushes, never polls CI;
+  hand off to `/forge-ci-green` for CI.
 
 ## Inputs
 
@@ -56,6 +58,11 @@ path + function. Missing → exit, point at `/forge` or `/forge-tests`.
    override → refuse
    `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install it or
    override via `/forge-setup`).
+3. Resolve the `deslop` capability the same way: override → use it; else default
+   `/deslop` (`@orrgal1/devloop`). Default provider absent & no override →
+   refuse `PROVIDER_MISSING cap=deslop provider=@orrgal1/devloop`. Resolved up
+   front (before the loop) so a missing provider refuses early, not after the
+   work.
 
 ## Baseline & failure handling
 
@@ -67,7 +74,8 @@ Run the linked set once (via the `test` capability) before invoking the loop:
   repo playbooks (`/forge-setup` § "Failure recovery — playbooks"): a match
   recovers + retries; an interactive recovery no one completes →
   `BLOCKED_INFRA`.
-- Baseline already green → settle `IMPL_GREEN` (refresh `run.json`), no loop.
+- Baseline already green → run the deslop pass (§ "Deslop pass"), refresh
+  `run.json`, settle `IMPL_GREEN` — no loop.
 
 ## Invoke the capability
 
@@ -89,12 +97,12 @@ without editing what it protects.
 
 ## On capability settle (chain mapping)
 
-| Capability verdict       | Chain action                                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `SUCCESS`                | settle `IMPL_GREEN`; refresh `run.json` by re-running the linked tests (automatic, never offered)            |
-| `BLOCKED` (protect path) | settle `BLOCKED_CONTRACT`, name the contract file (operator revises via `/forge-tests` / `/forge-scenarios`) |
-| `BLOCKED` (other)        | settle `RED_PERSISTENT` / `BLOCKED_IMPL` with the failure signature; log to `decisions.md`                   |
-| `BUDGET_EXHAUSTED`       | settle verbatim; log to `decisions.md`                                                                       |
+| Capability verdict       | Chain action                                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `SUCCESS`                | run the deslop pass (§ "Deslop pass"), then refresh `run.json` by re-running the linked tests, then settle `IMPL_GREEN` (all automatic, never offered) |
+| `BLOCKED` (protect path) | settle `BLOCKED_CONTRACT`, name the contract file (operator revises via `/forge-tests` / `/forge-scenarios`)                                           |
+| `BLOCKED` (other)        | settle `RED_PERSISTENT` / `BLOCKED_IMPL` with the failure signature; log to `decisions.md`                                                             |
+| `BUDGET_EXHAUSTED`       | settle verbatim; log to `decisions.md`                                                                                                                 |
 
 The protect set is how the never-touch guard is enforced: a step that can only
 go green by editing a linked **test body**, `goals.md`, `links.json`, or
@@ -103,6 +111,33 @@ fixed by re-running `/forge-tests`, never by the loop.
 
 `run.json` refresh runs the **full** linked set so sibling regressions surface,
 overwriting `$FORGE_ART/branches/<slug>/run.json`.
+
+## Deslop pass (on green)
+
+The impl phase isn't done when the bar goes green — it's done when the green
+code is also **clean**. The moment the linked set is green (loop `SUCCESS`, or
+baseline already green), run the resolved `deslop` capability over the PR diff,
+**before** the `run.json` refresh:
+
+```
+<deslop> --protect '<linked test file paths from links.json>,$FORGE_ART/branches/<slug>/{goals.md,links.json,design.md}'
+```
+
+The `--protect` set is the **same** surfaces the loop protects — deslop strips
+slop comments + over-complex constructs from the impl it just wrote but never
+touches a linked **test body** or a chain-contract artifact (their exact bytes
+are load-bearing for `verify-match` / `verify-runs`). deslop is
+behavior-preserving + idempotent (a clean diff is a no-op) and commits its own
+cleanup locally — **no push** (this wrapper stays push-free).
+
+The `run.json` refresh then runs **after** deslop, so it records the
+post-cleanup state and confirms the pass kept the bar green. A deslop pass that
+somehow reddens the linked set → settle `RED_PERSISTENT` (revert the deslop
+commit, re-run); never let cleanup ship a red bar.
+
+deslop is **always** run on green — it is part of reaching `IMPL_GREEN`, not an
+optional extra. Skip it only when the `deslop` capability is overridden to
+empty.
 
 ## Termination
 

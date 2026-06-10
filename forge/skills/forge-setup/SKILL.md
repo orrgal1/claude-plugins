@@ -330,20 +330,22 @@ external suite (e.g. `@fordefi/*`) read it.
 | `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)      |
 | `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)    |
 | `pr_brief`       | Write/refresh a tight PR description        | `/pr-brief` (`@orrgal1/devloop`)          |
+| `deslop`         | Strip AI slop from the PR diff (on green)   | `/deslop` (`@orrgal1/devloop`)            |
 
 Two classes of capability live here, distinguished by `required`:
 
 - **Optional enhancements** (`root_cause`, `hypothesize`, `trace_logging`) —
   nice to have; no override **and** provider absent → **degrade gracefully** (do
   the work inline or skip the optional step). Never refuse.
-- **Required** — capabilities forge does **not** implement itself. Two kinds:
+- **Required** — capabilities forge does **not** implement itself. Three kinds:
   the chain-blind **PR ops** (`request_review` and its siblings, default
-  `@orrgal1/devloop`) and the **`iteration_loop`** the `*-green` wrappers drive
-  (default `/grind`, `@orrgal1/grind`). Each carries a **built-in default
-  provider + skill** baked into this contract (the table above). Forge **falls
-  back to it automatically** — a fresh install with the default plugins present
-  needs **no** registry wiring at all. The registry file is an **override
-  surface**, not a required hand-wiring.
+  `@orrgal1/devloop`), the **`iteration_loop`** the `*-green` wrappers drive
+  (default `/grind`, `@orrgal1/grind`), and **`deslop`** — the on-green slop
+  strip `forge-impl-green` always runs (default `/deslop`, `@orrgal1/devloop`).
+  Each carries a **built-in default provider + skill** baked into this contract
+  (the table above). Forge **falls back to it automatically** — a fresh install
+  with the default plugins present needs **no** registry wiring at all. The
+  registry file is an **override surface**, not a required hand-wiring.
 
 **Forge works best with the default provider (and needs it unless overridden).**
 This is the deliberate forge↔devloop/grind coupling. When a required capability
@@ -426,6 +428,11 @@ required = true
 
 [capabilities.pr_brief]
 skill    = "/pr-brief"         # forge-brief wraps it with the body-layout contract
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.deslop]
+skill    = "/deslop"           # forge-impl-green runs it on green with the chain --protect set
 provider = "@orrgal1/devloop"
 required = true
 ```
