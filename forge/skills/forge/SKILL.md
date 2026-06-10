@@ -47,7 +47,10 @@ Three modes:
   wrapper) or `/forge --mode yolo`.
 
 Operator resumes via `/forge approve` or `/forge iterate "<feedback>"` — both
-auto-detect the awaiting phase via `/forge-status`.
+auto-detect the awaiting phase via `/forge-status`. The slash commands are the
+explicit form, not a requirement: at any AWAIT pause a plain reply ("approved",
+"pushback: …", any feedback) is classified and routed the same way (§ "Resume
+sub-commands" → natural-language resume).
 
 ## Chain
 
@@ -165,7 +168,24 @@ Common `--until`:
 | `/forge approve` at `AWAIT_REVIEW_REQUEST`             | Action gate (§ 9.7), not a sha gate: run `/request-review --ready` (ready + request the proposed reviewer), record `{review_request: <login>}`, settle `READY`.                                                                                                         |
 | `/forge iterate "<steer>"` at `AWAIT_REVIEW_REQUEST`   | Re-run `/request-review` with the steer to re-rank before marking ready; re-settle the gate.                                                                                                                                                                            |
 
-Both refuse if `/forge-status` reports no awaiting phase.
+**Natural-language resume.** When the session sits at an AWAIT pause, the
+operator's next message needs no slash command — classify intent exactly like
+the contract router (§ "Contract-pause watch"):
+
+- **Approval** ("approved", "lgtm", "ship it", "go ahead", 👍) → the gate's
+  `approve` action.
+- **Feedback / steer** ("pushback: …", "actually …", any requested change or
+  question about the artifact) → the gate's `iterate` action with the message
+  verbatim as feedback.
+- **Unrelated or ambiguous** (a new task, a question about the chain itself) →
+  answer it; the gate stays settled. Unsure whether a message is approval or
+  steer → ask. **Never infer an approval.**
+
+Applies to all AWAIT gates, including the action gates (`AWAIT_AUTHOR_REVIEW`,
+`AWAIT_REVIEW_REQUEST`). When surfacing an AWAIT in the result output, lead with
+the plain-reply form; list the slash commands as the explicit fallback.
+
+All forms refuse if `/forge-status` reports no awaiting phase.
 
 ## Pre-phase — resolve
 
@@ -605,16 +625,17 @@ PR.** Forge pauses for that self-review:
    `AWAIT_AUTHOR_REVIEW`.
 2. **Approval gate (hard, all modes including `yolo`).** Reviewing one's own
    work before pinging a peer is the **author's gesture** — forge never skips it
-   autonomously. An interactive operator may approve inline; otherwise the
-   operator approves (`/forge approve` at this gate) once they've looked.
+   autonomously. An interactive operator approves with a plain reply
+   ("approved") or `/forge approve` once they've looked (§ "Resume
+   sub-commands", natural-language resume).
 3. **On approval** → run `/forge-address-review --source self` to drive any
    `forge:self-review` comments to resolution (a clean no-op when none were
    left); that path refreshes `run.json` and the continuous monitor (8.5)
    re-greens any landed fixes. Record `{author_review: <sha>}`; advance to the
    peer-review request gate (9.7).
-4. **Iterate** (`/forge iterate "<feedback>"` at this gate) → treat the inline
-   feedback as author-review input: dispatch the self-scoped address-review (or
-   apply the fix), re-settle `AWAIT_AUTHOR_REVIEW`.
+4. **Iterate** (a plain feedback reply, or `/forge iterate "<feedback>"`) →
+   treat the inline feedback as author-review input: dispatch the self-scoped
+   address-review (or apply the fix), re-settle `AWAIT_AUTHOR_REVIEW`.
 5. **Skip** when `--no-author-review`: don't pause; advance straight to the
    peer-review request gate.
 
@@ -633,11 +654,11 @@ draft for peer review:
    author's work > people the author reviews > code-area / CODEOWNERS).
 2. **Approval gate (hard, all modes including `yolo`).** Marking the PR
    ready-for-review and requesting a reviewer is the **author's gesture** —
-   forge never performs it autonomously. It surfaces the proposal + the
-   one-command ready (`/request-review --ready [--reviewer <login>]`) and
-   settles `AWAIT_REVIEW_REQUEST`. An interactive operator may approve inline;
-   otherwise the operator runs the ready command (or `/forge approve` at this
-   gate) when ready.
+   forge never performs it autonomously. It surfaces the proposal and settles
+   `AWAIT_REVIEW_REQUEST`. The operator approves with a plain reply ("approved")
+   or steers ("pushback: <steer>" re-ranks); `/forge approve` / `/forge iterate`
+   and the one-command ready (`/request-review --ready [--reviewer <login>]`)
+   remain the explicit forms.
 3. **On approval** → `/request-review --ready` lazily converts the draft
    (`gh pr ready` only if still draft) + `gh pr edit --add-reviewer <login>`;
    log `D<n> marked ready for review, requested <login>`; settle `READY`
@@ -852,13 +873,14 @@ open blockers: <N>   open majors: <N>
 ### next move
 READY                    → peer-review watch armed; merge per workflow
 HANDOFF_WORKTREE         → switch to a session in the new worktree, then /forge | /forge-yolo
-AWAIT_AUTHOR_REVIEW      → self-review your own PR, then /forge approve
+AWAIT_AUTHOR_REVIEW      → self-review your own PR, then reply "approved"
                            (forge then ingests any forge:self-review comments)
-AWAIT_REVIEW_REQUEST     → reviewer proposed; approve to ready+request
-                           (/request-review --ready [--reviewer <login>] | /forge approve)
+AWAIT_REVIEW_REQUEST     → reviewer proposed; reply "approved" to ready+request,
+                           or "pushback: <steer>" to re-rank
                            or leave draft (watch fires when you mark it ready)
-AWAIT_*_REVIEW           → watch armed: submit a GitHub review (feedback, or a
-                           comment review = approval) | or /forge approve | iterate
+AWAIT_*_REVIEW           → reply "approved" or give feedback (routes to
+                           approve | iterate); or submit a GitHub review
+                           (watch armed: comment review = approval)
 BLOCKED_SPEC             → fix source; re-run /forge
 BLOCKED_DESIGN           → resolve unsatisfiable scenario; --from design
 BLOCKED_IMPL             → see decisions.md; --from impl

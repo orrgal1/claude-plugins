@@ -102,7 +102,9 @@ request_review cap     rank the most relevant peer reviewer; gated ready+request
 `/forge` runs the whole arc end-to-end. **Modes:** `auto` (pause at goals +
 design + scenarios), `manual` (pause every phase), `yolo` (no contract pauses —
 drive to READY, stop only at genuine blockers; `/forge-yolo` is the thin
-wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
+wrapper). At any pause, resume with a plain reply — "approved" advances,
+"pushback: …" (or any feedback) iterates. `/forge approve` and
+`/forge iterate "<feedback>"` are the explicit forms.
 
 ### Runs unattended
 
