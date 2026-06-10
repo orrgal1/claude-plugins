@@ -226,7 +226,9 @@ JSON (`--json`):
   `{"author_review": "<sha>"}` in `approvals.json`; `iterate "<feedback>"` feeds
   the steer to the self-scoped address-review. The two gates are sequential —
   `AWAIT_REVIEW_REQUEST` only surfaces once `author_review` is recorded — so a
-  bare `approve` is unambiguous.
+  bare `approve` is unambiguous. While the gate is open, the self-review aid
+  `/forge-author-review` (goals-framed walkthrough + manual verification) can be
+  run or re-run any time.
 - **`AWAIT_REVIEW_REQUEST` is an action gate, not a sha gate.** `approve` at it
   runs `/request-review --ready` (mark ready + request the proposed reviewer)
   and records `{"review_request": "<reviewer-login>"}` in `approvals.json`;

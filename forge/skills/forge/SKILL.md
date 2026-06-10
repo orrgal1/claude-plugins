@@ -73,7 +73,7 @@ status → entry phase → phases in order:
   8  ci-green (push the review-clean diff; first green → arm continuous /forge-ci-green --until-merge, runs until merge)
   9  ci-ready            (read continuous monitor — GREEN on current HEAD; no separate final loop)
   9.5 arm /forge-review-watch for peer review
-  9.6 author-review     (gated — operator reviews own PR; ingest forge:self-review comments on approve; AWAIT_AUTHOR_REVIEW, even yolo)
+  9.6 author-review     (author_review cap → /forge-author-review: walkthrough + manual-verify aid; gated — ingest forge:self-review on approve; AWAIT_AUTHOR_REVIEW, even yolo)
   9.7 request peer review (request_review cap → /request-review) → gated ready+request (AWAIT_REVIEW_REQUEST, even yolo)
                 ↓
   READY | AWAIT_*_REVIEW | AWAIT_AUTHOR_REVIEW | AWAIT_REVIEW_REQUEST | HANDOFF_WORKTREE | BLOCKED_* | NEEDS_OPERATOR | STUCK
@@ -618,11 +618,16 @@ own no-double-arm guard).
 Before the PR is handed to a peer, **the author is expected to review their own
 PR.** Forge pauses for that self-review:
 
-1. Surface the diff summary + PR link and **instruct the operator** to
-   self-review — read the diff and leave any self-review comments on the PR
-   (forge marks the chain's own self-review thread `forge:self-review`, the same
-   marker `/forge-address-review --source self` ingests). Settle
-   `AWAIT_AUTHOR_REVIEW`.
+1. **Dispatch the self-review aid** — `/forge-author-review` (thin wrapper over
+   the `author_review` capability, default `/author-review`, `@orrgal1/devloop`;
+   default provider absent & no override → `PROVIDER_MISSING`). It offers the
+   author a goals-framed **walkthrough** of the diff and a **manual
+   verification** pass driven by the repo's `manual_verify` how-to (unwired →
+   diff-derived plan + a `/forge-setup` hint), collects author notes into the
+   `forge:self-review` body section (the same marker
+   `/forge-address-review --source self` ingests), and offers to embed each
+   artifact as an idempotent collapsible body block (body-layout contract,
+   `/forge-brief`). Surface the PR link; settle `AWAIT_AUTHOR_REVIEW`.
 2. **Approval gate (hard, all modes including `yolo`).** Reviewing one's own
    work before pinging a peer is the **author's gesture** — forge never skips it
    autonomously. An interactive operator approves with a plain reply
@@ -941,10 +946,11 @@ STUCK                    → loop made no progress (grind stuck); --from <phase>
   (unless `--no-review-watch`), then proposes a reviewer via the
   `request_review` capability (§ 9.7).
 - **Author-review before peers** — the author is expected to review their own PR
-  before handing it to a peer; forge stops at the `AWAIT_AUTHOR_REVIEW` gate
-  (even in `yolo`, unless `--no-author-review`) and ingests any
-  `forge:self-review` comments via `/forge-address-review --source self` on
-  approval (§ 9.6).
+  before handing it to a peer; forge dispatches the self-review aid
+  (`/forge-author-review` — walkthrough + manual verification), stops at the
+  `AWAIT_AUTHOR_REVIEW` gate (even in `yolo`, unless `--no-author-review`) and
+  ingests any `forge:self-review` comments via
+  `/forge-address-review --source self` on approval (§ 9.6).
 - **Open-for-review is gated** — marking the PR ready + requesting a reviewer is
   the author's gesture; forge performs it **only** through the
   `AWAIT_REVIEW_REQUEST` approval gate, never autonomously, **never in `yolo`

@@ -233,17 +233,18 @@ Stability properties:
 Logical operations forge resolves through the map. All optional — wire only what
 this repo has.
 
-| Capability        | What it runs                                                                                      | Used by                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `test`            | Run tests. Forge appends an optional selector as the last arg.                                    | `/forge-impl-green`, `/forge-tests`, proof runs              |
-| `build`           | Compile / build                                                                                   | `/forge-ci-green`, impl loop                                 |
-| `lint`            | Lint                                                                                              | `/forge-ci-green`                                            |
-| `typecheck`       | Static type check                                                                                 | `/forge-ci-green`, impl loop                                 |
-| `codegen`         | Regenerate generated code (mocks, proto, clients)                                                 | impl loop recovery, `/forge`                                 |
-| `devenv`          | Bring up a dev environment (optional)                                                             | manual / component-tier flows                                |
-| `localenv`        | Bring up local infra for component-tier tests (optional)                                          | component-tier test runs                                     |
-| `restack`         | Sync the branch's base into the branch (base from upstream first)                                 | `/forge-ci-green` (each iteration), `/forge-wait-for` resume |
-| review automation | GitHub `gh` baseline: list unresolved / reply / resolve / re-request. External tools → draft-only | `/forge-address-review`                                      |
+| Capability        | What it runs                                                                                                   | Used by                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `test`            | Run tests. Forge appends an optional selector as the last arg.                                                 | `/forge-impl-green`, `/forge-tests`, proof runs              |
+| `build`           | Compile / build                                                                                                | `/forge-ci-green`, impl loop                                 |
+| `lint`            | Lint                                                                                                           | `/forge-ci-green`                                            |
+| `typecheck`       | Static type check                                                                                              | `/forge-ci-green`, impl loop                                 |
+| `codegen`         | Regenerate generated code (mocks, proto, clients)                                                              | impl loop recovery, `/forge`                                 |
+| `devenv`          | Bring up a dev environment (optional)                                                                          | manual / component-tier flows                                |
+| `localenv`        | Bring up local infra for component-tier tests (optional)                                                       | component-tier test runs                                     |
+| `manual_verify`   | How to manually verify a change in this repo (instructions-form typical: env up, run the flow, what to expect) | `/forge-author-review` manual-verification pass              |
+| `restack`         | Sync the branch's base into the branch (base from upstream first)                                              | `/forge-ci-green` (each iteration), `/forge-wait-for` resume |
+| review automation | GitHub `gh` baseline: list unresolved / reply / resolve / re-request. External tools → draft-only              | `/forge-address-review`                                      |
 
 `test` is the one capability nearly every chain needs; the rest as warranted.
 
@@ -317,20 +318,21 @@ slash command. Machine-scoped (one map serves every repo + worktree), forge-root
 location, TOML like `forge.toml`. forge-setup owns it; forge skills and any
 external suite (e.g. `@fordefi/*`) read it.
 
-| Capability       | What it does                                | Default provider                         |
-| ---------------- | ------------------------------------------- | ---------------------------------------- |
-| `iteration_loop` | Bounded grind-to-green loop toward a verify | `/grind` (`@orrgal1/devloop`)            |
-| `root_cause`     | Hypothesis-driven RCA, parallel fan-out     | `/root-cause` (`@orrgal1/devloop`)       |
-| `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/devloop`)      |
-| `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/devloop`) |
-| `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)   |
-| `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)     |
-| `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)         |
-| `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)           |
-| `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)     |
-| `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)   |
-| `pr_brief`       | Write/refresh a tight PR description        | `/pr-brief` (`@orrgal1/devloop`)         |
-| `deslop`         | Strip AI slop from the PR diff (on green)   | `/deslop` (`@orrgal1/devloop`)           |
+| Capability       | What it does                                          | Default provider                         |
+| ---------------- | ----------------------------------------------------- | ---------------------------------------- |
+| `iteration_loop` | Bounded grind-to-green loop toward a verify           | `/grind` (`@orrgal1/devloop`)            |
+| `root_cause`     | Hypothesis-driven RCA, parallel fan-out               | `/root-cause` (`@orrgal1/devloop`)       |
+| `hypothesize`    | Lightweight 2–4 candidate hypothesis loop             | `/hypothesize` (`@orrgal1/devloop`)      |
+| `trace_logging`  | Scatter tagged trace logs / route output              | `/trace`, `/pepper` (`@orrgal1/devloop`) |
+| `request_review` | Rank + gated-request the best peer reviewer           | `/request-review` (`@orrgal1/devloop`)   |
+| `find_blocker`   | Classify whether a PR is externally blocked           | `/find-blocker` (`@orrgal1/devloop`)     |
+| `ci_green`       | Drive a PR's CI to green (loop + monitor)             | `/ci-green` (`@orrgal1/devloop`)         |
+| `review`         | Multi-channel PR review → ranked verdict              | `/review` (`@orrgal1/devloop`)           |
+| `review_watch`   | Persistent PR monitor → dispatch a handler            | `/review-watch` (`@orrgal1/devloop`)     |
+| `address_review` | Drive reviewer feedback to resolution                 | `/address-review` (`@orrgal1/devloop`)   |
+| `pr_brief`       | Write/refresh a tight PR description                  | `/pr-brief` (`@orrgal1/devloop`)         |
+| `deslop`         | Strip AI slop from the PR diff (on green)             | `/deslop` (`@orrgal1/devloop`)           |
+| `author_review`  | Guided self-review: walkthrough + manual verification | `/author-review` (`@orrgal1/devloop`)    |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -433,6 +435,11 @@ required = true
 
 [capabilities.deslop]
 skill    = "/deslop"           # forge-impl-green runs it on green with the chain --protect set
+provider = "@orrgal1/devloop"
+required = true
+
+[capabilities.author_review]
+skill    = "/author-review"    # forge-author-review wraps it with goals framing + the repo's manual_verify how-to
 provider = "@orrgal1/devloop"
 required = true
 ```
@@ -596,6 +603,7 @@ typecheck = ""
 codegen   = ""
 devenv    = ""
 localenv  = ""
+manual_verify = ""   # usually instructions-form (below) — how a human exercises a change here
 # Review automation is NOT a forge.toml slot — GitHub `gh` is the auto-driven
 # baseline; external review tools are draft-only (see Capabilities).
 
@@ -604,6 +612,7 @@ localenv  = ""
 # A commands/<cap>.md file is the multi-line equivalent and takes precedence.
 [instructions]
 # localenv = "Run `make infra-up`, wait until `curl localhost:8080/health` is 200, then component tests can run."
+# manual_verify = "Bring up a devenv, log in as a test user, run the changed flow end-to-end; state what to expect per area."
 
 # How forge restacks a branch onto its base (every CI iteration + on
 # external-block resume). No hard plugin dependency — wire ONE form, or leave
@@ -963,6 +972,7 @@ capabilities:
   codegen    <…>
   devenv     <…>
   localenv   <…>
+  manual_verify <…>
   restack    <skill | command | instructions | built-in fallback>   <preview>
 
 playbooks:

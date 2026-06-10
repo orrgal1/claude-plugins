@@ -65,8 +65,10 @@ Rules:
 - **Each writer touches only its own region.** This skill rewrites the brief
   region and preserves the collapsible stack byte-for-byte; an embedder rewrites
   only between its own markers and preserves the brief + other blocks.
-- **Order:** brief first; collapsibles in chain order (proof, then review). A
-  new block appends after the existing stack.
+- **Order:** brief first; collapsibles in chain order (proof, review, then the
+  self-review aids — walkthrough, manual-verification, owned by the
+  `author_review` capability via `/forge-author-review`). A new block appends
+  after the existing stack.
 
 ## Resolve
 

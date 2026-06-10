@@ -94,7 +94,7 @@ region, so the description never drifts into a wall of stale machine output.
 /forge-ci-green   drive PR CI to green over the review-clean diff — restacks each iteration; after first green stays armed --until-merge
    ── on READY ──
 /forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
-author-review gate     you review your own PR first; gated (your call, even in yolo) → ingests forge:self-review comments
+author-review gate     /forge-author-review aids your self-review (goals-framed walkthrough + manual verify); gated (your call, even in yolo) → ingests forge:self-review comments
 request_review cap     rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
