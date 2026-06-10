@@ -89,11 +89,12 @@ region, so the description never drifts into a wall of stale machine output.
 /forge-tests   one component-tier test per scenario (the only step that writes test code)
 /forge-impl-green  drive the linked tests to green
 /forge-proof   attest the whole chain (the 7 layers above)
-/forge-ci-green   drive PR CI to green — restacks each iteration; after first green stays armed --until-merge
 /forge-review     lens-designed, chain-aware PR review
 /forge-review-green  drive the review to 0 findings (every severity)
+/forge-ci-green   drive PR CI to green over the review-clean diff — restacks each iteration; after first green stays armed --until-merge
    ── on READY ──
 /forge-review-watch    stand watch for incoming peer feedback → /forge-address-review (hands-free)
+author-review gate     you review your own PR first; gated (your call, even in yolo) → ingests forge:self-review comments
 request_review cap     rank the most relevant peer reviewer; gated ready+request (your call, even in yolo)
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
@@ -107,8 +108,8 @@ wrapper). Resume with `/forge approve` and `/forge iterate "<feedback>"`.
 
 - **Continuous CI until merge** — after CI first goes green, forge keeps a
   background `/forge-ci-green --until-merge` armed; it re-arms on every new HEAD
-  (review fixes, restacks, base syncs) and drives CI back to green until the PR
-  merges. No one-shot "final CI".
+  (peer-review fixes, restacks, base syncs) and drives CI back to green until
+  the PR merges. No one-shot "final CI".
 - **External-block recovery** — when a halt is something an external actor owns
   (a red/behind base PR, an infra incident), the `find_blocker` capability
   identifies the peripheral blocker and `/forge-wait-for` watches that one

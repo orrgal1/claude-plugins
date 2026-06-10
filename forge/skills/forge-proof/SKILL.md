@@ -174,7 +174,7 @@ section name and Layer + verdict pair per row.
 
 ## Next step
 
-PASS → `/forge-ci-green`, `/forge-review` (opt-in), `/forge-status`.
+PASS → `/forge-review-green`, then `/forge-ci-green`, `/forge-status`.
 
 FAIL → re-run the failing layer (`/forge-verify-goals` | `-scenarios` | `-tests`
 | `-match` | `-runs` | `-validations`) for tighter signal, or

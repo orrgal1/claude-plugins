@@ -118,8 +118,8 @@ the scenario `- tier:` reason sub-bullet) are fair game for the loop.
 `PROOF_GREEN` → resume chain.
 
 - `/forge-proof --embed` — write report to PR body
-- `/forge-ci-green` — confirm CI stays green after any landed commits
-- `/forge-review-green` — semantic review
+- `/forge-review-green` — semantic review (next in the chain after proof)
+- `/forge-ci-green` — drive CI green over the review-clean diff
 - `/forge` — close the chain
 - `/forge-status` — chain state + drift
 

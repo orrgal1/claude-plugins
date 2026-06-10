@@ -104,9 +104,10 @@ restack+resume; `auto`/`manual` → surface the command, settle as-is).
 
 - `/forge` phase 5.5 — post-impl CI before proof-green (one-shot).
 - `/forge` phase 6.5 — post-proof-embed CI re-confirm (one-shot).
-- `/forge` phase 7.5 — on the first `CI_GREEN`, forge arms this skill
-  `--until-merge` in the background; the capability's continuous monitor keeps
-  CI green through review and beyond, re-arming on every new HEAD until merge.
+- `/forge` phase 8.5 — on the first `CI_GREEN` (CI runs after review-green, on
+  the review-clean diff), forge arms this skill `--until-merge` in the
+  background; the capability's continuous monitor keeps CI green through the
+  peer-review handoff and beyond, re-arming on every new HEAD until merge.
   **There is no separate final CI phase.**
 - `/forge-status` reads the continuous monitor's `status.json` (under
   `--state`); drift `pr.ci_failing` recommends this skill.

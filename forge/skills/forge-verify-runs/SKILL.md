@@ -121,7 +121,7 @@ PASS → chain attested:
 - `/forge-proof` — re-aggregate, with `--embed` write the report into the PR
   body
 - `/forge-status` — confirm chain state, check drift
-- `/forge` — close the chain if PR is ready (CI-green + review-green still
+- `/forge` — close the chain if PR is ready (review-green + CI-green still
   required separately)
 
 FAIL → fix per finding, re-run:
