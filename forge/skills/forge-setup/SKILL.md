@@ -303,34 +303,34 @@ Never `NEEDS_SETUP`.
 
 Distinct from the per-repo tooling above. A few **generic agent functions** — a
 bounded grind-to-green loop, a root-cause pass, trace logging, the chain-blind
-PR ops — are not repo-specific and live in **companion** plugins
-(`@orrgal1/devloop`, `@orrgal1/grind`, `@orrgal1/diagnose`). Skills that want
-them don't hardcode a slash command: they resolve through a map with a
-**built-in default provider per capability**, falling back to it automatically
-and honoring any operator override. Forge **works best with** these default
-providers and uses them by default — they're the default backing for
-un-overridden required caps, so forge refuses (`PROVIDER_MISSING`) when one is
-absent — but every cap stays repointable, so nothing is truly hardwired:
+PR ops — are not repo-specific and live in forge's single **companion** plugin
+(`@orrgal1/devloop`). Skills that want them don't hardcode a slash command: they
+resolve through a map with a **built-in default provider per capability**,
+falling back to it automatically and honoring any operator override. Forge
+**works best with** this companion and uses it by default — it's the default
+backing for un-overridden required caps, so forge refuses (`PROVIDER_MISSING`)
+when it's absent — but every cap stays repointable, so nothing is truly
+hardwired:
 
 **`~/.claude/forge/capabilities.toml`** — generic capability → installed-plugin
 slash command. Machine-scoped (one map serves every repo + worktree), forge-root
 location, TOML like `forge.toml`. forge-setup owns it; forge skills and any
 external suite (e.g. `@fordefi/*`) read it.
 
-| Capability       | What it does                                | Default provider                          |
-| ---------------- | ------------------------------------------- | ----------------------------------------- |
-| `iteration_loop` | Bounded grind-to-green loop toward a verify | `/grind` (`@orrgal1/grind`)               |
-| `root_cause`     | Hypothesis-driven RCA, parallel fan-out     | `/root-cause` (`@orrgal1/diagnose`)       |
-| `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/diagnose`)      |
-| `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/diagnose`) |
-| `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)    |
-| `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)      |
-| `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)          |
-| `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)            |
-| `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)      |
-| `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)    |
-| `pr_brief`       | Write/refresh a tight PR description        | `/pr-brief` (`@orrgal1/devloop`)          |
-| `deslop`         | Strip AI slop from the PR diff (on green)   | `/deslop` (`@orrgal1/devloop`)            |
+| Capability       | What it does                                | Default provider                         |
+| ---------------- | ------------------------------------------- | ---------------------------------------- |
+| `iteration_loop` | Bounded grind-to-green loop toward a verify | `/grind` (`@orrgal1/devloop`)            |
+| `root_cause`     | Hypothesis-driven RCA, parallel fan-out     | `/root-cause` (`@orrgal1/devloop`)       |
+| `hypothesize`    | Lightweight 2–4 candidate hypothesis loop   | `/hypothesize` (`@orrgal1/devloop`)      |
+| `trace_logging`  | Scatter tagged trace logs / route output    | `/trace`, `/pepper` (`@orrgal1/devloop`) |
+| `request_review` | Rank + gated-request the best peer reviewer | `/request-review` (`@orrgal1/devloop`)   |
+| `find_blocker`   | Classify whether a PR is externally blocked | `/find-blocker` (`@orrgal1/devloop`)     |
+| `ci_green`       | Drive a PR's CI to green (loop + monitor)   | `/ci-green` (`@orrgal1/devloop`)         |
+| `review`         | Multi-channel PR review → ranked verdict    | `/review` (`@orrgal1/devloop`)           |
+| `review_watch`   | Persistent PR monitor → dispatch a handler  | `/review-watch` (`@orrgal1/devloop`)     |
+| `address_review` | Drive reviewer feedback to resolution       | `/address-review` (`@orrgal1/devloop`)   |
+| `pr_brief`       | Write/refresh a tight PR description        | `/pr-brief` (`@orrgal1/devloop`)         |
+| `deslop`         | Strip AI slop from the PR diff (on green)   | `/deslop` (`@orrgal1/devloop`)           |
 
 Two classes of capability live here, distinguished by `required`:
 
@@ -340,7 +340,7 @@ Two classes of capability live here, distinguished by `required`:
 - **Required** — capabilities forge does **not** implement itself. Three kinds:
   the chain-blind **PR ops** (`request_review` and its siblings, default
   `@orrgal1/devloop`), the **`iteration_loop`** the `*-green` wrappers drive
-  (default `/grind`, `@orrgal1/grind`), and **`deslop`** — the on-green slop
+  (default `/grind`, `@orrgal1/devloop`), and **`deslop`** — the on-green slop
   strip `forge-impl-green` always runs (default `/deslop`, `@orrgal1/devloop`).
   Each carries a **built-in default provider + skill** baked into this contract
   (the table above). Forge **falls back to it automatically** — a fresh install
@@ -348,14 +348,14 @@ Two classes of capability live here, distinguished by `required`:
   registry file is an **override surface**, not a required hand-wiring.
 
 **Forge works best with the default provider (and needs it unless overridden).**
-This is the deliberate forge↔devloop/grind coupling. When a required capability
-is **not overridden**, forge resolves it to its built-in default skill and
-therefore needs the **default provider plugin installed** (`@orrgal1/devloop`
-for the PR ops, `@orrgal1/grind` for `iteration_loop`). Default provider absent
-**and** no override → forge **refuses to run** that capability:
-`PROVIDER_MISSING cap=<name> provider=<provider>`, halt, with the fix — install
-the provider plugin, **or** point the capability at an alternative via
-`/forge-setup` (an override binds only _its own_ plugin, never the default).
+This is the deliberate forge↔devloop coupling. When a required capability is
+**not overridden**, forge resolves it to its built-in default skill and
+therefore needs the **default provider plugin installed** (`@orrgal1/devloop` —
+forge's single companion — for the PR ops, `iteration_loop`, and `deslop`).
+Default provider absent **and** no override → forge **refuses to run** that
+capability: `PROVIDER_MISSING cap=<name> provider=<provider>`, halt, with the
+fix — install the provider plugin, **or** point the capability at an alternative
+via `/forge-setup` (an override binds only _its own_ plugin, never the default).
 This replaces the old "unconfigured → `NEEDS_SETUP`" friction for registry caps:
 forge no longer demands `/forge-setup` to hand-wire each default — it falls back
 to the default provider and refuses only when that backing is genuinely missing.
@@ -379,22 +379,22 @@ via the skill's `--out`).
 version = 1
 
 [capabilities.iteration_loop]
-skill    = "/grind"            # *-green wrappers drive this; default provider — no override -> needs @orrgal1/grind
-provider = "@orrgal1/grind"
+skill    = "/grind"            # *-green wrappers drive this; default provider — no override -> needs @orrgal1/devloop
+provider = "@orrgal1/devloop"
 required = true
 
 [capabilities.root_cause]
 skill    = "/root-cause"
-provider = "@orrgal1/diagnose"
+provider = "@orrgal1/devloop"
 
 [capabilities.hypothesize]
 skill    = "/hypothesize"
-provider = "@orrgal1/diagnose"
+provider = "@orrgal1/devloop"
 
 [capabilities.trace_logging]
 skill    = "/trace"
 fallback = "/pepper"
-provider = "@orrgal1/diagnose"
+provider = "@orrgal1/devloop"
 
 [capabilities.request_review]
 skill    = "/request-review"   # chain-blind; forge passes --out for the verdict
@@ -453,8 +453,8 @@ required = true
    - **Installed** → invoke the default skill.
    - **Missing, `required = true`** → **refuse to run**:
      `PROVIDER_MISSING cap=<name> provider=<default-provider>`, halt. Fix:
-     install the provider plugin (`@orrgal1/devloop` / `@orrgal1/grind`) **or**
-     set an override via `/forge-setup`. Never guess another slash command.
+     install the provider plugin (`@orrgal1/devloop`) **or** set an override via
+     `/forge-setup`. Never guess another slash command.
    - **Missing, optional** → **degrade gracefully**: do the work inline or skip.
      Never hard-fail on a missing companion plugin.
 
@@ -820,11 +820,11 @@ legacy="$HOME/.claude/.fordefi/tools.yml"     # retired @fordefi/setup output
   in the available-skills registry). Missing default provider with no override →
   **warn loudly**: forge will **refuse** (`PROVIDER_MISSING`) at runtime for
   that cap until the provider is installed or the cap is overridden. Name the
-  plugin to install (`@orrgal1/devloop` for the PR ops, `@orrgal1/grind` for
-  `iteration_loop`). This is a **warning**, not a setup hard-block — the
-  operator may install the provider later or override; the runtime preflight
-  enforces it. Optional caps (diagnose) absent → note "degrades gracefully,"
-  never warn.
+  plugin to install (`@orrgal1/devloop` — forge's single companion — for the PR
+  ops, `iteration_loop`, and `deslop`). This is a **warning**, not a setup
+  hard-block — the operator may install the provider later or override; the
+  runtime preflight enforces it. Optional caps (`root_cause` / `hypothesize` /
+  `trace_logging`) absent → note "degrades gracefully," never warn.
 
 5b. **Global `forge-resolve` helper** (machine-scoped, idempotent — like 5a).
 Install the deterministic artifact resolver so every skill resolves

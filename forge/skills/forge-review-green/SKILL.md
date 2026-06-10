@@ -22,7 +22,7 @@ user-invocable: true
 # /forge-review-green — review cycles to zero blockers+majors
 
 A **thin** chain layer over the generic `iteration_loop` capability (default
-`/grind`, `@orrgal1/grind`). grind owns the entire fix-to-green loop — step
+`/grind`, `@orrgal1/devloop`). grind owns the entire fix-to-green loop — step
 dispatch, commit-per-step, stuck detection, budget. This wrapper adds only what
 touches the **forge chain**: the contract-protect set, the review-cycle verify
 command, finding-status bookkeeping, and the settle→verdict mapping.
@@ -42,10 +42,10 @@ blocker + 0 major. Minors and nits do **not** gate — they survive to deferral
    green/skipped (cached OK). Tests red → `/forge-impl-green` first.
 3. Resolve the `iteration_loop` capability
    (`~/.claude/forge/capabilities.toml`): override → use it; else fall back to
-   the default `/grind` (`@orrgal1/grind`). Default provider absent & no
+   the default `/grind` (`@orrgal1/devloop`). Default provider absent & no
    override → refuse
-   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install it or
-   override via `/forge-setup`).
+   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/devloop` (install it
+   or override via `/forge-setup`).
 
 ## Invoke the capability
 

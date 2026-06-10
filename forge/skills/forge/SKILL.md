@@ -181,12 +181,11 @@ Both refuse if `/forge-status` reports no awaiting phase.
   (`/forge-setup` § "Global agent capabilities" resolution contract): override →
   its plugin; else the built-in default provider. Any required cap un-overridden
   whose default provider is **not installed** → halt
-  `PROVIDER_MISSING provider=<p> caps=<list>` (collapsed per provider —
-  `@orrgal1/devloop` absent ⇒ the un-overridden PR-op caps + `deslop`;
-  `@orrgal1/grind` absent ⇒ `iteration_loop`). Fix: install the provider, or
-  override the caps via `/forge-setup`. Refuses at entry, not mid-chain; each
-  step re-checks at point of use. This is the deliberate forge↔devloop/grind
-  coupling.
+  `PROVIDER_MISSING provider=<p> caps=<list>`. Forge's single companion
+  `@orrgal1/devloop` backs every required cap — absent ⇒ the un-overridden PR-op
+  caps + `iteration_loop` + `deslop`. Fix: install the provider, or override the
+  caps via `/forge-setup`. Refuses at entry, not mid-chain; each step re-checks
+  at point of use. This is the deliberate forge↔devloop coupling.
 - Source: argument → `gh pr view --json body` → conversation seed. Mandatory for
   start; optional for resumes.
 - `/forge-status --slug <slug> --json` → entry phase per its mapping table.

@@ -11,19 +11,20 @@ nothing reaches READY that isn't backed by a goal, a scenario, a test, and a
 passing run — and forge mechanically attests every link.
 
 **Works best with:** the `gh` CLI is the one hard external requirement. For its
-agent capabilities forge **works best with two companion plugins**, which it
-uses by default — **`@orrgal1/devloop`** for the chain-blind PR ops
-(`/forge-review` fan-out, `request_review`, `find_blocker`, `ci_green`, …) and
-**`@orrgal1/grind`** for the `iteration_loop` behind every `*-green` loop.
-They're the default backing, so the chain needs them installed (or the
-capability repointed) to run — an un-overridden capability whose default
-provider is missing halts that step (`PROVIDER_MISSING`) until you install it.
-Every capability is **repointable** to another plugin via `/forge-setup`, so the
-coupling is tight by default yet never hardwired. The one capability that needs
-no companion at all is **`restack`**: it has a **built-in plain-git fallback**
-(fetch the base, merge it into the branch); `/forge-setup` can still point it at
-an installed skill (e.g. `@orrgal1/devloop`'s `/restack`, richer for stacked
-PRs) or a command/instructions.
+agent capabilities forge **works best with a single companion plugin**, which it
+uses by default — **`@orrgal1/devloop`** backs every capability forge consumes:
+the chain-blind PR ops (`/forge-review` fan-out, `request_review`,
+`find_blocker`, `ci_green`, …), the `iteration_loop` behind every `*-green`
+loop, and the optional diagnostic toolkit. It's the default backing, so the
+chain needs it installed (or the capability repointed) to run — an un-overridden
+capability whose default provider is missing halts that step
+(`PROVIDER_MISSING`) until you install it. Every capability is **repointable**
+to another plugin via `/forge-setup`, so the coupling is tight by default yet
+never hardwired. The one capability that needs no companion at all is
+**`restack`**: it has a **built-in plain-git fallback** (fetch the base, merge
+it into the branch); `/forge-setup` can still point it at an installed skill
+(e.g. `@orrgal1/devloop`'s `/restack`, richer for stacked PRs) or a
+command/instructions.
 
 ## The proof chain — forge's core idea
 
@@ -200,21 +201,22 @@ fallback.)
 **Machine-global agent capabilities.** Above the per-repo dirs, at the forge
 root, `/forge-setup` also maintains `~/.claude/forge/capabilities.toml` — a
 single machine-scoped map from generic agent functions to the installed plugin
-that provides each. Two classes: **optional enhancements** (`root_cause`,
-`hypothesize`, `trace_logging` → `@orrgal1/diagnose`) degrade gracefully when
-their provider is absent; **required** capabilities — the chain-blind PR ops
-(`ci_green`, `review`, `review_watch`, `address_review`, `pr_brief`,
-`request_review`, `find_blocker` → `@orrgal1/devloop`) and the `iteration_loop`
-the `*-green` wrappers drive (→ `@orrgal1/grind`). Every capability carries a
-**built-in default provider**: forge falls back to it automatically, so the
-registry is an **override surface**, not required wiring. Forge **works best
-with** these default providers and uses them by default — they're the default
-backing for the required caps, so an un-overridden required capability whose
-default provider isn't installed makes forge **refuse** (`PROVIDER_MISSING`;
-install the provider, or repoint the cap via `/forge-setup`), preflighted at
-`/forge` and `/forge-status` entry. Forge honors any override, so the coupling
-is the deliberate forge↔devloop/grind kind: tight by default, fully repointable;
-no hardcoded slash command. (Supersedes the retired `@fordefi/setup` +
+that provides each — all defaulting to forge's single companion
+`@orrgal1/devloop`. Two classes: **optional enhancements** (`root_cause`,
+`hypothesize`, `trace_logging`) degrade gracefully when their provider is
+absent; **required** capabilities — the chain-blind PR ops (`ci_green`,
+`review`, `review_watch`, `address_review`, `pr_brief`, `request_review`,
+`find_blocker`), the `iteration_loop` the `*-green` wrappers drive, and
+`deslop`. Every capability carries a **built-in default provider**
+(`@orrgal1/devloop`): forge falls back to it automatically, so the registry is
+an **override surface**, not required wiring. Forge **works best with** this
+companion and uses it by default — it's the default backing for the required
+caps, so an un-overridden required capability whose default provider isn't
+installed makes forge **refuse** (`PROVIDER_MISSING`; install the provider, or
+repoint the cap via `/forge-setup`), preflighted at `/forge` and `/forge-status`
+entry. Forge honors any override, so the coupling is the deliberate
+forge↔devloop/grind kind: tight by default, fully repointable; no hardcoded
+slash command. (Supersedes the retired `@fordefi/setup` +
 `~/.claude/.fordefi/tools.yml`.)
 
 **Recovery playbooks.** A repo also has known recoveries for known failures —

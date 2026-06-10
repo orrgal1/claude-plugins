@@ -44,9 +44,9 @@ grind's verify command — that coupling is what makes this a forge skill.
    `NO_CHAIN`. `/forge-proof` is the prereq _check_ (and the loop's verify).
 2. **Resolve** the `iteration_loop` capability from
    `~/.claude/forge/capabilities.toml`: override → use it; else fall back to the
-   default `/grind` (`@orrgal1/grind`). Default provider absent & no override →
-   refuse `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install
-   it or override via `/forge-setup`).
+   default `/grind` (`@orrgal1/devloop`). Default provider absent & no override
+   → refuse `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/devloop`
+   (install it or override via `/forge-setup`).
 3. **Invoke** the loop — its verify command is `/forge-proof`:
 
    ```
@@ -104,7 +104,7 @@ the scenario `- tier:` reason sub-bullet) are fair game for the loop.
 | `BLOCKED` (stuck)   | `BLOCKED_RECURRENT` | same finding survived grind's stuck threshold       |
 | `BUDGET_EXHAUSTED`  | `BUDGET_EXHAUSTED`  | hit `max=<N>` without PASS                          |
 | (no `goals.md`)     | `NO_CHAIN`          | no chain for slug                                   |
-| (provider missing)  | `PROVIDER_MISSING`  | `cap=iteration_loop provider=@orrgal1/grind`        |
+| (provider missing)  | `PROVIDER_MISSING`  | `cap=iteration_loop provider=@orrgal1/devloop`      |
 
 ## Hooks
 

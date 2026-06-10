@@ -26,9 +26,10 @@ user-invocable: true
 # /forge-impl-green — chain wrapper around the `iteration_loop` capability
 
 A **thin** chain layer over the `iteration_loop` capability (default `/grind`,
-`@orrgal1/grind`). The capability owns the entire fix-to-green loop machinery —
-`plan.md`, per-iteration commit, stuck detection, budget. This wrapper adds only
-what touches the **forge chain**: resolving `links.json` into the verify command
+`@orrgal1/devloop`). The capability owns the entire fix-to-green loop machinery
+— `plan.md`, per-iteration commit, stuck detection, budget. This wrapper adds
+only what touches the **forge chain**: resolving `links.json` into the verify
+command
 
 - protect set, the baseline flake-exit, the verdict mapping, and a **deslop pass
   on green** (the `deslop` capability, same protect set — § "Deslop pass").
@@ -54,10 +55,10 @@ path + function. Missing → exit, point at `/forge` or `/forge-tests`.
    resolve the PR per `/forge` rules. Verify prereqs.
 2. Resolve the `iteration_loop` capability
    (`~/.claude/forge/capabilities.toml`): override → use it; else fall back to
-   the default `/grind` (`@orrgal1/grind`). Default provider absent & no
+   the default `/grind` (`@orrgal1/devloop`). Default provider absent & no
    override → refuse
-   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/grind` (install it or
-   override via `/forge-setup`).
+   `PROVIDER_MISSING cap=iteration_loop provider=@orrgal1/devloop` (install it
+   or override via `/forge-setup`).
 3. Resolve the `deslop` capability the same way: override → use it; else default
    `/deslop` (`@orrgal1/devloop`). Default provider absent & no override →
    refuse `PROVIDER_MISSING cap=deslop provider=@orrgal1/devloop`. Resolved up

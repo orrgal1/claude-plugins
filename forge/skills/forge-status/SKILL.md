@@ -44,9 +44,10 @@ yet). Exit non-zero.
 
 **Provider preflight.** Resolve every required registry cap (`/forge-setup` §
 "Global agent capabilities"): override → its plugin; else the built-in default
-provider (`@orrgal1/devloop` for the PR ops, `@orrgal1/grind` for
-`iteration_loop`). Any required cap un-overridden whose default provider is
-**not installed** → emit `phase: PROVIDER_MISSING`, list the missing provider(s)
+provider (`@orrgal1/devloop` — forge's single companion — for the PR ops, the
+`iteration_loop`, and `deslop`). Any required cap un-overridden whose default
+provider is **not installed** → emit `phase: PROVIDER_MISSING`, list the missing
+provider(s)
 
 - affected caps, next move `install <provider> or override via /forge-setup`,
   stop (exit 3). Forge can't run those caps until the backing exists.
