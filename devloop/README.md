@@ -24,14 +24,15 @@ dependency on other plugins.
 
 ### Review + CI
 
-| Skill             | Purpose                                                                                                                                            |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/review`         | Multi-channel PR review — parallel lens fan-out (lens-reviewer agent + lens pool) + always-on `/code-review` and `/security-review` → one verdict. |
-| `/review-watch`   | Persistent PR monitor firing a `--on-trigger` handler on each new review-like event; re-arms until stopped.                                        |
-| `/address-review` | Drive externally-submitted reviewer feedback to resolution — intake, triage, fix-walk under `--protect`, reply/resolve, re-request.                |
-| `/request-review` | Rank the most relevant peer reviewer by signal precedence and, gated, mark ready + request.                                                        |
-| `/ci-green`       | Drive a GitHub PR's CI to green — bounded fix-to-green loop, optional `--until-merge` monitor.                                                     |
-| `/find-blocker`   | Classify whether a PR is held by an external blocker (red/behind base, infra, sibling PR); emit a neutral, waitable condition spec.                |
+| Skill             | Purpose                                                                                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/review`         | Multi-channel PR review — parallel lens fan-out (lens-reviewer agent + lens pool) + always-on `/code-review` and `/security-review` → one verdict.                      |
+| `/review-watch`   | Persistent PR monitor firing a `--on-trigger` handler on each new review-like event; re-arms until stopped.                                                             |
+| `/address-review` | Drive externally-submitted reviewer feedback to resolution — intake, triage, fix-walk under `--protect`, reply/resolve, re-request.                                     |
+| `/request-review` | Rank the most relevant peer reviewer by signal precedence and, gated, mark ready + request.                                                                             |
+| `/author-review`  | Guide the author's self-review — structured diff walkthrough + manual-verification pass (via a repo how-to), each embeddable as an idempotent collapsible body section. |
+| `/ci-green`       | Drive a GitHub PR's CI to green — bounded fix-to-green loop, optional `--until-merge` monitor.                                                                          |
+| `/find-blocker`   | Classify whether a PR is held by an external blocker (red/behind base, infra, sibling PR); emit a neutral, waitable condition spec.                                     |
 
 ### Iteration loop + diagnostics
 
