@@ -1,27 +1,15 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, diagnose, grind, persona, reviewable, graphify-wrapper, welcome)",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, persona, reviewable, graphify-wrapper, welcome)",
   "owner": {
     "name": "orrgal1"
   },
   "plugins": [
     {
       "name": "forge",
-      "description": "PR forge chain: /forge-setup maps host-repo tooling into $FORGE_HOME (~/.claude/forge/<repo-key>/), then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl (closing with an always-on deslop pass over the diff), continuous CI, and lens-designed review to READY — then hands off to peer review. forge works best with two companion plugins it uses by default for its agent capabilities — @orrgal1/devloop for the PR ops, @orrgal1/grind for the iteration loop; they're the default backing, so the chain needs them installed (or the capability repointed via /forge-setup) to run, and forge halts a step (PROVIDER_MISSING) when an un-overridden capability's default provider is missing. The restack capability needs no companion — it has a built-in git fallback (configurable to a skill like @orrgal1/devloop's /restack or command/instructions). Recovery playbooks ([playbooks.<name>]) let forge self-heal known capability failures — e.g. an expired ECR/SSO token triggers `aws sso login` then a retry — instead of blocking to ask; forge also offers to capture new playbooks on the fly when a recurring failure is cleared manually.",
+      "description": "PR forge chain: /forge-setup maps host-repo tooling into $FORGE_HOME (~/.claude/forge/<repo-key>/), then the chain drives a PR from a source brief through goals, scenarios, tests, design, impl (closing with an always-on deslop pass over the diff), continuous CI, and lens-designed review to READY — then hands off to peer review. forge works best with its single companion plugin @orrgal1/devloop, which it uses by default for every agent capability it consumes — the PR ops, the iteration loop, and the diagnostics; it's the default backing, so the chain needs it installed (or the capability repointed via /forge-setup) to run, and forge halts a step (PROVIDER_MISSING) when an un-overridden capability's default provider is missing. The restack capability needs no companion — it has a built-in git fallback (configurable to a skill like @orrgal1/devloop's /restack or command/instructions). Recovery playbooks ([playbooks.<name>]) let forge self-heal known capability failures — e.g. an expired ECR/SSO token triggers `aws sso login` then a retry — instead of blocking to ask; forge also offers to capture new playbooks on the fly when a recurring failure is cleared manually.",
       "source": "./forge",
-      "category": "development"
-    },
-    {
-      "name": "diagnose",
-      "description": "Portable, repo-agnostic diagnostic toolkit — /root-cause, /hypothesize, /pepper, /trace. No dependency on other plugins.",
-      "source": "./diagnose",
-      "category": "development"
-    },
-    {
-      "name": "grind",
-      "description": "/grind — general bounded-autonomy iteration loop toward any verifiable target; grinds to green, commits each step, stops at success or budget. Self-contained, repo-agnostic.",
-      "source": "./grind",
       "category": "development"
     },
     {
@@ -38,7 +26,7 @@
     },
     {
       "name": "devloop",
-      "description": "Thin, repo-agnostic dev-loop + PR-ops skills, chain-blind so forge consumes them via its capability map (no dependency on other plugins). Stacked-PR restack — /restack (bring a PR's base into its branch, syncing upstream first; merge/rebase per operator preference) and /restack-all (bottom-up across a stack). Review — /review (parallel lens fan-out + built-in /code-review + /security-review → one ranked verdict), /review-watch (re-arm on each new review event), /address-review (drive reviewer feedback to resolution), /request-review (rank + gated-request the best peer reviewer). CI — /ci-green (bounded fix-to-green, optional --until-merge monitor). Plus /find-blocker (classify a PR's external blocker), /pr-brief (idempotent 1–3 sentence PR brief), /deslop (strip AI slop from a diff, reusing /simplify; --protect to spare designated files), /stuck-check (in-loop rabbit-hole detector).",
+      "description": "Repo-agnostic dev-loop + tooling skills — forge's single companion, providing every capability forge consumes (no dependency on other plugins). Stacked-PR restack — /restack (bring a PR's base into its branch, syncing upstream first; merge/rebase per operator preference) and /restack-all (bottom-up across a stack). Review — /review (parallel lens fan-out + built-in /code-review + /security-review → one ranked verdict), /review-watch (re-arm on each new review event), /address-review (drive reviewer feedback to resolution), /request-review (rank + gated-request the best peer reviewer). CI — /ci-green (bounded fix-to-green, optional --until-merge monitor). Plus /find-blocker (classify a PR's external blocker), /pr-brief (idempotent 1–3 sentence PR brief), /deslop (strip AI slop from a diff, reusing /simplify; --protect to spare designated files), /stuck-check (in-loop rabbit-hole detector). Iteration loop — /grind (bounded-autonomy grind-to-green toward any verifiable target, the engine forge's *-green wrappers drive). Diagnostics — /root-cause (hypothesis-driven RCA), /hypothesize (lighter candidate loop), /pepper (tagged trace-log scatter), /trace (route output to disk).",
       "source": "./devloop",
       "category": "development"
     },

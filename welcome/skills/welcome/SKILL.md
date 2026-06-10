@@ -19,17 +19,15 @@ Interactive, idempotent onboarding for the **orrgal1** marketplace. Walks a new
 operator from a bare Claude Code install to a fully wired setup, then prints a
 usage guide.
 
-The marketplace ships seven plugins:
+The marketplace ships six plugins:
 
-| Plugin             | Headline              | Reach for it when…                                        |
-| ------------------ | --------------------- | --------------------------------------------------------- |
-| `forge`            | `/forge`              | drive a PR from a brief to READY with attestation         |
-| `devloop`          | `/restack` `/deslop`  | restack a PR stack on its base; strip AI slop from a diff |
-| `diagnose`         | `/root-cause`         | find the root cause of a bug, flake, or regression        |
-| `grind`            | `/grind`              | grind a bounded verifiable target to green, committing    |
-| `graphify-wrapper` | `/graphify-wrapper-*` | structural knowledge-graph search across a monorepo       |
-| `persona`          | `/load-persona`       | swap behavioral guidance Claude loads every session       |
-| `reviewable`       | `/reviewable-*`       | drive Reviewable.io review threads                        |
+| Plugin             | Headline              | Reach for it when…                                                                                |
+| ------------------ | --------------------- | ------------------------------------------------------------------------------------------------- |
+| `forge`            | `/forge`              | drive a PR from a brief to READY with attestation                                                 |
+| `devloop`          | `/restack` `/grind`   | forge's companion — restack stacks, review/CI ops, grind to green, root-cause bugs, strip AI slop |
+| `graphify-wrapper` | `/graphify-wrapper-*` | structural knowledge-graph search across a monorepo                                               |
+| `persona`          | `/load-persona`       | swap behavioral guidance Claude loads every session                                               |
+| `reviewable`       | `/reviewable-*`       | drive Reviewable.io review threads                                                                |
 
 ## Agent contract
 
@@ -94,8 +92,8 @@ Why each matters to orrgal1:
 
 - **claude-mem** — session-start memory injection + `/smart-explore`; the
   graph-first habit in the shipped persona leans on structural search.
-- **caveman** — compresses long `forge` / `diagnose` sessions; `cavecrew`
-  subagents shrink tool-result context ~60%.
+- **caveman** — compresses long `forge` / `grind` sessions; `cavecrew` subagents
+  shrink tool-result context ~60%.
 - **context7** — fresh docs for any library, beats stale training data.
 - **official bundle** — `forge` and `devloop` reuse the built-in `/simplify` and
   `/code-review`; the bundle adds the review toolkit and plugin-dev tooling.
@@ -154,7 +152,8 @@ Print the plugin table at the top of this file, then the canonical entry points:
   `/forge`.
 - **Keep a PR stack current** → `/restack` (one) / `/restack-all` (stack).
 - **Clean a diff before review** → `/deslop`.
-- **Debug something broken** → `/root-cause` (or `/diagnose` to route).
+- **Debug something broken** → `/root-cause` (or `/hypothesize` for a lighter
+  pass).
 - **Grind to green autonomously** → `/grind <verifiable target>`.
 - **Orient in a domain** → `/graphify-wrapper-query <domain> "…"`.
 - **Switch behavior** → `/load-persona <name>`.
