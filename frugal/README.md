@@ -5,7 +5,8 @@ nested subagents.
 
 `/frugal` switches the session into frugal mode — the main loop (expensive
 model) keeps decomposition, synthesis, and verification; every well-bounded
-subtask is dispatched to the cheapest adequate **model + effort** combo:
+subtask is dispatched to the cheapest **one-shot-confident** model + effort
+combo:
 
 - **Model** is passed per-invocation on the Agent tool (`haiku` / `sonnet` /
   `opus` / `fable` — the top two are escalation tiers, never defaults).
@@ -18,9 +19,18 @@ recursion (depth cap default 3, native hard max 5): task envelope in, raw
 (`.claude/frugal/<run>/ledger.jsonl`, gitignored), child output verified with a
 one-tier escalation ladder.
 
+Triage is deliberately conservative — under-resourcing costs more than it saves:
+the expensive orchestrator pays to re-read, re-spec, and re-dispatch a cheap
+tier's failure, and an undetected bad result poisons downstream nodes. So
+downgrading below sonnet requires a **closed spec** plus a **cheap mechanical
+verification**; unsure picks the higher tier; one retry exactly one tier up; two
+failures pull the task back into the main loop as a spec problem; a tier that
+failed a task class is not retried for similar tasks in the same run.
+
 `/frugal-stats` renders the ledger: subtask tree, tokens by model, estimated
-cost vs an all-main-model baseline. Estimates only — authoritative spend is
-`/cost` and `/usage`.
+cost vs an all-main-model baseline, and a per-tier failure-rate calibration line
+(>10% at a tier = triage too aggressive). Estimates only — authoritative spend
+is `/cost` and `/usage`.
 
 ## Enforcement
 

@@ -47,15 +47,47 @@ the root ledger entry `closed`, suggest `/frugal-stats`.
 
 ## While active
 
-For each unit of work, triage before doing it inline:
+### The routing question
 
-| Subtask class                                                                                                                 | Dispatch                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Locate/read/summarize code, grep sweeps, log triage, formatting, boilerplate from exact spec                                  | `worker-low` + `haiku`                                               |
-| Bounded single-file edits, tests from a clear scenario, doc updates, simple scripts                                           | `worker-low`/`worker-medium` + `sonnet`                              |
-| Multi-file bounded feature slices, debugging with a clear repro, crisp-boundary refactors                                     | `worker-high` + `sonnet`                                             |
-| Rare: genuinely hard bounded subtask that should still stay out of main context                                               | `worker-xhigh` + `sonnet`; escalate `opus` → `fable` only on failure |
-| Decomposition, ambiguous design, cross-cutting decisions, user interaction, destructive/irreversible actions, final synthesis | **main loop — never delegated**                                      |
+For each unit of work ask: **what is the cheapest tier I am ~90% confident will
+one-shot this?** — not "what might manage it." Unsure between two tiers → the
+higher one. If you can't write a crisp envelope for the task, that uncertainty
+IS the classification: it is not delegable downward.
+
+Misclassification is asymmetric, and the asymmetry is not about worker tokens:
+
+- **Over-resourcing** wastes a bounded, known amount of cheap worker tokens
+  (tiers sit ~3× apart).
+- **Under-resourcing** wastes orchestrator cycles — the expensive main model
+  reads the failed output, re-diagnoses, re-specs, re-dispatches, and its
+  context grows permanently. A failed cheap attempt costs more in main-loop
+  tokens than it saved in worker tokens, and an UNDETECTED bad result poisons
+  every downstream node.
+
+Play it safe: never bet a subtask on a tier to chase savings.
+
+### Downgrade gates
+
+A task may run below `sonnet` + `worker-medium` ONLY if both hold:
+
+1. **Closed spec** — the envelope's `task` + `output` can be written with zero
+   judgment calls left to the worker: inputs enumerated, paths absolute, output
+   shape deterministic, one obvious approach. If your draft envelope needs
+   "investigate", "figure out", "as appropriate", or "clean up", the gate
+   failed.
+2. **Cheap mechanical verification** — there is a check for the result (test
+   passes, grep count, diff shape, schema match) the dispatching side can run
+   without redoing the work. Unverifiable output never goes to a cheap tier.
+
+### Tier guide (examples — the gates are the rules)
+
+| Tier                              | One-shot-confident for                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `haiku` + `worker-low`            | Enumerable lookups, reads/summaries with stated targets, format conversion, boilerplate from exact spec           |
+| `sonnet` + `worker-low`/`-medium` | **Safe default for all bounded work** — few-file edits with clear acceptance, tests from a written scenario, docs |
+| `sonnet` + `worker-high`          | Multi-file bounded slices, debugging with a reliable repro, crisp-boundary refactors                              |
+| `opus`/`fable` + `worker-xhigh`   | Escalation destinations — almost never a first dispatch                                                           |
+| main loop — never delegated       | Decomposition, ambiguous design, judgment calls, user interaction, destructive/irreversible actions, synthesis    |
 
 Stay inline also when delegation overhead beats the work itself: a single tool
 call (one Read, one quick Edit, one short command) is cheaper done directly than
@@ -85,11 +117,24 @@ context: <inline excerpts / file paths>
 ### After each worker returns
 
 1. **Verify** the output against its `output` spec — a worker's `STATUS: ok` is
-   a claim, not proof. Failed verification → retry once, one model tier up
-   (haiku→sonnet→opus→fable). A second failure → do it in the main loop; never
-   loop at the same tier.
+   a claim, not proof. Verification runs mechanically or at the dispatching tier
+   — never below the tier that did the work.
 2. **Ledger** — append one line using the tool result's usage block:
    `{"id":"0.3","parent":"0","model":"sonnet","effort":"medium","task":"<≤80 chars>","status":"ok|partial|failed","tokens":<subagent_tokens>,"duration_ms":<n>,"ts":"<UTC ISO-8601>"}`
+
+### Anti-spin rules
+
+- Failed verification → retry once, exactly one tier up
+  (haiku→sonnet→opus→fable). Never retry at the same tier.
+- **Two failures = spec problem.** If the escalated attempt also fails, do NOT
+  try a third model — pull the task into the main loop and re-examine the
+  decomposition and envelope. Capability is rarely the issue twice; the spec
+  usually is.
+- **No re-descend.** Once a tier fails a task class in this run, route similar
+  tasks one tier higher for the rest of the run. The ledger's `failed`/`partial`
+  lines are your memory — consult them before classifying.
+- Calibrate: if `/frugal-stats` shows >10% failed+partial at a tier, triage is
+  too aggressive — shift that task class up a tier.
 
 ## Enforcement
 

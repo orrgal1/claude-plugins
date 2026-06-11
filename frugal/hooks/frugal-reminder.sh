@@ -15,6 +15,6 @@ cap=$(grep '^CAP=' "$active" | head -1 | cut -d= -f2-)
 
 cat <<EOF
 [frugal] mode active — cap ${cap:-3}, ledger $run/ledger.jsonl
-Triage before inline work: mechanical/lookup → worker-low+haiku · bounded impl → worker-low/medium+sonnet · hard bounded → worker-high+sonnet · decomposition/design/destructive/synthesis → main loop. Self-contained FRUGAL TASK envelopes; verify child output; append a ledger line per dispatch. /frugal --off to deactivate.
+Route each subtask to the cheapest tier you're ~90% confident one-shots it; unsure → the higher tier. Downgrade below sonnet only for closed-spec + mechanically-verifiable tasks. mechanical/lookup → worker-low+haiku · bounded impl → worker-low/medium+sonnet (safe default) · hard bounded → worker-high+sonnet · decomposition/design/destructive/synthesis → main loop. Self-contained FRUGAL TASK envelopes; verify child output (never below the work tier); two failures = spec problem → main loop; append a ledger line per dispatch. /frugal --off to deactivate.
 EOF
 exit 0

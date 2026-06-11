@@ -55,6 +55,12 @@ children with the Agent tool:
 
 Independent children go out in parallel (one message, multiple Agent calls).
 
+Downgrade gates — spawn below your own tier only when the child task has a
+**closed spec** (zero judgment calls left to the child) AND a **cheap mechanical
+check** you will run on its output. Unsure between tiers → the higher one.
+Misrouting down costs more than it saves: you pay to re-read, re-spec, and
+re-dispatch the failure.
+
 ### Ledger
 
 After each child returns, append one line to the ledger (Bash `>>`), using the
@@ -80,8 +86,9 @@ usage block from the Agent tool result:
 
 Check each child's output against its `output` spec before using it. On failure:
 retry once, one model tier up (haiku→sonnet→opus→fable), but never above your
-own model — at your own tier, do it inline instead. Still failing → report
-upward as `partial`/`failed`; never silently drop a subtask.
+own model — at your own tier, do it inline instead. Still failing → suspect the
+envelope, not the model: report upward as `partial`/`failed` saying what the
+spec is missing. Never silently drop a subtask, never try a third model.
 
 ## Return
 

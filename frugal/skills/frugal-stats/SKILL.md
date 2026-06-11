@@ -48,6 +48,9 @@ Use `jq`/`awk` over the JSONL — don't do arithmetic in your head:
    = baseline − estimated actual. A fable baseline is conservative — fable's
    tokenizer counts ~30% more tokens for the same content, so true savings run
    higher than estimated.
+5. Calibration: failure rate per tier — (failed+partial)/nodes per model. Over
+   ~10% at a tier means the run's triage was too aggressive for that task class;
+   recommend shifting it up a tier.
 
 ## Report shape
 
@@ -66,6 +69,7 @@ FRUGAL-STATS — run: <dir>
     est. delegated cost:  $<x.xx>
     est. all-<main> cost: $<y.yy>
     est. saved:           $<z.zz>  (~<pct>%)
+    calibration:          haiku <f>/<n> · sonnet <f>/<n> — ok | too aggressive at <tier>
 
   caveats: estimates only — blended-rate assumption, no cache discounts,
   excludes main-loop tokens. Authoritative spend: /cost and /usage.
