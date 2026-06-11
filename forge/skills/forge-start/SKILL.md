@@ -24,7 +24,7 @@ Phase 0. Resolves a source into a 1-3 sentence brief, **scaffolds the
 worktree**, lands a sentinel commit, pushes, opens a draft PR, then **hands
 off** — the operator switches to a session rooted in the new worktree and runs
 `/forge` or `/forge-yolo` from there (goals is the next step). Nothing else —
-goals / design / scenarios land via later skills.
+ground / goals / design / scenarios land via later skills.
 
 `/forge` calls this by dispatching step `start` to a general-purpose agent (per
 /forge § "Step dispatch") when `status.phase = NO_CHAIN`. When start creates a

@@ -72,11 +72,11 @@ re-fires.
 
 ## Contract mode (`--contract <phase>`)
 
-Armed by `/forge` at each contract pause (`goals` / `design` / `scenarios`).
-Watches the **same** PR for the operator's review of the contract artifact and
-routes it to a forge resume — not `/forge-address-review`. Contract feedback is
-inherently chain-impacting; the consumer would only bounce it back, so the
-router resumes the awaiting phase directly:
+Armed by `/forge` at each contract pause (`ground` / `goals` / `design` /
+`scenarios`). Watches the **same** PR for the operator's review of the contract
+artifact and routes it to a forge resume — not `/forge-address-review`. Contract
+feedback is inherently chain-impacting; the consumer would only bounce it back,
+so the router resumes the awaiting phase directly:
 
 ```
 /review-watch --include-self \

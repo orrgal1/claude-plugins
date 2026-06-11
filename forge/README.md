@@ -82,7 +82,7 @@ region, so the description never drifts into a wall of stale machine output.
 
 ```
 /forge-start   source brief → scaffold worktree → draft PR → hand off
-/forge-ground  conditional: verify a bug claim against observed behavior before goals (not reproduced / expectation suspect → ticket pushback, not a PR)
+/forge-ground  verify the source's premise against observed reality before goals — bug claim or feature baseline; gated like goals (not reproduced / expectation suspect / already supported → ticket pushback, not a PR)
 /forge-goals   the PR's intended end-state, as a goal list (loyal to source; symptom-only bug sources halt until the expected behavior is stated)
 /forge-scenarios  when:/then: scenarios covering each goal (observable behavior)
 /forge-validations  checkable predicates for removal/structural goals (no runtime observable)
@@ -100,10 +100,10 @@ request_review cap     rank the most relevant peer reviewer; gated ready+request
 /forge-address-review  work externally-submitted reviewer feedback to resolution
 ```
 
-`/forge` runs the whole arc end-to-end. **Modes:** `auto` (pause at goals +
-design + scenarios), `manual` (pause every phase), `yolo` (no contract pauses —
-drive to READY, stop only at genuine blockers; `/forge-yolo` is the thin
-wrapper). At any pause, resume with a plain reply — "approved" advances,
+`/forge` runs the whole arc end-to-end. **Modes:** `auto` (pause at ground +
+goals + design + scenarios), `manual` (pause every phase), `yolo` (no contract
+pauses — drive to READY, stop only at genuine blockers; `/forge-yolo` is the
+thin wrapper). At any pause, resume with a plain reply — "approved" advances,
 "pushback: …" (or any feedback) iterates. `/forge approve` and
 `/forge iterate "<feedback>"` are the explicit forms.
 

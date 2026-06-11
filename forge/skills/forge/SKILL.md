@@ -33,18 +33,18 @@ blockers, no majors) by sequencing the chain skills.
 
 Three modes:
 
-- **`auto` (default)** — pauses at goals + design + scenarios (contract review).
-  At each such pause it **arms a `/forge-review-watch --contract <phase>`** so
-  the operator can approve / give feedback from the PR review UI (§
-  "Contract-pause watch"). Everything else unattended; auto-resolutions log to
-  `decisions.md`.
+- **`auto` (default)** — pauses at ground + goals + design + scenarios (contract
+  review). At each such pause it **arms a
+  `/forge-review-watch --contract <phase>`** so the operator can approve / give
+  feedback from the PR review UI (§ "Contract-pause watch"). Everything else
+  unattended; auto-resolutions log to `decisions.md`.
 - **`manual`** — pauses after every phase.
-- **`yolo`** — `auto` minus the three contract pauses. Drives straight to a
+- **`yolo`** — `auto` minus the four contract pauses. Drives straight to a
   terminal state, stopping **only at genuine halts** (`BLOCKED_*`,
-  `NEEDS_OPERATOR`, `STUCK`). The goals / design / scenarios gates still run,
-  push their artifacts, and **auto-approve + advance** instead of settling an
-  AWAIT or arming a watch (§ "Yolo mode"). Invoke via `/forge-yolo` (thin
-  wrapper) or `/forge --mode yolo`.
+  `NEEDS_OPERATOR`, `STUCK`). The ground / goals / design / scenarios gates
+  still run, push their artifacts, and **auto-approve + advance** instead of
+  settling an AWAIT or arming a watch (§ "Yolo mode"). Invoke via `/forge-yolo`
+  (thin wrapper) or `/forge --mode yolo`.
 
 Operator resumes via `/forge approve` or `/forge iterate "<feedback>"` — both
 auto-detect the awaiting phase via `/forge-status`. The slash commands are the
@@ -57,7 +57,7 @@ sub-commands" → natural-language resume).
 ```
 status → entry phase → phases in order:
   0  start              (only when NO_CHAIN + no PR; runs /forge-start — scaffolds worktree; stops at HANDOFF_WORKTREE if a new one was created)
-  0.5 ground            (conditional: source claims current behavior is wrong → verify against observed reality before goals; feature sources fast-path NOT_APPLICABLE)
+  0.5 ground --push     AWAIT_GROUND_REVIEW (auto/manual; yolo auto-approves) — verify the source's premise against observed reality (bug claim or feature baseline) before goals
   1  goals --push       AWAIT_GOALS_REVIEW (auto/manual; yolo auto-approves)
   2  design --push      AWAIT_DESIGN_REVIEW (auto/manual; yolo auto-approves)
   3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (auto/manual; yolo auto-approves)
@@ -149,8 +149,8 @@ terminal verdict.
 
 Common `--until`:
 
-- `ground` — verify the source's claim only (e.g. triage a QA report); hand back
-  the evidence without opening goals.
+- `ground` — verify the source's premise only (e.g. triage a QA report); hand
+  back the evidence without opening goals.
 - `tests` — pre-impl TDD lock (start → ground → goals → design → scenarios →
   tests + red bar). Hand off to operator for impl.
 - `impl` — stop after impl loop, before proof.
@@ -305,12 +305,12 @@ phases by invoking the `*-green` skill. The skill's SKILL.md is canonical; this
 section names only the per-phase orchestrator delta (mode-aware pause, halt
 mapping).
 
-### Contract-pause watch (phases 1–3)
+### Contract-pause watch (phases 0.5–3)
 
-The three contract pauses don't only settle an AWAIT and wait for the operator
-to type `/forge approve | iterate` — on settling each, forge also **arms a
-`/forge-review-watch --slug <slug> --contract <goals|design|scenarios>`** so the
-operator can drive the gate from the PR's review UI:
+The four contract pauses don't only settle an AWAIT and wait for the operator to
+type `/forge approve | iterate` — on settling each, forge also **arms a
+`/forge-review-watch --slug <slug> --contract <ground|goals|design|scenarios>`**
+so the operator can drive the gate from the PR's review UI:
 
 - The watch seeds its cursor at the just-pushed artifact and waits for the
   operator's review. **Instruct the operator** (in the result output): submit a
@@ -327,9 +327,9 @@ operator can drive the gate from the PR's review UI:
 - The watch is **additive** — typing `/forge approve` /
   `/forge iterate "<feedback>"` by hand still reaches the same two resumes.
 
-### Yolo mode (phases 1–3 override)
+### Yolo mode (phases 0.5–3 override)
 
-In `yolo` the three contract gates do **not** pause. Each still runs its step
+In `yolo` the four contract gates do **not** pause. Each still runs its step
 (with `--yolo`, so the draft is auto-approved per "Auto-decide and continue"),
 still pushes its artifact to the PR, then — instead of settling
 `AWAIT_<PHASE>_REVIEW` and arming `/forge-review-watch` — **auto-writes the
@@ -374,22 +374,34 @@ Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists
 
 ### 0.5 ground
 
-Dispatch step `ground` (§ "Step dispatch") → `/forge-ground`, passing `source`.
-Conditionality lives inside the skill — feature-shaped sources fast-path
-`NOT_APPLICABLE`; sources claiming current behavior is wrong get one bounded
-observation pass. Skip the phase entirely when `goals.md` already exists (not
-retroactive). No AWAIT — evidence, not a contract. Route the receipt's verdict:
+Dispatch step `ground` (§ "Step dispatch"), `flags: ["--push", "--yolo"]` (auto
 
-- `NOT_APPLICABLE` / `DEVIATION_CONFIRMED` → advance to goals (`ground-truth.md`
-  becomes a goals source).
-- `NOT_REPRODUCED` / `EXPECTATION_SUSPECT` → `BLOCKED_GROUND reason <verdict>` —
-  genuine blocker in every mode (yolo does not skip): the claimed bug may not
-  exist / current behavior appears deliberate. Next move is ticket pushback with
-  the evidence; deliberate override = `/forge --from goals`, logged to
+- yolo; manual drops `--yolo`) → `/forge-ground`, passing `source`. Universal —
+  every chain grounds before goals: a bug-shaped source gets its claim verified
+  against observed reality, a feature-shaped source gets its premise checked
+  against the observed baseline. Skip the phase only when `goals.md` already
+  exists with no `ground-truth.md` (pre-ground chain — not retroactive). Route
+  the receipt's verdict:
+
+* `BASELINE_MAPPED` / `DEVIATION_CONFIRMED` / `EVIDENCE_LIMITED` → settle
+  `AWAIT_GROUND_REVIEW` after push in auto / manual — the evidence seeds goals,
+  so it is reviewed like a contract (yolo auto-approves + advances, § "Yolo
+  mode"; for `EVIDENCE_LIMITED` yolo proceeds on code evidence, logged). On
+  settle, arm `/forge-review-watch --contract ground` (§ "Contract-pause
+  watch"). At the pause, approve = proceed on the evidence as written
+  (`EVIDENCE_LIMITED`: on code evidence); iterate = extend the observation
+  ("check the admin path too", "pay the devenv cost, do the live repro").
+
+  Approve → write `{"ground": "<sha>"}` to `approvals.json` → advance. Iterate →
+  re-spawn with `["--iterate", "<feedback>", "--push"]`; new push re-settles
+  AWAIT.
+
+* `NOT_REPRODUCED` / `EXPECTATION_SUSPECT` / `ALREADY_SUPPORTED` →
+  `BLOCKED_GROUND reason <verdict>` — genuine blocker in every mode (yolo does
+  not skip): the claimed bug may not exist / current behavior appears deliberate
+  / the capability already exists. Next move is ticket pushback with the
+  evidence; deliberate override = `/forge --from goals`, logged to
   `decisions.md`.
-- `EVIDENCE_LIMITED` → auto/manual: `NEEDS_OPERATOR reason ground-evidence` (pay
-  the named repro cost vs proceed on code evidence). Yolo auto-decides: proceed
-  on code evidence, log the decision.
 
 ### 1. goals
 
@@ -892,7 +904,7 @@ phases:  <list ran this invocation>
 - …/review/cycle-N.md
 
 ### per-phase tallies
-start / goals / design / scenarios+validations+tests / impl / proof-green / review-green / ci-green / ci-ready (+ continuous ci until merge)
+start / ground / goals / design / scenarios+validations+tests / impl / proof-green / review-green / ci-green / ci-ready (+ continuous ci until merge)
 
 ### terminal state
 open blockers: <N>   open majors: <N>
@@ -930,8 +942,8 @@ STUCK                    → loop made no progress (grind stuck); --from <phase>
 - **Runs unattended** between AWAIT pauses. Sub-skill gates auto-resolve — log.
 - **Sequential phases at orchestrator layer.** Lens fan-out happens inside
   `/forge-review`.
-- **Three contract pauses** — goals + design + scenarios pause in `auto` /
-  `manual`; each arms a `/forge-review-watch --contract <phase>` so the
+- **Four contract pauses** — ground + goals + design + scenarios pause in `auto`
+  / `manual`; each arms a `/forge-review-watch --contract <phase>` so the
   operator's PR review drives the gate (§ "Contract-pause watch"). `yolo`
   auto-approves these three and advances (§ "Yolo mode").
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
