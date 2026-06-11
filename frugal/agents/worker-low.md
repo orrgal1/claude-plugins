@@ -48,7 +48,8 @@ children with the Agent tool:
 - `subagent_type`: one of this plugin's workers — `worker-low`, `worker-medium`,
   `worker-high`, `worker-xhigh` (namespaced as listed in your available agents).
 - `model`: pass explicitly — `haiku` for mechanical/lookup, `sonnet` for bounded
-  implementation. Never a higher tier than your own model.
+  implementation; `opus`/`fable` are escalation tiers, never defaults. Never a
+  higher tier than your own model.
 - `prompt`: a fresh FRUGAL TASK block — node `<your-id>.<n>`, depth
   `<d+1>/<cap>`, same ledger path, fully self-contained task.
 
@@ -78,9 +79,9 @@ usage block from the Agent tool result:
 ### Verify + escalate
 
 Check each child's output against its `output` spec before using it. On failure:
-retry once, one model tier up (haiku→sonnet), but never above your own model —
-at your own tier, do it inline instead. Still failing → report upward as
-`partial`/`failed`; never silently drop a subtask.
+retry once, one model tier up (haiku→sonnet→opus→fable), but never above your
+own model — at your own tier, do it inline instead. Still failing → report
+upward as `partial`/`failed`; never silently drop a subtask.
 
 ## Return
 

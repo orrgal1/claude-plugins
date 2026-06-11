@@ -49,13 +49,13 @@ the root ledger entry `closed`, suggest `/frugal-stats`.
 
 For each unit of work, triage before doing it inline:
 
-| Subtask class                                                                                                                 | Dispatch                                                |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Locate/read/summarize code, grep sweeps, log triage, formatting, boilerplate from exact spec                                  | `worker-low` + `haiku`                                  |
-| Bounded single-file edits, tests from a clear scenario, doc updates, simple scripts                                           | `worker-low`/`worker-medium` + `sonnet`                 |
-| Multi-file bounded feature slices, debugging with a clear repro, crisp-boundary refactors                                     | `worker-high` + `sonnet`                                |
-| Rare: genuinely hard bounded subtask that should still stay out of main context                                               | `worker-xhigh` + `sonnet`, `opus` only if sonnet failed |
-| Decomposition, ambiguous design, cross-cutting decisions, user interaction, destructive/irreversible actions, final synthesis | **main loop — never delegated**                         |
+| Subtask class                                                                                                                 | Dispatch                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Locate/read/summarize code, grep sweeps, log triage, formatting, boilerplate from exact spec                                  | `worker-low` + `haiku`                                               |
+| Bounded single-file edits, tests from a clear scenario, doc updates, simple scripts                                           | `worker-low`/`worker-medium` + `sonnet`                              |
+| Multi-file bounded feature slices, debugging with a clear repro, crisp-boundary refactors                                     | `worker-high` + `sonnet`                                             |
+| Rare: genuinely hard bounded subtask that should still stay out of main context                                               | `worker-xhigh` + `sonnet`; escalate `opus` → `fable` only on failure |
+| Decomposition, ambiguous design, cross-cutting decisions, user interaction, destructive/irreversible actions, final synthesis | **main loop — never delegated**                                      |
 
 Stay inline also when delegation overhead beats the work itself: a single tool
 call (one Read, one quick Edit, one short command) is cheaper done directly than
@@ -86,8 +86,8 @@ context: <inline excerpts / file paths>
 
 1. **Verify** the output against its `output` spec — a worker's `STATUS: ok` is
    a claim, not proof. Failed verification → retry once, one model tier up
-   (haiku→sonnet→opus). A second failure → do it in the main loop; never loop at
-   the same tier.
+   (haiku→sonnet→opus→fable). A second failure → do it in the main loop; never
+   loop at the same tier.
 2. **Ledger** — append one line using the tool result's usage block:
    `{"id":"0.3","parent":"0","model":"sonnet","effort":"medium","task":"<≤80 chars>","status":"ok|partial|failed","tokens":<subagent_tokens>,"duration_ms":<n>,"ts":"<UTC ISO-8601>"}`
 

@@ -39,12 +39,15 @@ Use `jq`/`awk` over the JSONL — don't do arithmetic in your head:
    | haiku  | 1.00      | 5.00       | 1.80        |
    | sonnet | 3.00      | 15.00      | 5.40        |
    | opus   | 5.00      | 25.00      | 9.00        |
+   | fable  | 10.00     | 50.00      | 18.00       |
 
    Update the table when pricing changes; it is a point-in-time snapshot.
 
 4. Baseline = all delegated tokens priced at the **main model's** blended rate
-   (opus-tier if the main model has no listed price). Estimated saved = baseline
-   − estimated actual.
+   (highest listed tier if the main model has no listed price). Estimated saved
+   = baseline − estimated actual. A fable baseline is conservative — fable's
+   tokenizer counts ~30% more tokens for the same content, so true savings run
+   higher than estimated.
 
 ## Report shape
 
@@ -59,7 +62,7 @@ FRUGAL-STATS — run: <dir>
 
   totals:
     nodes: <N> (<ok>/<partial>/<failed>)
-    tokens by model:   haiku <n> · sonnet <n> · opus <n>
+    tokens by model:   haiku <n> · sonnet <n> · opus <n> · fable <n>
     est. delegated cost:  $<x.xx>
     est. all-<main> cost: $<y.yy>
     est. saved:           $<z.zz>  (~<pct>%)

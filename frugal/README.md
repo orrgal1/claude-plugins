@@ -8,7 +8,7 @@ model) keeps decomposition, synthesis, and verification; every well-bounded
 subtask is dispatched to the cheapest adequate **model + effort** combo:
 
 - **Model** is passed per-invocation on the Agent tool (`haiku` / `sonnet` /
-  `opus`).
+  `opus` / `fable` — the top two are escalation tiers, never defaults).
 - **Effort** is pinned by four generic worker definitions: `worker-low`,
   `worker-medium`, `worker-high`, `worker-xhigh`.
 
