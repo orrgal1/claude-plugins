@@ -19,7 +19,7 @@ Interactive, idempotent onboarding for the **orrgal1** marketplace. Walks a new
 operator from a bare Claude Code install to a fully wired setup, then prints a
 usage guide.
 
-The marketplace ships six plugins:
+The marketplace ships five plugins:
 
 | Plugin             | Headline              | Reach for it when…                                                                                |
 | ------------------ | --------------------- | ------------------------------------------------------------------------------------------------- |
@@ -27,7 +27,6 @@ The marketplace ships six plugins:
 | `devloop`          | `/restack` `/grind`   | forge's companion — restack stacks, review/CI ops, grind to green, root-cause bugs, strip AI slop |
 | `graphify-wrapper` | `/graphify-wrapper-*` | structural knowledge-graph search across a monorepo                                               |
 | `persona`          | `/load-persona`       | swap behavioral guidance Claude loads every session                                               |
-| `reviewable`       | `/reviewable-*`       | drive Reviewable.io review threads                                                                |
 
 ## Agent contract
 
@@ -53,8 +52,8 @@ git config --get remote.origin.url 2>/dev/null || echo "no origin yet"
 git --version
 ```
 
-- `gh` un-authed/missing → `forge`, `devloop`, `reviewable` need it. Point the
-  operator at `! gh auth login` (the `!` prefix runs it in this session).
+- `gh` un-authed/missing → `forge` and `devloop` need it. Point the operator at
+  `! gh auth login` (the `!` prefix runs it in this session).
 - `origin` is `https://…` → flag it: persona git discipline is SSH-only; HTTPS
   bypasses the YubiKey. Suggest `git remote set-url origin git@github.com:…`.
 - Anything green → say so and move on.
@@ -138,9 +137,6 @@ from inside that repo's worktree:
 - Then the chain is live: `/forge-start <source>` → `/forge`.
 - Unmapped capabilities surface a `NEEDS_SETUP` gap — forge never guesses a
   command.
-
-If the operator uses Reviewable.io: `/reviewable-login` once to wire the browser
-session.
 
 ---
 

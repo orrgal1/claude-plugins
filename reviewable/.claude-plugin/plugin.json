@@ -1,8 +1,0 @@
-{
-  "name": "@orrgal1/reviewable",
-  "description": "Reviewable.io automation via agent-browser. /reviewable-read lists unresolved discussions on a Reviewable PR. /reviewable-reply types a reply into a specific discussion (auto-saves as draft). /reviewable-publish click-and-holds the top-right publish button to batch-publish all drafts (notifies reviewer to re-review).",
-  "version": "0.1.0",
-  "author": {
-    "name": "orrgal1"
-  }
-}

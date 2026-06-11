@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/welcome",
   "description": "Onboarding for the orrgal1 marketplace. /welcome runs an interactive, idempotent walkthrough — prerequisites, recommended 3rd-party plugins, persona, graphify-wrapper, per-repo forge setup — then prints a usage guide for every orrgal1 plugin. No dependency on other plugins.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "orrgal1"
   }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, persona, reviewable, graphify-wrapper, welcome)",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, persona, graphify-wrapper, welcome)",
   "owner": {
     "name": "orrgal1"
   },
@@ -17,12 +17,6 @@
       "description": "Simple inlined persona — /setup-persona writes ~/.claude/persona.md (idempotent) and ensures CLAUDE.md @-imports it; /load-persona swaps in a named persona from the builtin pool. No dependency on other plugins.",
       "source": "./persona",
       "category": "productivity"
-    },
-    {
-      "name": "reviewable",
-      "description": "Reviewable.io automation via agent-browser — /reviewable-read, /reviewable-reply, /reviewable-publish, /reviewable-login. Repo-agnostic (resolves owner/repo from git origin).",
-      "source": "./reviewable",
-      "category": "development"
     },
     {
       "name": "devloop",
