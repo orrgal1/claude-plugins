@@ -168,15 +168,15 @@ enforcement point, committed so the policy travels with the repo.
 
 | Category  | Globs                                                                                                                                                                             |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`    | human review surfaces: `branches/*/goals.md` `branches/*/design.md`                                                                                                               |
+| `spec`    | human review surfaces: `branches/*/ground-truth.md` `branches/*/goals.md` `branches/*/design.md`                                                                                  |
 | `proof`   | machine chain state: `branches/*/links.json` `branches/*/run.json` `branches/*/validations.json` `branches/*/decisions.md` `branches/*/approvals.json` `branches/*/.harvest.json` |
 | `loop`    | `branches/*/loop/`                                                                                                                                                                |
 | `review`  | `branches/*/review/` `branches/*/reviewer/`                                                                                                                                       |
 | `monitor` | `branches/*/blocker/` `branches/*/wait/`                                                                                                                                          |
 
-`spec` is the review-facing pair (goals + design); `proof` is the machine state
-the chain regenerates — `track = ["spec"]` keeps a repo's tracked surface to the
-two human artifacts.
+`spec` is the review-facing set (ground-truth + goals + design); `proof` is the
+machine state the chain regenerates — `track = ["spec"]` keeps a repo's tracked
+surface to the human artifacts.
 
 Generation is **allowlist**, not denylist: ignore everything under `branches/`,
 then re-include only the tracked categories. This is deliberate — a PR's

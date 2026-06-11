@@ -55,9 +55,12 @@ non-bug). Close two questions before writing goals:
 1. **What is the correct behavior, concretely?** Source states it → cite it. It
    doesn't → demand it in dialogue; the operator may know, or must take it back
    to the reporter. Never derive it from the symptom by guessing.
-2. **Is the claim verified?** An unreproduced report (QA claim, drive-by ticket)
-   may describe behavior that is already correct — flag it, so the answer to 1
-   can turn out to be "current behavior; close the ticket, no PR".
+2. **Is the claim verified?** `ground-truth.md` (written by `/forge-ground`,
+   phase 0.5) answers this with receipts — read it and cite its verdict. Absent
+   → flag the claim unverified, or run `/forge-ground` first. An unreproduced
+   report (QA claim, drive-by ticket) may describe behavior that is already
+   correct — the answer to 1 can turn out to be "current behavior; close the
+   ticket, no PR".
 
 Neither source nor operator can state the expected behavior → **halt**:
 
@@ -112,6 +115,9 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
 
    Don't invent goals the source doesn't claim AND the operator doesn't endorse.
    Bug-fix source → close the § "Symptom-only sources" gate before proposing.
+   `$FORGE_ART/branches/<slug>/ground-truth.md` present (phase 0.5 ran) → it is
+   a first-class source: read it, cite its verdict, and propose no goal
+   contradicting its observed behavior.
 
 4. **Propose, iterate, converge.** Present inline (not yet written):
 

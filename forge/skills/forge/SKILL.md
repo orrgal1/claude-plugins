@@ -57,6 +57,7 @@ sub-commands" → natural-language resume).
 ```
 status → entry phase → phases in order:
   0  start              (only when NO_CHAIN + no PR; runs /forge-start — scaffolds worktree; stops at HANDOFF_WORKTREE if a new one was created)
+  0.5 ground            (conditional: source claims current behavior is wrong → verify against observed reality before goals; feature sources fast-path NOT_APPLICABLE)
   1  goals --push       AWAIT_GOALS_REVIEW (auto/manual; yolo auto-approves)
   2  design --push      AWAIT_DESIGN_REVIEW (auto/manual; yolo auto-approves)
   3  scenarios+validations --push   AWAIT_SCENARIOS_REVIEW (auto/manual; yolo auto-approves)
@@ -140,7 +141,7 @@ the loop `plan.md` / `scratchpad.md` (durable cross-iteration memory).
 | `--no-continuous-ci`  | off — at first `CI_GREEN`, arm continuous ci-green (§ 8.5)         |
 
 `--from` / `--until` phase set:
-`start | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | proof | review | ci | ci-ready`.
+`start | ground | goals | design | scenarios | tests | impl | verify-goals | verify-scenarios | verify-tests | verify-match | verify-runs | verify-validations | proof | review | ci | ci-ready`.
 
 `--from` resumes after a halt; prereqs checked, missing inputs route to earliest
 unsatisfied phase regardless. `--until` truncates; exits with the named phase's
@@ -148,8 +149,10 @@ terminal verdict.
 
 Common `--until`:
 
-- `tests` — pre-impl TDD lock (start → goals → design → scenarios → tests + red
-  bar). Hand off to operator for impl.
+- `ground` — verify the source's claim only (e.g. triage a QA report); hand back
+  the evidence without opening goals.
+- `tests` — pre-impl TDD lock (start → ground → goals → design → scenarios →
+  tests + red bar). Hand off to operator for impl.
 - `impl` — stop after impl loop, before proof.
 - `verify-tests` — through L3 link/tier attestation; stop before body-match.
 - `verify-runs` — full per-layer attestation; stop before proof-green.
@@ -248,9 +251,9 @@ them; forge never auto-publishes to an external tool.
 
 ## Step dispatch
 
-One-shot spine steps (`start`, `goals`, `design`, `scenarios`, `validations`,
-`tests`, `verify`, `verify-<layer>`) each run in a fresh **general-purpose
-agent** — one step per agent, for clean context. The agent:
+One-shot spine steps (`start`, `ground`, `goals`, `design`, `scenarios`,
+`validations`, `tests`, `verify`, `verify-<layer>`) each run in a fresh
+**general-purpose agent** — one step per agent, for clean context. The agent:
 
 1. **Setup gate (hard).** Confirm `$FORGE_HOME/forge.toml` has
    `[meta].ready = true`. Absent → return `SETUP_REQUIRED — run /forge-setup`;
@@ -368,6 +371,25 @@ worktree, lands the sentinel, pushes, opens the draft PR.
 
 Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists`
 → `NEEDS_OPERATOR`.
+
+### 0.5 ground
+
+Dispatch step `ground` (§ "Step dispatch") → `/forge-ground`, passing `source`.
+Conditionality lives inside the skill — feature-shaped sources fast-path
+`NOT_APPLICABLE`; sources claiming current behavior is wrong get one bounded
+observation pass. Skip the phase entirely when `goals.md` already exists (not
+retroactive). No AWAIT — evidence, not a contract. Route the receipt's verdict:
+
+- `NOT_APPLICABLE` / `DEVIATION_CONFIRMED` → advance to goals (`ground-truth.md`
+  becomes a goals source).
+- `NOT_REPRODUCED` / `EXPECTATION_SUSPECT` → `BLOCKED_GROUND reason <verdict>` —
+  genuine blocker in every mode (yolo does not skip): the claimed bug may not
+  exist / current behavior appears deliberate. Next move is ticket pushback with
+  the evidence; deliberate override = `/forge --from goals`, logged to
+  `decisions.md`.
+- `EVIDENCE_LIMITED` → auto/manual: `NEEDS_OPERATOR reason ground-evidence` (pay
+  the named repro cost vs proceed on code evidence). Yolo auto-decides: proceed
+  on code evidence, log the decision.
 
 ### 1. goals
 
