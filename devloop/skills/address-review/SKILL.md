@@ -139,7 +139,16 @@ status to `<state>/external-<cycle>.md`
     (`addPullRequestReviewThreadReply` then `resolveReviewThread`); issue-level
     → `gh pr comment <N> --body`.
   - **External-tool threads** — **not** auto-posted. Collect drafted replies in
-    `<state>/replies.md` keyed by source thread; hand the batch to the operator.
+    `<state>/replies.md` and hand the batch to the operator as a comment → reply
+    map. Per entry: every locator available (tool/author, file, line, thread or
+    comment URL/id), the reviewer comment **quoted verbatim**, then the draft —
+    so the operator can pinpoint exactly where each reply goes without opening
+    anything else:
+    ```
+    [E1] <tool>/<author> · <file>:<line> · <comment URL/id>
+    > <reviewer comment, verbatim>
+    reply: <draft>
+    ```
     Don't mark resolved — the operator resolves on publish.
 - **Verification gate (hard).** Every GitHub thread Fixed / justified /
   resolved; any unaddressed → STOP, list, resolve. External-tool replies all
