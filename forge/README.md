@@ -4,11 +4,12 @@ A repo-agnostic **PR forge chain** for
 [Claude Code](https://claude.com/claude-code).
 
 forge drives a pull request from a one-line source brief all the way to
-**READY** — capturing goals, drafting behavior scenarios, designing the
-implementation, writing a test per scenario, driving tests + CI green, and
-running a lens-designed code review. What sets it apart is the **proof chain**:
-nothing reaches READY that isn't backed by a goal, a scenario, a test, and a
-passing run — and forge mechanically attests every link.
+**READY** — grounding the source's premise in observed reality, capturing goals,
+drafting behavior scenarios, designing the implementation, writing a test per
+scenario, driving tests + CI green, and running a lens-designed code review.
+What sets it apart is the **proof chain**: nothing reaches READY that isn't
+backed by a goal, a scenario, a test, and a passing run — and forge mechanically
+attests every link.
 
 **Works best with:** the `gh` CLI is the one hard external requirement. For its
 agent capabilities forge **works best with a single companion plugin**, which it
@@ -262,6 +263,7 @@ tools are drafted, never auto-posted.
 | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `/forge-setup`                                                                                | Map host-repo tooling into `$FORGE_HOME`                                          |
 | `/forge-start`                                                                                | Bootstrap a chain: source brief → scaffold worktree → draft PR → hand off         |
+| `/forge-ground`                                                                               | Verify the source's premise against observed reality before goals (gated)         |
 | `/forge-brief`                                                                                | Own the tight, non-collapsible PR brief; refresh it as intent evolves             |
 | `/forge`                                                                                      | Orchestrate the whole chain to READY                                              |
 | `/forge-goals` · `/forge-scenarios` · `/forge-validations` · `/forge-design` · `/forge-tests` | Chain atoms                                                                       |
