@@ -50,8 +50,11 @@ a restart before they arm.
 - Nested subagent spawning is a recent, experimental Claude Code capability
   (depth-capped at 5). If unavailable, the mode degrades to flat depth-1
   delegation — still most of the savings.
-- Agent `effort` frontmatter honored per current docs; if a runtime ignores it
-  for plugin agents, routing still works on model alone.
+- Agent `effort` frontmatter verified honored at the wire level (Claude Code
+  2.1.173, via request capture) for both project-level and plugin-shipped agents
+  — `effort: low` also disables thinking on the worker. Haiku takes no effort
+  parameter at all. If a future runtime regresses this, routing still works on
+  model alone.
 - Never set `CLAUDE_CODE_SUBAGENT_MODEL` while active — it overrides every
   per-invocation model choice.
 - Pricing table in `/frugal-stats` is a point-in-time snapshot; update on

@@ -116,9 +116,11 @@ on the next restart — say so when activating.
 - Nested spawning is a recent native capability (depth-capped). If a worker
   reports it cannot spawn, continue flat — depth-1 delegation still captures
   most of the savings.
-- Workers run at their pinned effort via frontmatter; if the runtime ignores
-  agent `effort` frontmatter, routing still works on model alone — note it in
-  the ledger run if observed.
+- Workers run at their pinned effort via frontmatter — verified at the wire
+  level on Claude Code 2.1.173 for plugin-shipped agents (`effort: low` also
+  disables thinking; haiku takes no effort parameter). If a future runtime
+  regresses this, routing still works on model alone — note it in the ledger run
+  if observed.
 
 ## Honesty
 
