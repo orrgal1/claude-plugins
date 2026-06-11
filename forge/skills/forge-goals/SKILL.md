@@ -45,6 +45,38 @@ observable: "the field is gone") → **validations** (`/forge-validations` →
 `git grep` / build predicate, or agent attestation). A goal may carry both.
 Every goal needs ≥1 proof, not ≥1 of each.
 
+## Symptom-only sources — demand the expected behavior
+
+A bug report that names only a deviation — "X is wrong / broken / missing" —
+defines no end-state. Downstream proof only ever checks loyalty to goals, so an
+expected behavior invented here poisons the whole chain (and may "fix" a
+non-bug). Close two questions before writing goals:
+
+1. **What is the correct behavior, concretely?** Source states it → cite it. It
+   doesn't → demand it in dialogue; the operator may know, or must take it back
+   to the reporter. Never derive it from the symptom by guessing.
+2. **Is the claim verified?** An unreproduced report (QA claim, drive-by ticket)
+   may describe behavior that is already correct — flag it, so the answer to 1
+   can turn out to be "current behavior; close the ticket, no PR".
+
+Neither source nor operator can state the expected behavior → **halt**:
+
+```
+Source claims wrong behavior but never states the right one.
+
+  symptom: <quoted claim from source>
+
+Options:
+  [a] State the expected behavior now — it becomes the goal's end-state.
+  [b] Point me at where it's specified (spec / doc / prior ticket).
+  [c] Take it back to the reporter — goals stay unwritten.
+
+Which?
+```
+
+No `--force`. Genuine blocker in every mode — yolo does not auto-approve past
+it.
+
 ## Count — hard cap 3, floor 1
 
 - **G1** = main (the one sentence reviewers should remember).
@@ -79,6 +111,7 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
    | Pasted text / conversation | Use as-is                                         |
 
    Don't invent goals the source doesn't claim AND the operator doesn't endorse.
+   Bug-fix source → close the § "Symptom-only sources" gate before proposing.
 
 4. **Propose, iterate, converge.** Present inline (not yet written):
 

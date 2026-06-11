@@ -82,7 +82,7 @@ region, so the description never drifts into a wall of stale machine output.
 
 ```
 /forge-start   source brief → scaffold worktree → draft PR → hand off
-/forge-goals   the PR's intended end-state, as a goal list (loyal to source)
+/forge-goals   the PR's intended end-state, as a goal list (loyal to source; symptom-only bug sources halt until the expected behavior is stated)
 /forge-scenarios  when:/then: scenarios covering each goal (observable behavior)
 /forge-validations  checkable predicates for removal/structural goals (no runtime observable)
 /forge-design  map each scenario to the components/symbols that satisfy it
