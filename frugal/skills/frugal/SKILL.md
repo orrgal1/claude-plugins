@@ -22,8 +22,9 @@ well-bounded subtask runs on the cheapest adequate model+effort combo via this
 plugin's worker agents. Every spawn lands in a ledger; `/frugal-stats` turns it
 into a cost report.
 
-`--off` (or the user asking to stop): deactivate — stop delegating, mark the
-root ledger entry `closed`, suggest `/frugal-stats`.
+`--off` (or the user asking to stop): deactivate — remove
+`.claude/frugal/active` (silences the enforcement hooks), stop delegating, mark
+the root ledger entry `closed`, suggest `/frugal-stats`.
 
 ## Activation
 
@@ -34,7 +35,14 @@ root ledger entry `closed`, suggest `/frugal-stats`.
      (append to `.gitignore` if missing).
    - Append the root line:
      `{"id":"0","parent":null,"model":"<main model>","effort":"<session effort>","task":"<user's goal, ≤80 chars>","status":"open","ts":"<UTC ISO-8601>"}`
-2. Announce: frugal mode on, depth cap (default **3**, `--cap` overrides, hard
+2. Arm the enforcement hooks — write `.claude/frugal/active` (two lines):
+
+   ```
+   RUN=<absolute run dir>
+   CAP=<cap>
+   ```
+
+3. Announce: frugal mode on, depth cap (default **3**, `--cap` overrides, hard
    max 5 — the native nesting limit), ledger path.
 
 ## While active
@@ -82,6 +90,21 @@ context: <inline excerpts / file paths>
    the same tier.
 2. **Ledger** — append one line using the tool result's usage block:
    `{"id":"0.3","parent":"0","model":"sonnet","effort":"medium","task":"<≤80 chars>","status":"ok|partial|failed","tokens":<subagent_tokens>,"duration_ms":<n>,"ts":"<UTC ISO-8601>"}`
+
+## Enforcement
+
+The skill text persuades; the plugin's hooks enforce — both keyed on
+`.claude/frugal/active`, inert without it:
+
+- **UserPromptSubmit** re-injects a terse mode reminder every turn, so frugal
+  behavior survives long sessions and compaction.
+- **PreToolUse** (Edit/Write/NotebookEdit) emits a soft delegate-instead nudge,
+  rate-limited to one per 5 minutes. It never blocks — trivial and
+  never-delegate work proceeds inline; the ledger is what exposes habitual
+  bypassing.
+
+Hooks load at session start: if the plugin was installed mid-session, they arm
+on the next restart — say so when activating.
 
 ## Guardrails
 

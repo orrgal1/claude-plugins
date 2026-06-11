@@ -22,6 +22,20 @@ one-tier escalation ladder.
 cost vs an all-main-model baseline. Estimates only — authoritative spend is
 `/cost` and `/usage`.
 
+## Enforcement
+
+Skill text alone is persuasion — it decays over long sessions and dies in
+compaction. Two hooks, both gated on `.claude/frugal/active` (written by
+`/frugal`, removed by `--off`, inert otherwise):
+
+- **UserPromptSubmit** — re-injects a terse mode reminder (triage table gist,
+  cap, ledger path) every turn while active.
+- **PreToolUse** (Edit/Write/NotebookEdit) — soft "delegate instead?" nudge,
+  rate-limited to one per 5 minutes, never blocks.
+
+Hooks load at session start — installing/upgrading the plugin mid-session needs
+a restart before they arm.
+
 ## Components
 
 | Component                  | Role                                                |
@@ -29,6 +43,7 @@ cost vs an all-main-model baseline. Estimates only — authoritative spend is
 | `skills/frugal`            | Activate/deactivate the mode; routing table; ledger |
 | `skills/frugal-stats`      | Ledger → tree + cost/savings report                 |
 | `agents/worker-low..xhigh` | Generic workers, one per effort tier                |
+| `hooks/`                   | Enforcement: per-turn reminder + edit-time nudge    |
 
 ## Caveats
 

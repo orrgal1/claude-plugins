@@ -1,7 +1,7 @@
 {
   "name": "@orrgal1/frugal",
-  "version": "0.1.0",
-  "description": "Session-activatable cost optimization — /frugal decomposes work and delegates to cheap model+effort workers (worker-low..xhigh) in a ledger-tracked subtask tree; /frugal-stats reports estimated cost and savings.",
+  "version": "0.2.0",
+  "description": "Session-activatable cost optimization — /frugal decomposes work and delegates to cheap model+effort workers (worker-low..xhigh) in a ledger-tracked subtask tree; enforcement hooks keep the mode warm across turns and nudge before inline edits; /frugal-stats reports estimated cost and savings.",
   "author": "orrgal1",
   "license": "MIT",
   "repository": {
@@ -21,6 +21,7 @@
   "files": [
     ".claude-plugin",
     "skills",
-    "agents"
+    "agents",
+    "hooks"
   ]
 }
