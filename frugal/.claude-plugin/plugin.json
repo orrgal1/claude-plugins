@@ -1,0 +1,8 @@
+{
+  "name": "@orrgal1/frugal",
+  "description": "Session-activatable cost optimization via a cost-routed subtask tree. /frugal switches the session into frugal mode: the main loop (expensive model) decomposes work into small self-contained subtasks and delegates each to the cheapest adequate model+effort combo via four generic worker agents (worker-low/medium/high/xhigh — effort pinned in frontmatter, model passed per-invocation: haiku/sonnet/opus). Workers can recurse within a depth cap (native nested subagents, default cap 3, hard max 5), every spawn is recorded in a per-run JSONL ledger (node id, parent, model, effort, status, tokens), and child output is verified with a one-tier escalation ladder before integration. /frugal-stats aggregates the ledger into a tree + estimated cost/savings report (tokens by model x blended pricing; authoritative spend stays with /cost and /usage). No dependency on other plugins.",
+  "version": "0.1.0",
+  "author": {
+    "name": "orrgal1"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "orrgal1",
-  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, persona, graphify-wrapper, welcome)",
+  "description": "orrgal1 — self-contained, repo-agnostic Claude Code plugins (forge, devloop, frugal, persona, graphify-wrapper, welcome)",
   "owner": {
     "name": "orrgal1"
   },
@@ -23,6 +23,12 @@
       "description": "Repo-agnostic dev-loop + tooling skills — forge's single companion, providing every capability forge consumes (no dependency on other plugins). Stacked-PR restack — /restack (bring a PR's base into its branch, syncing upstream first; merge/rebase per operator preference) and /restack-all (bottom-up across a stack). Review — /review (parallel lens fan-out + built-in /code-review + /security-review → one ranked verdict), /review-watch (re-arm on each new review event), /address-review (drive reviewer feedback to resolution), /request-review (rank + gated-request the best peer reviewer), /author-review (guide the author's self-review — structured diff walkthrough + manual verification via a repo how-to, each embeddable as an idempotent collapsible body section). CI — /ci-green (bounded fix-to-green, optional --until-merge monitor). Plus /find-blocker (classify a PR's external blocker), /pr-brief (idempotent 1–3 sentence PR brief), /deslop (strip AI slop from a diff, reusing /simplify; --protect to spare designated files), /stuck-check (in-loop rabbit-hole detector). Iteration loop — /grind (bounded-autonomy grind-to-green toward any verifiable target, the engine forge's *-green wrappers drive). Diagnostics — /root-cause (hypothesis-driven RCA), /hypothesize (lighter candidate loop), /pepper (tagged trace-log scatter), /trace (route output to disk).",
       "source": "./devloop",
       "category": "development"
+    },
+    {
+      "name": "frugal",
+      "description": "Session-activatable cost optimization via a cost-routed subtask tree. /frugal switches the session into frugal mode: the main loop keeps decomposition, synthesis, and verification; every well-bounded subtask is delegated to the cheapest adequate model+effort combo via four generic workers (worker-low/medium/high/xhigh — effort pinned in frontmatter, model passed per-invocation: haiku/sonnet/opus). Workers recurse within a depth cap (default 3, native max 5), every spawn lands in a per-run JSONL ledger, and child output is verified with a one-tier escalation ladder. /frugal-stats renders the ledger as a subtask tree with tokens by model and estimated cost vs an all-main-model baseline (estimates only — /cost and /usage stay authoritative). No dependency on other plugins.",
+      "source": "./frugal",
+      "category": "productivity"
     },
     {
       "name": "graphify-wrapper",

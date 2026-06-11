@@ -1,0 +1,26 @@
+{
+  "name": "@orrgal1/frugal",
+  "version": "0.1.0",
+  "description": "Session-activatable cost optimization — /frugal decomposes work and delegates to cheap model+effort workers (worker-low..xhigh) in a ledger-tracked subtask tree; /frugal-stats reports estimated cost and savings.",
+  "author": "orrgal1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/orrgal1/claude-plugins.git",
+    "directory": "frugal"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "claude-code-plugin",
+    "cost",
+    "subagents",
+    "delegation"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "agents"
+  ]
+}
