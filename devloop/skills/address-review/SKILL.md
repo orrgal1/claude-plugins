@@ -134,7 +134,12 @@ status to `<state>/external-<cycle>.md`
 
 - **Push** at this gate only (operator-confirmed). Per-item commits already
   exist.
-- **Replies** reference commit SHAs; short + concrete:
+- **Replies** reference commit SHAs and read like a human wrote them:
+  realistically short, to the point. Where an acknowledgment suffices, a single
+  word or sentence is the right reply (`Done — <sha>.`,
+  `Good catch, fixed in <sha>.`). Never a paragraph; never restate the fix the
+  commit already shows. A push-back gets the technical reason in a sentence or
+  two, no more.
   - **GitHub threads** — reply + resolve via GraphQL
     (`addPullRequestReviewThreadReply` then `resolveReviewThread`); issue-level
     → `gh pr comment <N> --body`.
