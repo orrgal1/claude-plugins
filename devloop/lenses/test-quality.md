@@ -47,6 +47,14 @@ Do the asserts **pin the behavior**, or only check that _something_ happened?
 - `NotEmpty` / `toBeTruthy` / `toBeDefined` where the value is fully known.
 - Asserting only the **count** of a returned set when element **identity** is
   the contract.
+- **Flag-variable assertion loops** — iterating a result collection with
+  `found`/`seen` booleans (or asserts behind `if` conditions inside the loop)
+  and asserting the flags afterward, when the collection's contents and order
+  are deterministic. This hides what each entry should be, silently skips
+  entries no branch matches, and passes on unexpected extras. Assert each entry
+  explicitly by index (address + value per entry), or compare against a full
+  expected slice; reach for set-membership only when order is genuinely
+  unspecified.
 
 ### Assertion nuance — do not over-flag
 
