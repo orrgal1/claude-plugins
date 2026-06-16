@@ -150,10 +150,10 @@ goals:
 
 When start ran **in-place** (cwd already the related worktree), `handoff: no` —
 the operator is already where the chain lives; `/forge` autopilot may continue
-straight into goals.
+straight into ground (phase 0.5), then goals.
 
 `/forge` reads `handoff:` from the receipt: `yes` → surface this and stop
-(`HANDOFF_WORKTREE`); `no` → advance to phase 1.
+(`HANDOFF_WORKTREE`); `no` → advance to phase 0.5 (ground).
 
 ## Halt verdicts
 
@@ -185,7 +185,7 @@ artifacts:
 
 ### next move
 <handoff: switch to a session in <path>, then /forge | /forge-yolo>
-<in-place: /forge-goals  |  /forge (autopilot from here)>
+<in-place: /forge-ground  |  /forge (autopilot from here)>
 <blocked: fix the block + re-run>
 ```
 

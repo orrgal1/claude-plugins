@@ -367,7 +367,7 @@ worktree, lands the sentinel, pushes, opens the draft PR.
   cross the worktree boundary.
 - `handoff: no` (start ran in-place — cwd already the related worktree) — manual
   mode settles `AWAIT_START_REVIEW` post draft-PR open; auto/yolo proceed to
-  phase 1.
+  phase 0.5 (ground), **not** straight to goals.
 
 Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists`
 → `NEEDS_OPERATOR`.
@@ -375,15 +375,14 @@ Halts: `START_BLOCKED reason empty-source` → `BLOCKED_SPEC`. Reason `pr-exists
 ### 0.5 ground
 
 Dispatch step `ground` (§ "Step dispatch"), `flags: ["--push", "--yolo"]` (auto
+and yolo; manual drops `--yolo`) → `/forge-ground`, passing `source`. Universal
+— every chain grounds before goals: a bug-shaped source gets its claim verified
+against observed reality, a feature-shaped source gets its premise checked
+against the observed baseline. Skip the phase only when `goals.md` already
+exists with no `ground-truth.md` (pre-ground chain — not retroactive). Route the
+receipt's verdict:
 
-- yolo; manual drops `--yolo`) → `/forge-ground`, passing `source`. Universal —
-  every chain grounds before goals: a bug-shaped source gets its claim verified
-  against observed reality, a feature-shaped source gets its premise checked
-  against the observed baseline. Skip the phase only when `goals.md` already
-  exists with no `ground-truth.md` (pre-ground chain — not retroactive). Route
-  the receipt's verdict:
-
-* `BASELINE_MAPPED` / `DEVIATION_CONFIRMED` / `EVIDENCE_LIMITED` → settle
+- `BASELINE_MAPPED` / `DEVIATION_CONFIRMED` / `EVIDENCE_LIMITED` → settle
   `AWAIT_GROUND_REVIEW` after push in auto / manual — the evidence seeds goals,
   so it is reviewed like a contract (yolo auto-approves + advances, § "Yolo
   mode"; for `EVIDENCE_LIMITED` yolo proceeds on code evidence, logged). On
@@ -396,7 +395,7 @@ Dispatch step `ground` (§ "Step dispatch"), `flags: ["--push", "--yolo"]` (auto
   re-spawn with `["--iterate", "<feedback>", "--push"]`; new push re-settles
   AWAIT.
 
-* `NOT_REPRODUCED` / `EXPECTATION_SUSPECT` / `ALREADY_SUPPORTED` →
+- `NOT_REPRODUCED` / `EXPECTATION_SUSPECT` / `ALREADY_SUPPORTED` →
   `BLOCKED_GROUND reason <verdict>` — genuine blocker in every mode (yolo does
   not skip): the claimed bug may not exist / current behavior appears deliberate
   / the capability already exists. Next move is ticket pushback with the
@@ -945,7 +944,7 @@ STUCK                    → loop made no progress (grind stuck); --from <phase>
 - **Four contract pauses** — ground + goals + design + scenarios pause in `auto`
   / `manual`; each arms a `/forge-review-watch --contract <phase>` so the
   operator's PR review drives the gate (§ "Contract-pause watch"). `yolo`
-  auto-approves these three and advances (§ "Yolo mode").
+  auto-approves these four and advances (§ "Yolo mode").
 - **Manual-mode pauses every phase 4-9** (3 already pauses by default).
 - **Yolo skips no genuine halt** — `BLOCKED_*` / `NEEDS_OPERATOR` / `STUCK`
   still stop the run; only the contract pauses are removed. Yolo also still
