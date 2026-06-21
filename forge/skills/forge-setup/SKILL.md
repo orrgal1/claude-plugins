@@ -157,11 +157,15 @@ artifacts own `branches/`. The artifact `.gitignore` scopes every rule to
 
 ## `$FORGE_ART/.gitignore` — per-PR tracking policy
 
-Default forge tracks **everything** under `branches/<slug>/` — the metadata is
-checked in so reviewers see the proof chain in the PR. The operator narrows that
-via `[artifacts].track`; `/forge-setup` (and the first per-PR writer, as a
-bootstrap) regenerates `$FORGE_ART/.gitignore` from it. The file is the single
-enforcement point, committed so the policy travels with the repo.
+**Default forge ignores everything** under `branches/<slug>/` — per-PR metadata
+stays untracked unless the operator opts in. Opt-in is `[artifacts].track`,
+resolved across **three tiers**: the repo's own `forge.toml` (override) →
+machine-global `~/.claude/forge/defaults.toml` (customizes the default for every
+repo) → forge's built-in `none`. `forge-resolve.sh` computes the effective value
+and emits it as `FORGE_TRACK` (with `FORGE_TRACK_SOURCE`). `/forge-setup` (and
+the first per-PR writer, as a bootstrap) regenerates `$FORGE_ART/.gitignore`
+from `FORGE_TRACK`. The file is the single enforcement point, committed so the
+policy travels with the repo.
 
 **Category → re-include globs** (relative to `$FORGE_ART`, all under
 `branches/`):
@@ -183,32 +187,21 @@ then re-include only the tracked categories. This is deliberate — a PR's
 artifact dir also accumulates uncategorized scratch (`brief.md`, `*.log`, ad-hoc
 notes); a denylist would leak those into git, an allowlist never does.
 
+Generation lives in `forge-resolve.sh` (under its `bash` shebang, where the
+allowlist's word-splitting is reliable), not in a hand-run recipe. Skills just
+redirect its `--gitignore` output — it resolves `track` and prints the body:
+
 ```bash
-art="$(forge_art)"; mkdir -p "$art/branches"
-gi="$art/.gitignore"   # at $FORGE_ART root, above branches/ — always tracked
-{
-  echo "# Forge per-PR artifact tracking — generated from forge.toml [artifacts].track"
-  echo "# Governs only branches/<slug>/ metadata. Edit [artifacts].track + re-run /forge-setup."
-  case "$track" in
-    all)  : ;;                          # track everything → ignore nothing
-    none) echo "branches/**" ;;         # ignore all per-PR metadata
-    *)    echo "branches/**"            # ignore all, then re-include tracked
-          echo "!branches/*/"           #   (descend into slug dirs)
-          for cat in $track; do
-            for g in $(globs_for "$cat"); do
-              echo "!$g"
-              case "$g" in */) echo "!$g**" ;; esac   # dir glob → also re-include contents
-            done
-          done ;;
-  esac
-} > "$gi"
+~/.claude/forge/bin/forge-resolve.sh --gitignore > "$FORGE_ART/.gitignore"
 ```
 
-`none`/`[list]` ignore only `branches/**`, so the `.gitignore` (above
-`branches/`) stays tracked without a `!` rule. Dropping `spec` is unusual — it
-is the review surface. This recipe is canonical; per-PR writers (`/forge-goals`,
-`/forge-design`, `/forge-start`) bootstrap it on first write and otherwise leave
-it alone.
+`none` → just `branches/**`; `all` → empty (track everything); a category list →
+`branches/**` + `!`-reincludes per the table above. The `.gitignore` itself sits
+above `branches/` so it is always tracked. When opting in, `spec`
+(ground-truth + goals + design) is the usual first choice — it is the review
+surface. Per-PR writers (`/forge-goals`, `/forge-design`, `/forge-start`)
+bootstrap the file on first write
+(`[ -f … ] || forge-resolve.sh --gitignore > …`) and otherwise leave it alone.
 
 ## Repo identity
 
@@ -576,21 +569,25 @@ builtins_verified = ["code-review", "security-review"]  # core skills confirmed 
 # Per-PR artifact layout + git-tracking policy. Governs ONLY the in-repo per-PR
 # metadata under $FORGE_ART/branches/<slug>/. Does NOT govern maps / tools /
 # commands (those live in $FORGE_HOME; gitignore them separately if in-repo).
+# track resolves 3 tiers: this repo block (override) > ~/.claude/forge/defaults.toml
+# [artifacts] (machine-global default) > forge's built-in "none". A key here is an
+# override only when present + non-empty; leave it out to inherit. Forge ignores
+# ALL per-PR metadata by default — opt in here or in defaults.toml.
 [artifacts]
 prefix = ""        # "" -> .forge at repo root ; "<prefix>" -> <prefix>/.forge
-track  = "all"     # what of per-PR metadata git tracks. Default tracks everything.
-                   #   "all"  -> nothing ignored
-                   #   "none" -> ignore every branches/<slug>/ artifact
-                   #   [list] -> track only these categories, ignore the rest
+# track = "none"   # uncomment to PIN this repo (else inherits defaults.toml / built-in):
+                   #   "none" (default) -> ignore every branches/<slug>/ artifact
+                   #   "all"            -> track everything (nothing ignored)
+                   #   [list]           -> track only these categories, ignore the rest
                    # Categories:
-                   #   spec     goals.md design.md       (human review surfaces)
+                   #   spec     ground-truth.md goals.md design.md  (human review surfaces)
                    #   proof    links.json run.json validations.json
                    #            decisions.md approvals.json .harvest.json
-                   #   loop     loop/**     (green-loop scratchpads)
-                   #   review   review/**   (cycles, synthesis, watch)
+                   #   loop     loop/**           (green-loop scratchpads)
+                   #   review   review/** reviewer/**  (cycles, synthesis, watch)
                    #   monitor  blocker/** wait/**
-                   # e.g. track = ["spec"]  tracks only goals.md + design.md
-                   # /forge-setup regenerates $FORGE_ART/.gitignore from this.
+                   # e.g. track = ["spec"]  tracks only ground-truth + goals + design
+                   # /forge-setup regenerates $FORGE_ART/.gitignore from the resolved value.
 
 # Logical capability -> shell command (deterministic). A script at
 # $FORGE_HOME/commands/<cap> takes precedence. Leave a capability empty if
@@ -786,7 +783,8 @@ See `/forge-map` for the full ground-truth + absorption flow.
 
    [artifacts]
    prefix = ""        # "" -> .forge ; "<prefix>" -> <prefix>/.forge
-   track  = "all"     # all (default) | none | [spec, proof, loop, review, monitor]
+   # track = "none"   # inherits defaults.toml / built-in "none" (gitignore all);
+                      # uncomment to PIN: "none" | "all" | [spec, proof, loop, review, monitor]
 
    [playbooks]
    enabled      = true   # failure->recovery rules consulted on capability failure
@@ -851,8 +849,37 @@ install -m 0755 "${CLAUDE_PLUGIN_ROOT}/bin/forge-resolve.sh" \
 Skills invoke `~/.claude/forge/bin/forge-resolve.sh --json` (or `--sh`); it
 mirrors the `forge_repo_key` / `forge_home` / `forge_art` functions above, so
 its output is authoritative — `worktree`, `slug`, `forge_art`, `chain_root`,
-`chain_present`, `branches`. Single derivation: no skill re-implements slug
-sanitization or path math.
+`chain_present`, `branches`, and the resolved `track` (+ `track_source`). Single
+derivation: no skill re-implements slug sanitization, path math, or the
+artifact-tracking resolution chain.
+
+5c. **Global artifact defaults** (machine-scoped, idempotent — like 5a/5b).
+Ensure `~/.claude/forge/defaults.toml`, the machine-global default for artifact
+policy — the layer that lets an operator **customize the default behavior** for
+every repo at once, sitting above forge's built-in `none` and below any per-repo
+override. Skip the write if it already exists (the operator owns it); otherwise
+seed it with the built-in default so the knob is discoverable:
+
+```bash
+def="$HOME/.claude/forge/defaults.toml"
+mkdir -p "$HOME/.claude/forge"
+[ -f "$def" ] || cat > "$def" <<'TOML'
+# Machine-global forge defaults — apply to every repo unless that repo's
+# ~/.claude/forge/<repo-key>/forge.toml [artifacts] sets the same key.
+# Resolution per key: repo forge.toml > this file > forge's built-in.
+[artifacts]
+# track: what of per-PR branches/<slug>/ metadata git tracks, by default, for
+# every repo. Built-in is "none" (forge ignores all per-PR metadata). Raise it
+# here to opt every repo in — e.g. track = ["spec"] to track the review surfaces.
+track  = "none"     # "none" | "all" | [spec, proof, loop, review, monitor]
+# prefix = ""       # default $FORGE_ART nesting for every repo
+TOML
+```
+
+A repo **overrides** a key only by setting it non-empty in its own `forge.toml`;
+an unset key inherits this file, and an absent file inherits the built-in. The
+resolver reads this chain — so do not duplicate the logic in a skill; read
+`FORGE_TRACK` / `FORGE_TRACK_SOURCE`.
 
 6. **Detect the stack** to propose mappings. Read the repo (files are data, §
    Honesty):
@@ -886,12 +913,14 @@ sanitization or path math.
    from the stub below. Short instructions → inline `[instructions]`. Multi-step
    → `$FORGE_HOME/commands/<cap>.md` from the instructions stub below.
 
-9a. **Artifact tracking** (offer; default keeps everything). Propose
+9a. **Artifact tracking** (offer; default ignores everything). Propose
 `[artifacts].prefix` (default `""` → `.forge` at repo root) and
-`[artifacts].track` (default `"all"` → every per-PR artifact tracked). Only
-prompt if the operator wants to nest the root or exclude noisy categories
-(`loop`, `monitor`); otherwise write the defaults silently. Governs only
-`$FORGE_ART/branches/<slug>/` — not maps/tools.
+`[artifacts].track` (default: inherit — built-in `none` ignores every per-PR
+artifact; raise the machine-global `~/.claude/forge/defaults.toml` to change the
+default for all repos). Only prompt if the operator wants to nest the root or
+**opt in** to tracking categories (`spec` is the usual review surface);
+otherwise leave `track` unset (so it inherits) and write `prefix` silently.
+Governs only `$FORGE_ART/branches/<slug>/` — not maps/tools.
 
 9b. **Recovery playbooks** (offer; § "Failure recovery — playbooks"). For each
 auth/recovery _signal_ detection flagged (step 6), describe the likely failure

@@ -170,15 +170,21 @@ autopilot.
    Violation → don't write; iterate or surface as a blocker.
 
 9. **Write `$FORGE_ART/branches/<slug>/design.md`.** Bootstrap the artifact dir
-   - tracking `.gitignore` per `/forge-goals` §5. If a tracked artifact ends up
-     ignored by a host rule, force-add:
+   - tracking `.gitignore` per `/forge-goals` §5. By default forge **ignores**
+     per-PR metadata; `design.md` ∈ the `spec` category, so publish it only when
+     tracking is opted in (repo `forge.toml` or `defaults.toml`). When opted in,
+     if a host rule still leaves it ignored, force-add:
 
    ```bash
    dm="$FORGE_ART/branches/${slug}/design.md"
-   if git check-ignore -q "$dm"; then
-     git add -f "$FORGE_ART/.gitignore" "$dm"
-     git commit -m "forge-design: publish artifact (ignored path)"
-   fi
+   eval "$(~/.claude/forge/bin/forge-resolve.sh --sh)"   # → FORGE_TRACK
+   case " $FORGE_TRACK " in
+     *" all "*|*" spec "*)
+       if git check-ignore -q "$dm"; then
+         git add -f "$FORGE_ART/.gitignore" "$dm"
+         git commit -m "forge-design: publish artifact (ignored path)"
+       fi ;;
+   esac
    ```
 
 10. **`--push`** (orchestrator entry, before `AWAIT_DESIGN_REVIEW`) — push gate

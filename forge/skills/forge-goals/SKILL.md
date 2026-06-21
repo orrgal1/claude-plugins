@@ -137,24 +137,32 @@ Out-of-scope items live under `## Out of scope` — don't count toward cap.
    until `y`. Re-present current state each loop.
 
 5. **Write `$FORGE_ART/branches/<slug>/goals.md`** per Output shape. Bootstrap
-   the artifact dir + the tracking `.gitignore` (generated from
+   the artifact dir + the tracking `.gitignore` (generated from the resolved
    `[artifacts].track`, per `/forge-setup` § `$FORGE_ART/.gitignore`):
 
    ```bash
    mkdir -p "$FORGE_ART/branches/${slug}"
-   [ -f "$FORGE_ART/.gitignore" ] || forge_write_artifact_gitignore   # from [artifacts].track; default "all"
+   # bootstrap the policy file from the resolved track (default "none" → ignore all):
+   [ -f "$FORGE_ART/.gitignore" ] || \
+     ~/.claude/forge/bin/forge-resolve.sh --gitignore > "$FORGE_ART/.gitignore"
    ```
 
-   `track="all"` (default) tracks everything — `goals.md` is committed for
-   inline review. If the operator set a host `.gitignore` that blanket-ignores
-   `$FORGE_ART`'s parent and a tracked artifact ends up ignored, force-add it:
+   By default forge **ignores** per-PR metadata — `goals.md` stays untracked
+   unless this repo or `~/.claude/forge/defaults.toml` opts the `spec` category
+   in. **Only when tracking is opted in** is the artifact published; if a host
+   `.gitignore` that blanket-ignores `$FORGE_ART`'s parent leaves that opted-in
+   file ignored, force-add it:
 
    ```bash
    gm="$FORGE_ART/branches/${slug}/goals.md"
-   if git check-ignore -q "$gm"; then
-     git add -f "$FORGE_ART/.gitignore" "$gm"
-     git commit -m "forge-goals: publish artifact (ignored path)"
-   fi
+   eval "$(~/.claude/forge/bin/forge-resolve.sh --sh)"   # → FORGE_TRACK
+   case " $FORGE_TRACK " in
+     *" all "*|*" spec "*)                  # goals.md ∈ spec → intended tracked
+       if git check-ignore -q "$gm"; then   # an ancestor .gitignore still hides it
+         git add -f "$FORGE_ART/.gitignore" "$gm"
+         git commit -m "forge-goals: publish artifact (ignored path)"
+       fi ;;
+   esac
    ```
 
 6. **`--push`** (orchestrator entry): push when local commits ahead
@@ -216,8 +224,8 @@ Don't write until cap respected. No `--force`.
 # Goals — <PR title or feature name>
 
 > 🔨 **Forge artifact** — the PR's goal contract, tracked per
-> `[artifacts].track` (default: tracked, for inline review). Not runtime code;
-> don't import it.
+> `[artifacts].track` (default: untracked; opt in for inline review). Not
+> runtime code; don't import it.
 
 - Source: <Jira key | PR# | doc path | "conversation">
 - Branch: <branch>

@@ -285,11 +285,15 @@ Two locations, by purpose:
   `goals.md`, `links.json`, `run.json`, `validations.json`, `design.md`,
   decisions, review cycles, loop scratchpads, the continuous-CI monitor's
   status. `$FORGE_ART` is `.forge` by default, or `<prefix>/.forge` when
-  `[artifacts].prefix` is set. **What of this metadata git tracks is
-  configurable** via `[artifacts].track` (default: everything), enforced by a
-  generated `$FORGE_ART/.gitignore` scoped to `branches/…`. Categories: `spec`
-  (goals + design), `proof` (machine chain state), `loop`, `review`, `monitor` —
-  e.g. `track = ["spec"]` tracks only `goals.md` + `design.md`.
+  `[artifacts].prefix` is set. **Forge keeps all of this metadata untracked by
+  default** — a generated `$FORGE_ART/.gitignore` (scoped to `branches/…`) keeps
+  it out of git and the PR diff. Tracking is **opt-in** via `[artifacts].track`,
+  resolved over two config layers above the built-in gitignore-all default: a
+  **machine-global default** (`~/.claude/forge/defaults.toml`, changes the
+  default for every repo at once) and a **per-repo override** (the repo's
+  `forge.toml`). Categories: `spec` (ground-truth + goals + design), `proof`
+  (machine chain state), `loop`, `review`, `monitor` — e.g. `track = ["spec"]`
+  tracks only the human review surfaces.
 - **The tooling map + repo-scoped state** live at `$FORGE_HOME`
   (`~/.claude/forge/<repo-key>/`) — a user-layer path, never committed, shared
   by every worktree of the repo. Maps, tools, and commands live here,

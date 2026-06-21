@@ -87,8 +87,10 @@ still stop every mode).
 4. **Verdict** (§ "Verdicts"). Compare observed reality vs the premise.
 
 5. **Write `$FORGE_ART/branches/<slug>/ground-truth.md`** (§ "Output shape").
-   Artifact-dir bootstrap + force-add-if-ignored per `/forge-goals` §5. Commit
-   `forge-ground: <verdict> — <slug>`.
+   Artifact-dir bootstrap + gated force-add-if-ignored per `/forge-goals` §5
+   (`ground-truth.md` ∈ the `spec` category — untracked by default; published
+   only when `spec` is opted in). Commit the bootstrap (the `.gitignore`, always
+   tracked) and the artifact when tracked as `forge-ground: <verdict> — <slug>`.
 
 6. **`--push`** — same rule as `/forge-goals` §6.
 
@@ -205,7 +207,7 @@ premise:  <one-line premise>
 observed: <one-line actual/baseline>
 
 artifacts:
-  - ground-truth.md (committed[, pushed])
+  - ground-truth.md (untracked by default; committed[, pushed] when spec tracked)
 
 ### next move
 <mapped/confirmed: operator reviews at AWAIT_GROUND_REVIEW → /forge-goals>
