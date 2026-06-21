@@ -86,6 +86,12 @@ bounded. A lens fires if ANY of its triggers match.
 
 Security review is the always-on `security-review-builtin` channel, not a lens.
 
+A **reorder fingerprint** — the diff moves an existing statement/call rather
+than only adding/deleting one — is gated _inside_ the always-on `correctness`
+lens (raises a MAJOR), not registered as a Tier-3 lens. See `lenses/README.md` §
+"Diff fingerprint → lens" and `correctness.md` § "Reordering & side-effect
+order".
+
 Fingerprint heuristics live in `lenses/README.md` § "Diff fingerprint → lens".
 Tier 1 + selected Tier 2/3 lenses can be edited at the gate (add/drop).
 
@@ -108,8 +114,8 @@ drop.
 
 ## Execution
 
-Agent (Task `subagent_type`): exact string `@orrgal1/devloop:lens-reviewer`
-— **`/` before `devloop`, `:` before the agent name**. Not `@orrgal1:devloop:…`
+Agent (Task `subagent_type`): exact string `@orrgal1/devloop:lens-reviewer` —
+**`/` before `devloop`, `:` before the agent name**. Not `@orrgal1:devloop:…`
 (all-colons fails: "Agent type not found").
 
 One Agent call per selected lens, all in **a single message** for true

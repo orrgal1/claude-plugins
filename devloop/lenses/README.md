@@ -1,8 +1,8 @@
 # Lens pool
 
-Reusable lens definitions for forge's lens-designed PR review (`/review`,
-the review fix-loop). One lens per file; the markdown body is fed verbatim
-into a reviewer subagent's brief.
+Reusable lens definitions for forge's lens-designed PR review (`/review`, the
+review fix-loop). One lens per file; the markdown body is fed verbatim into a
+reviewer subagent's brief.
 
 Ships **inside the forge plugin** — no dependency on any other review plugin. A
 host repo overrides/extends by dropping lens files into `.forge/lenses/` (same
@@ -60,8 +60,8 @@ brief.>
 
 The body after the frontmatter is the **lens text fed verbatim into the subagent
 brief**. Write it second-person ("read every changed function") or as a
-checklist. The fan-out agent (`@orrgal1/devloop:lens-reviewer`) treats this
-as its operating prompt.
+checklist. The fan-out agent (`@orrgal1/devloop:lens-reviewer`) treats this as
+its operating prompt.
 
 Keep it self-contained. The agent receives only the lens body plus PR scope +
 any `brief-artifacts` payload; it doesn't see this README.
@@ -125,6 +125,16 @@ fingerprints the diff at composition time; a lens fires if ANY trigger matches.
 Keep triggers conservative — a lens that fires on everything is an expensive
 always-on lens. If a surface recurs on most PRs, promote the lens to Tier 1
 instead of widening triggers.
+
+**Reorder fingerprint (folds into `correctness`, not a standalone lens).** When
+the diff _moves_ an existing statement/call rather than only adding or deleting
+one — a line removed in one position reappears added elsewhere in the same
+function/scope, or two side-effecting ops swap order — the always-on
+`correctness` lens raises a MAJOR-floor reordering finding (see `correctness.md`
+§ "Reordering & side-effect order"). It's fingerprint-_gated_ inside that lens
+rather than a Tier-3 lens of its own: the lens always loads, but emits the
+finding only when a reorder is present. The point is blast radius — a reorder
+that fixes one path can break sibling paths that share the function.
 
 ## Designing per-PR lenses (heuristics)
 

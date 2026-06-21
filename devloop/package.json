@@ -1,6 +1,6 @@
 {
   "name": "@orrgal1/devloop",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Dev-loop + tooling skills, forge's single companion plugin — /restack, /restack-all, /deslop, /request-review, /find-blocker, /ci-green, /review (multi-channel PR review engine + lens-reviewer agent + lens pool), /review-watch (persistent PR monitor dispatching a configurable --on-trigger handler), /address-review (drive reviewer feedback to resolution — triage, fix-walk under --protect, reply/resolve, re-request), /pr-brief (write/refresh a tight PR description, idempotent into a marker-bounded body region), /author-review (guide the PR author's self-review — structured diff walkthrough + manual-verification pass via a repo how-to, each embeddable as an idempotent collapsible body section), /stuck-check (in-loop rabbit-hole detector), /grind (bounded-autonomy iteration loop toward any verifiable target), and a diagnostic toolkit (/root-cause, /hypothesize, /pepper, /trace).",
   "author": "orrgal1",
   "license": "MIT",
