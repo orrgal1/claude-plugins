@@ -51,6 +51,7 @@ Runs on **every** review, chain or not. Cheap + universal hygiene/correctness.
 | `ai-slop`                 | hygiene      | —                                 |
 | `scope`                   | hygiene      | PR description                    |
 | `pr-description-fidelity` | hygiene      | PR description                    |
+| `self-evident`            | hygiene      | PR description                    |
 | `correctness`             | correctness  | —                                 |
 | `completeness`            | correctness  | —                                 |
 
